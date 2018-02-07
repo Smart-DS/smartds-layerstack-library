@@ -3,22 +3,23 @@ from __future__ import print_function, division, absolute_import
 from builtins import super
 import logging
 
-from ditto.layers.args import Arg, Kwarg
-from ditto.layers.layer import ModelType, ModelLayerBase
+from layerstack.args import Arg, Kwarg
+from layerstack.layer import LayerBase
 
 from ditto.store import Store
 from ditto.readers.opendss.read import reader as OpenDSSReader
 
-logger = logging.getLogger('ditto.layers.From_Opendss')
+logger = logging.getLogger('layerstack.layers.FromOpendss')
 
 
-class From_Opendss(ModelLayerBase):
-    name = "From_OpenDSS"
+class FromOpendss(LayerBase):
+    name = "From OpenDSS"
+    uuid = "f6a6cd1d-193f-475d-96a2-b9f5d88de202"
+    version = 'v0.1.0'
     desc = "Layer to load DiTTo model from Open DSS"
-    model_type = ModelType.DiTTo
 
     @classmethod
-    def args(cls, model=None):
+    def args(cls):
         arg_list = super().args()
         arg_list.append(Arg('opendss_model',
                             description='Path to OpenDSS model to be loaded',
@@ -29,19 +30,26 @@ class From_Opendss(ModelLayerBase):
         return arg_list
 
     @classmethod
-    def apply(cls, stack, model, opendss_model, bus_coords, read_power_source = True):
+    def kwargs(cls):
+        kwarg_dict = super().kwargs()
+        kwarg_dict['read_power_source'] = Kwarg(default=True, parser=bool)
+        return kwarg_dict
+
+    @classmethod
+    def apply(cls, stack, opendss_model, bus_coords, read_power_source=True):
         base_model = Store()
         reader = OpenDSSReader()
         reader.build_opendssdirect(opendss_model)
         reader.set_dss_file_names({'Nodes': bus_coords})
         reader.parse(base_model, verbose=True, read_power_source=read_power_source)
         base_model.set_names()
-        return base_model
+        stack.model = base_model
+        return True
 
 
 if __name__ == '__main__':
     # Arguments:
     #     - log_format (str) - set this to override the format of the default
     #           console logging output
-    #
-    From_Opendss.main()
+    # 
+    FromOpendss.main()

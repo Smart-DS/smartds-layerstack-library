@@ -3,20 +3,21 @@ from __future__ import print_function, division, absolute_import
 from builtins import super
 import logging
 
-from ditto.layers.args import Arg, Kwarg
-from ditto.layers.layer import ModelType, ModelLayerBase
+from layerstack.args import Arg, Kwarg
+from ditto.layerstack import DiTToLayerBase
 
 from ditto.store import Store
 from ditto.readers.csv.read import reader as CsvReader
 from ditto.modify.modify import Modifier
 
-logger = logging.getLogger('ditto.layers.Add_Basic_Load')
+logger = logging.getLogger('layerstack.layers.AddBasicLoad')
 
 
-class Add_Basic_Load(ModelLayerBase):
-    name = "Add_Basic_Load"
+class AddBasicLoad(DiTToLayerBase):
+    name = "Add Basic Load"
+    uuid = "60e1972b-f411-4451-82cc-c415ae1ea052"
+    version = 'v0.1.0'
     desc = "Layer to add load to base DiTTo model from a CSV file"
-    model_type = ModelType.DiTTo
 
     @classmethod
     def args(cls, model=None):
@@ -41,5 +42,6 @@ if __name__ == '__main__':
     # Arguments:
     #     - log_format (str) - set this to override the format of the default
     #           console logging output
-    #
-    Add_Load.main()
+    # 
+    AddBasicLoad.main()
+    

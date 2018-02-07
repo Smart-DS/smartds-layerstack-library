@@ -5,6 +5,11 @@ import logging
 import os
 import shutil
 
+from layerstack.args import Arg, Kwarg
+from layerstack.layer import Layer
+from layerstack.stack import Stack
+from ditto.layerstack import DiTToLayerBase
+
 from ditto.layers.args import Arg, Kwarg
 from ditto.layers.layer import ModelType, ModelLayerBase
 from ditto.store import Store
@@ -25,36 +30,46 @@ from ditto.models.phase_winding import PhaseWinding
 from ditto.models.timeseries import Timeseries
 from ditto.models.position import Position
 
-from src.layers.from_opendss.layer import From_Opendss
-from ditto.layers.stack import Stack
-
 import pandas as pd
 
-logger = logging.getLogger('ditto.layers.Add_Substations')
+logger = logging.getLogger('layerstack.layers.AddSubstations')
 
 
-class Add_Substations(ModelLayerBase):
-    name = "Add_Substations"
+class AddSubstations(DiTToLayerBase):
+    name = "Add Substations"
+    uuid = "3a5c2446-2836-4744-8a5f-0aa187f6ea75"
+    version = 'v0.1.0'
     desc = "Layer to Add substations to the dataset3 model"
-    model_type = 1
 
     @classmethod
     def args(cls, model=None):
         arg_list = super().args()
-        arg_list.append(Arg('arg_name', description='', parser=None,
+        arg_list.append(Arg('feeder_file', description='', parser=None,
+                            choices=None, nargs=None))
+        arg_list.append(Arg('substation_folder', description='', parser=None,
+                            choices=None, nargs=None))
+        arg_list.append(Arg('output_substation_folder', description='', parser=None,
                             choices=None, nargs=None))
         return arg_list
 
     @classmethod
-    def kwargs(cls, model=None):
-        kwarg_dict = super().kwargs()
-        kwarg_dict['kwarg_name'] = Kwarg(default=None, description='',
-                                         parser=None, choices=None,
-                                         nargs=None, action=None)
-        return kwarg_dict
+    def apply(cls, stack, model, feeder_file, substation_folder, output_substation_folder):
 
-    @classmethod
-    def apply(cls, stack, model, feeder_file,substation_folder,output_substation_folder):
+        # Need to load OpenDSS files later. Make sure we can find the required layer.
+        from_opendss_layer_dir = None
+        # first look in stack
+        for layer in stack:
+            if layer.name == 'From OpenDSS':
+                from_opendss_layer_dir = layer.layer_dir
+                break
+        # then try this layer's library directory
+        if from_opendss_layer_dir is None:
+            from_opendss_layer_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)),'from_opendss')        
+        if not os.path.exists(from_opendss_layer_dir):
+            msg = "Cannot find the 'From OpenDSS' layer."
+            logger.error(msg)
+            raise Exception(msg)
+
         model.build_networkx() # Used to remove internal edges in substation
         df = pd.read_csv(feeder_file,' ') #The RNM file specifying which feeders belong to which substation
         substations = {}
@@ -176,16 +191,15 @@ class Add_Substations(ModelLayerBase):
         for sub_folder in os.listdir(output_substation_folder):
             sub_master = os.path.join(output_substation_folder,sub_folder,'master.dss')
             sub_bus_coords = os.path.join(output_substation_folder, sub_folder, 'Buscoords.dss')
-            from_opendss_sub = From_Opendss()
-            stack_sub = Stack([from_opendss_sub])
-            substation_model = Store()
-            substation_model = from_opendss_sub.apply(stack_sub, substation_model, sub_master, sub_bus_coords,read_power_source=False)
+            stack_sub = Stack([Layer(from_opendss_layer_dir)],run_dir=stack.run_dir)
+            stack_sub.layers[0].args[0].value = sub_master
+            stack_sub.layers[0].args[1].value = sub_bus_coords
+            stack_sub.layers[0].kwargs['read_power_source'].value = False
+            stack_sub.run(archive=False)
+            substation_model = stack_sub.model
 
             final_model = modifier.add(final_model, substation_model)
         return final_model
-
-
-
 
 
 if __name__ == '__main__':
@@ -193,4 +207,5 @@ if __name__ == '__main__':
     #     - log_format (str) - set this to override the format of the default
     #           console logging output
     # 
-    Add_Substations.main()
+    AddSubstations.main()
+    
