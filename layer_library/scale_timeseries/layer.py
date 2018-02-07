@@ -3,16 +3,17 @@ from __future__ import print_function, division, absolute_import
 from builtins import super
 import logging
 
-from ditto.layers.args import Arg, Kwarg
-from ditto.layers.layer import ModelType, ModelLayerBase
+from layerstack.args import Arg, Kwarg
+from ditto.layerstack import DiTToLayerBase
 
-logger = logging.getLogger('ditto.layers.ScaleTimeseries')
+logger = logging.getLogger('layerstack.layers.ScaleTimeseries')
 
 
-class ScaleTimeseries(ModelLayerBase):
+class ScaleTimeseries(DiTToLayerBase):
     name = "Scale Timeseries"
+    uuid = "a2a25eea-addd-45b6-b057-59b10bc8e8ef"
+    version = 'v0.1.0'
     desc = "Layer to scale timeseries data in DiTTo"
-    model_type = 1
 
     @classmethod
     def args(cls, model=None):
@@ -40,3 +41,5 @@ if __name__ == '__main__':
     #           console logging output
     # 
     ScaleTimeseries.main()
+
+    

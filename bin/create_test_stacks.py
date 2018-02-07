@@ -13,7 +13,7 @@ def create_test_stack():
     stack.append(Layer(os.path.join(layer_library_dir,'add_substations')))
     stack.append(Layer(os.path.join(layer_library_dir,'add_timeseries_load')))
     stack.append(Layer(os.path.join(layer_library_dir,'scale_loads')))
-    stack.append(Layer(os.path.join(layer_library_dir,'write_model')))
+    stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
 
     # base_model = from_opendss.apply(stack,base_model,'data/dataset3/mixed_humid/industrial/OpenDSS/master.dss','data/dataset3/mixed_humid/industrial/OpenDSS/buscoords.dss')
     # substation_model = add_substations.apply(stack,base_model,'data/dataset3/mixed_humid/industrial/feeders/feeders.txt','data/substations','data/dataset3/post_process/modified_substations')

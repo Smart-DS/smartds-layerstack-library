@@ -3,16 +3,17 @@ from __future__ import print_function, division, absolute_import
 from builtins import super
 import logging
 
-from ditto.layers.args import Arg, Kwarg
-from ditto.layers.layer import ModelType, ModelLayerBase
+from layerstack.args import Arg, Kwarg
+from ditto.layerstack import DiTToLayerBase
 
-logger = logging.getLogger('ditto.layers.Peak_Loads')
+logger = logging.getLogger('layerstack.layers.PeakLoads')
 
 
-class Peak_Loads(ModelLayerBase):
-    name = "Peak_Loads"
+class PeakLoads(DiTToLayerBase):
+    name = "Peak Loads"
+    uuid = "002c1800-2e25-486e-b0c2-146dbfe714d2"
+    version = 'v0.1.0'
     desc = "Layer to find the peak value in the timeseries load objects"
-    model_type = 1
 
     @classmethod
     def args(cls, model=None):
@@ -39,4 +40,6 @@ if __name__ == '__main__':
     #     - log_format (str) - set this to override the format of the default
     #           console logging output
     # 
-    Peak_Loads.main()
+    PeakLoads.main()
+
+    

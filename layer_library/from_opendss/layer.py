@@ -9,10 +9,10 @@ from layerstack.layer import LayerBase
 from ditto.store import Store
 from ditto.readers.opendss.read import reader as OpenDSSReader
 
-logger = logging.getLogger('layerstack.layers.FromOpendss')
+logger = logging.getLogger('layerstack.layers.FromOpenDSS')
 
 
-class FromOpendss(LayerBase):
+class FromOpenDSS(LayerBase):
     name = "From OpenDSS"
     uuid = "f6a6cd1d-193f-475d-96a2-b9f5d88de202"
     version = 'v0.1.0'
@@ -52,4 +52,4 @@ if __name__ == '__main__':
     #     - log_format (str) - set this to override the format of the default
     #           console logging output
     # 
-    FromOpendss.main()
+    FromOpenDSS.main()

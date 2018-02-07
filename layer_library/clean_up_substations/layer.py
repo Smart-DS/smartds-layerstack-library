@@ -3,8 +3,8 @@ from __future__ import print_function, division, absolute_import
 from builtins import super
 import logging
 
-from ditto.layers.args import Arg, Kwarg
-from ditto.layers.layer import ModelType, ModelLayerBase
+from layerstack.args import Arg, Kwarg
+from ditto.layerstack import DiTToLayerBase
 
 import os
 from ditto.store import Store
@@ -12,13 +12,14 @@ from ditto.readers.csv.read import reader as CsvReader
 from ditto.readers.opendss.read import reader as OpenDSSReader
 from ditto.modify.modify import Modifier
 
-logger = logging.getLogger('ditto.layers.Clean_Up_Substations')
+logger = logging.getLogger('layerstack.layers.CleanUpSubstations')
 
 
-class Clean_Up_Substations(ModelLayerBase):
-    name = "Clean_Up_Substations"
+class CleanUpSubstations(DiTToLayerBase):
+    name = "Clean Up Substations"
+    uuid = "abf326e7-8a0d-4404-a7b7-570f5f15c887"
+    version = 'v0.1.0'
     desc = "Layer to clean up substations after adding load"
-    model_type = ModelType.DiTTo
 
     @classmethod
     def args(cls, model=None):
@@ -63,10 +64,11 @@ class Clean_Up_Substations(ModelLayerBase):
 
         return final_model
 
-
 if __name__ == '__main__':
     # Arguments:
     #     - log_format (str) - set this to override the format of the default
     #           console logging output
-    #
-    Clean_Up_Substations.main()
+    # 
+    CleanUpSubstations.main()
+
+    
