@@ -8,7 +8,7 @@ import shutil
 from layerstack.args import Arg, Kwarg
 from layerstack.layer import Layer
 from layerstack.stack import Stack
-from ditto.layerstack import DiTToLayerBase
+from ditto.dittolayers import DiTToLayerBase
 
 from ditto.layers.args import Arg, Kwarg
 from ditto.layers.layer import ModelType, ModelLayerBase

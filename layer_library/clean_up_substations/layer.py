@@ -4,7 +4,7 @@ from builtins import super
 import logging
 
 from layerstack.args import Arg, Kwarg
-from ditto.layerstack import DiTToLayerBase
+from ditto.dittolayers import DiTToLayerBase
 
 import os
 from ditto.store import Store

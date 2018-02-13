@@ -4,7 +4,7 @@ from builtins import super
 import logging
 
 from layerstack.args import Arg, Kwarg
-from ditto.layerstack import DiTToLayerBase
+from ditto.dittolayers import DiTToLayerBase
 
 logger = logging.getLogger('layerstack.layers.FindPeakLoad')
 
