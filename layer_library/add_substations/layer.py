@@ -4,6 +4,7 @@ from builtins import super
 import logging
 import os
 import shutil
+from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from layerstack.layer import Layer
@@ -37,7 +38,7 @@ logger = logging.getLogger('layerstack.layers.AddSubstations')
 
 class AddSubstations(DiTToLayerBase):
     name = "Add Substations"
-    uuid = "3a5c2446-2836-4744-8a5f-0aa187f6ea75"
+    uuid = UUID("3a5c2446-2836-4744-8a5f-0aa187f6ea75")
     version = 'v0.1.0'
     desc = "Layer to Add substations to the dataset3 model"
 

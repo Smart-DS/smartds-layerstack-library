@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from layerstack.layer import LayerBase
@@ -14,7 +15,7 @@ logger = logging.getLogger('layerstack.layers.FromOpenDSS')
 
 class FromOpenDSS(LayerBase):
     name = "From OpenDSS"
-    uuid = "f6a6cd1d-193f-475d-96a2-b9f5d88de202"
+    uuid = UUID("f6a6cd1d-193f-475d-96a2-b9f5d88de202")
     version = 'v0.1.0'
     desc = "Layer to load DiTTo model from Open DSS"
 

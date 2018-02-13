@@ -3,6 +3,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import super
 from random import shuffle
 import logging
+from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
@@ -18,7 +19,7 @@ from ditto.models.load import Timeseries
 
 class ScaleLoads(DiTToLayerBase):
     name = "Scale Loads"
-    uuid = "9aa14dff-f1c1-4c16-abc0-d6ff2ee9606c"
+    uuid = UUID("9aa14dff-f1c1-4c16-abc0-d6ff2ee9606c")
     version = 'v0.1.0'
     desc = "Layer to scale timeseries load objects for different years"
 

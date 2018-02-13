@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
@@ -15,7 +16,7 @@ from ditto.modify.modify import Modifier
 
 class AddTimeseriesLoad(DiTToLayerBase):
     name = "Add Timeseries Load"
-    uuid = "51f48260-a314-4dfb-aa5c-b64b98a219c8"
+    uuid = UUID("51f48260-a314-4dfb-aa5c-b64b98a219c8")
     version = 'v0.1.0'
     desc = "Layer to add timeseries load objects to base DiTTo model"
 

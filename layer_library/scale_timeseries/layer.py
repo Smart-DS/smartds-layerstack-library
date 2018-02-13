@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
@@ -11,7 +12,7 @@ logger = logging.getLogger('layerstack.layers.ScaleTimeseries')
 
 class ScaleTimeseries(DiTToLayerBase):
     name = "Scale Timeseries"
-    uuid = "a2a25eea-addd-45b6-b057-59b10bc8e8ef"
+    uuid = UUID("a2a25eea-addd-45b6-b057-59b10bc8e8ef")
     version = 'v0.1.0'
     desc = "Layer to scale timeseries data in DiTTo"
 

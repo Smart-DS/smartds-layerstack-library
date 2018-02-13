@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
@@ -17,7 +18,7 @@ logger = logging.getLogger('layerstack.layers.CleanUpSubstations')
 
 class CleanUpSubstations(DiTToLayerBase):
     name = "Clean Up Substations"
-    uuid = "abf326e7-8a0d-4404-a7b7-570f5f15c887"
+    uuid = UUID("abf326e7-8a0d-4404-a7b7-570f5f15c887")
     version = 'v0.1.0'
     desc = "Layer to clean up substations after adding load"
 

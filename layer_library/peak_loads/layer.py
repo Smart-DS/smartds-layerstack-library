@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from ditto.layerstack import DiTToLayerBase
@@ -11,7 +12,7 @@ logger = logging.getLogger('layerstack.layers.PeakLoads')
 
 class PeakLoads(DiTToLayerBase):
     name = "Peak Loads"
-    uuid = "002c1800-2e25-486e-b0c2-146dbfe714d2"
+    uuid = UUID("002c1800-2e25-486e-b0c2-146dbfe714d2")
     version = 'v0.1.0'
     desc = "Layer to find the peak value in the timeseries load objects"
 

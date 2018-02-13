@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
@@ -15,7 +16,7 @@ logger = logging.getLogger('layerstack.layers.AddBasicLoad')
 
 class AddBasicLoad(DiTToLayerBase):
     name = "Add Basic Load"
-    uuid = "60e1972b-f411-4451-82cc-c415ae1ea052"
+    uuid = UUID("60e1972b-f411-4451-82cc-c415ae1ea052")
     version = 'v0.1.0'
     desc = "Layer to add load to base DiTTo model from a CSV file"
 
