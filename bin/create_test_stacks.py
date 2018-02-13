@@ -1,4 +1,7 @@
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 from layerstack.layer import Layer
 from layerstack.stack import Stack

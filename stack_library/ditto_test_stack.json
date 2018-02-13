@@ -1,0 +1,154 @@
+{
+    "name": "DiTTo Test Stack",
+    "uuid": "20c16f29-8443-4eeb-9cea-e087432e5c2b",
+    "version": "v0.1.0",
+    "run_dir": null,
+    "model": null,
+    "layers": {
+        "From OpenDSS": {
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\from_opendss",
+            "version": "v0.1.0",
+            "checksum": "7e2a8d34a155e9213e1ea33194c97069",
+            "args": [
+                {
+                    "name": "opendss_model",
+                    "value": null,
+                    "description": "Path to OpenDSS model to be loaded",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "bus_coords",
+                    "value": null,
+                    "description": "Bus Coords for OpenDSS Model",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "read_power_source": {
+                    "value": true,
+                    "default": true,
+                    "description": "",
+                    "parser": "<class 'bool'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        "Add Substations": {
+            "uuid": "3a5c2446-2836-4744-8a5f-0aa187f6ea75",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_substations",
+            "version": "v0.1.0",
+            "checksum": "7346168264e052cf57e92ebbe38e7b53",
+            "args": [
+                {
+                    "name": "feeder_file",
+                    "value": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "substation_folder",
+                    "value": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "output_substation_folder",
+                    "value": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {}
+        },
+        "Add Timeseries Load": {
+            "uuid": "51f48260-a314-4dfb-aa5c-b64b98a219c8",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_timeseries_load",
+            "version": "v0.1.0",
+            "checksum": "5f8310c327e4fdcc9255b3b3883acc12",
+            "args": [
+                {
+                    "name": "load_path",
+                    "value": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {}
+        },
+        "Scale Loads": {
+            "uuid": "9aa14dff-f1c1-4c16-abc0-d6ff2ee9606c",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\scale_loads",
+            "version": "v0.1.0",
+            "checksum": "c14d3502de3ff9ab331621a8442136d5",
+            "args": [],
+            "kwargs": {
+                "random_percent": {
+                    "value": null,
+                    "default": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "scale_factor": {
+                    "value": null,
+                    "default": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "timeseries_path": {
+                    "value": null,
+                    "default": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        "To OpenDSS": {
+            "uuid": "293a0dd3-4065-4602-bb91-919c2001d47d",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\to_opendss",
+            "version": "v0.1.0",
+            "checksum": "5136c63da5331501d6b02c34a1a67bf7",
+            "args": [
+                {
+                    "name": "output_path",
+                    "value": null,
+                    "description": "Path to output model to",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {}
+        }
+    }
+}
