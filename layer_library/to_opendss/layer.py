@@ -27,7 +27,16 @@ class ToOpenDSS(LayerBase):
         return arg_list
 
     @classmethod
-    def apply(cls, stack, output_path):
+    def kwargs(cls):
+        kwarg_dict = super().kwargs()
+        kwarg_dict['base_dir'] = Kwarg(default=None, description='Base directory for argument paths.')
+        return kwarg_dict
+
+    @classmethod
+    def apply(cls, stack, output_path, base_dir=None):
+        if base_dir and (not os.path.exists(output_path)):
+            opendss_model = os.path.join(base_dir,output_path)
+
         writer = Writer(linecodes_flag=True, output_path=output_path)
         writer.write(stack.model, verbose=True)
         return True

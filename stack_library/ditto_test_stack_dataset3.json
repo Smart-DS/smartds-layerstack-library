@@ -1,6 +1,6 @@
 {
-    "name": "DiTTo Test Stack",
-    "uuid": "20c16f29-8443-4eeb-9cea-e087432e5c2b",
+    "name": "DiTTo Test Stack Dataset3",
+    "uuid": "e39f409d-3a6f-4669-920a-1afe7c145a3e",
     "version": "v0.1.0",
     "run_dir": null,
     "model": null,
@@ -9,11 +9,11 @@
             "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
             "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\from_opendss",
             "version": "v0.1.0",
-            "checksum": "7e2a8d34a155e9213e1ea33194c97069",
+            "checksum": "b2e6da11f3ba1520e5f3f499921d2f62",
             "args": [
                 {
                     "name": "opendss_model",
-                    "value": null,
+                    "value": "mixed_humid\\industrial\\master.dss",
                     "description": "Path to OpenDSS model to be loaded",
                     "parser": "<class 'str'>",
                     "choices": null,
@@ -22,7 +22,7 @@
                 },
                 {
                     "name": "bus_coords",
-                    "value": null,
+                    "value": "mixed_humid\\industrial\\buscoords.dss",
                     "description": "Bus Coords for OpenDSS Model",
                     "parser": "<class 'str'>",
                     "choices": null,
@@ -31,6 +31,15 @@
                 }
             ],
             "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/smartds-dataset3/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
                 "read_power_source": {
                     "value": true,
                     "default": true,
@@ -46,20 +55,11 @@
             "uuid": "3a5c2446-2836-4744-8a5f-0aa187f6ea75",
             "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_substations",
             "version": "v0.1.0",
-            "checksum": "7346168264e052cf57e92ebbe38e7b53",
+            "checksum": "d340a5ffdda0eec75c0cd7a02e2efe2b",
             "args": [
                 {
                     "name": "feeder_file",
-                    "value": null,
-                    "description": "",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                },
-                {
-                    "name": "substation_folder",
-                    "value": null,
+                    "value": "mixed_humid\\industrial\\feeders\\feeders.txt",
                     "description": "",
                     "parser": "None",
                     "choices": null,
@@ -68,7 +68,7 @@
                 },
                 {
                     "name": "output_substation_folder",
-                    "value": null,
+                    "value": "post_process\\modified_substations",
                     "description": "",
                     "parser": "None",
                     "choices": null,
@@ -76,17 +76,36 @@
                     "list_parser": "None"
                 }
             ],
-            "kwargs": {}
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/smartds-dataset3/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "substation_folder": {
+                    "value": null,
+                    "default": null,
+                    "description": "Defaults to this layer's resources folder",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
         },
         "Add Timeseries Load": {
             "uuid": "51f48260-a314-4dfb-aa5c-b64b98a219c8",
             "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_timeseries_load",
             "version": "v0.1.0",
-            "checksum": "5f8310c327e4fdcc9255b3b3883acc12",
+            "checksum": "f8e01d086cc2433b0b8d413d13f34430",
             "args": [
                 {
                     "name": "load_path",
-                    "value": null,
+                    "value": "mixed_humid\\industrial\\consumers&street_map\\customers_extended.csv",
                     "description": "",
                     "parser": "None",
                     "choices": null,
@@ -94,7 +113,17 @@
                     "list_parser": "None"
                 }
             ],
-            "kwargs": {}
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/smartds-dataset3/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
         },
         "Scale Loads": {
             "uuid": "9aa14dff-f1c1-4c16-abc0-d6ff2ee9606c",
@@ -113,7 +142,7 @@
                     "list_parser": "None"
                 },
                 "scale_factor": {
-                    "value": null,
+                    "value": 1.1,
                     "default": null,
                     "description": "",
                     "parser": "None",
@@ -136,11 +165,11 @@
             "uuid": "293a0dd3-4065-4602-bb91-919c2001d47d",
             "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\to_opendss",
             "version": "v0.1.0",
-            "checksum": "5136c63da5331501d6b02c34a1a67bf7",
+            "checksum": "76e552757a2144d46c9ce7cbb67f442a",
             "args": [
                 {
                     "name": "output_path",
-                    "value": null,
+                    "value": "post_process\\mixed_humid\\industrial",
                     "description": "Path to output model to",
                     "parser": "None",
                     "choices": null,
@@ -148,7 +177,17 @@
                     "list_parser": "None"
                 }
             ],
-            "kwargs": {}
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/smartds-dataset3/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
         }
     }
 }

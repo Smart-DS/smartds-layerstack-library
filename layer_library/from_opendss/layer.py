@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+import os
 from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
@@ -33,11 +34,17 @@ class FromOpenDSS(LayerBase):
     @classmethod
     def kwargs(cls):
         kwarg_dict = super().kwargs()
+        kwarg_dict['base_dir'] = Kwarg(default=None, description='Base directory for argument paths.')
         kwarg_dict['read_power_source'] = Kwarg(default=True, parser=bool)
         return kwarg_dict
 
     @classmethod
-    def apply(cls, stack, opendss_model, bus_coords, read_power_source=True):
+    def apply(cls, stack, opendss_model, bus_coords, base_dir=None, read_power_source=True):
+        if base_dir and (not os.path.exists(opendss_model)):
+            opendss_model = os.path.join(base_dir,opendss_model)
+        if base_dir and (not os.path.exists(bus_coords)):
+            bus_coords = os.path.join(base_dir,bus_coords)
+
         base_model = Store()
         reader = OpenDSSReader()
         reader.build_opendssdirect(opendss_model)

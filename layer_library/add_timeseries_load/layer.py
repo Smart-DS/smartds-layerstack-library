@@ -28,7 +28,16 @@ class AddTimeseriesLoad(DiTToLayerBase):
         return arg_list
 
     @classmethod
-    def apply(cls, stack, model, load_path):
+    def kwargs(cls, model=None):
+        kwarg_dict = super().kwargs()
+        kwarg_dict['base_dir'] = Kwarg(default=None, description='Base directory for argument paths.')
+        return kwarg_dict
+
+    @classmethod
+    def apply(cls, stack, model, load_path, base_dir=None):
+        if base_dir and (not os.path.exists(load_path)):
+            opendss_model = os.path.join(base_dir,load_path)
+
         loads = Store()
         reader = CsvReader()
         reader.parse(loads, load_path)

@@ -45,14 +45,28 @@ class AddSubstations(DiTToLayerBase):
         arg_list = super().args()
         arg_list.append(Arg('feeder_file', description='', parser=None,
                             choices=None, nargs=None))
-        arg_list.append(Arg('substation_folder', description='', parser=None,
-                            choices=None, nargs=None))
         arg_list.append(Arg('output_substation_folder', description='', parser=None,
                             choices=None, nargs=None))
         return arg_list
 
     @classmethod
-    def apply(cls, stack, model, feeder_file, substation_folder, output_substation_folder):
+    def kwargs(cls, model=None):
+        kwarg_dict = super().kwargs()
+        kwarg_dict['base_dir'] = Kwarg(default=None, description='Base directory for argument paths.')
+        kwarg_dict['substation_folder'] = Kwarg(default=None, 
+            description="Defaults to this layer's resources folder",
+            parser=None, choices=None,nargs=None, action=None)
+        return kwarg_dict
+
+    @classmethod
+    def apply(cls, stack, model, feeder_file, output_substation_folder, base_dir=None, substation_folder=None):
+        if base_dir and (not os.path.exists(feeder_file)):
+            opendss_model = os.path.join(base_dir,feeder_file)
+        if base_dir and (not os.path.exists(output_substation_folder)):
+            bus_coords = os.path.join(base_dir,output_substation_folder)
+
+        if substation_folder == None:
+            substation_folder = os.path.join(os.path.dirname(__file__),'resources')
 
         # Need to load OpenDSS files later. Make sure we can find the required layer.
         from_opendss_layer_dir = None
