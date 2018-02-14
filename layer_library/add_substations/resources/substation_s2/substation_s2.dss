@@ -1,0 +1,214 @@
+! need to know the exact value
+
+!TRANSFORMER DEFINITIONS
+! Substation transformer Bank-1
+New Transformer.Sub_tran1 phases=3 windings=2 buses=(SourceBus,node2.1.2.3.4)  conns=(delta,wye) kvs=(69, 12.47)
+~ kvas=(25000, 25000) XHL=0.1 %loadloss=0.1 %noloadloss=0.12 basefreq=60 sub=Yes
+New Regcontrol.SubXFMR_Regulator_1  transformer=Sub_tran1  winding=2   vreg=123.0 band=3 ptratio=60 ctprim=600 R=7 X=0 enabled=True delay=45
+! secondary side of the transformer is not grounded directly
+New Reactor.SubGround1 phases=1 bus1=node2.4 bus2=node2.0 R=0 X=0.3   ! x=0.3 is used as arbitary. 
+! Substation transformer Bank-2
+New Transformer.Sub_tran2 phases=3 windings=2 buses=(SourceBus,node10.1.2.3.4)  conns=(delta,wye) kvs=(69, 12.47)
+~ kvas=(25000, 25000) XHL=0.1 %loadloss=0.1 %noloadloss=0.12 basefreq=60 sub=Yes
+New Regcontrol.SubXFMR_Regulator_2  transformer=Sub_tran2  winding=2   vreg=123.0 band=3 ptratio=60 ctprim=600 R=7 X=0 enabled=True delay=45
+! secondary side of the transformer is not grounded directly
+New Reactor.SubGround2 phases=1 bus1=node10.4 bus2=node10.0 R=0 X=0.3   ! x=0.3 is used as arbitary. 
+! Substation transformer Bank-3
+New Transformer.Sub_tran3 phases=3 windings=2 buses=(SourceBus,node19.1.2.3.4)  conns=(delta,wye) kvs=(69, 12.47)
+~ kvas=(25000, 25000) XHL=0.1 %loadloss=0.01 %noloadloss=0.12 basefreq=60 sub=Yes
+New Regcontrol.SubXFMR_Regulator_3  transformer=Sub_tran3  winding=2   vreg=123.0 band=3 ptratio=60 ctprim=600 R=7 X=0 enabled=True delay=45
+! secondary side of the transformer is not grounded directly
+New Reactor.SubGround3 phases=1 bus1=node19.4 bus2=node19.0 R=0 X=0.3   ! x=0.3 is used as arbitary.
+New Transformer.XFM16-17  Phases=3   Windings=2  XHL=2.1
+~ wdg=1 bus=node16       conn=Wye kv=14.4    kva=75    %r=.5     
+~ wdg=2 bus=node17       conn=Wye kv=0.12    kva=75    %r=.5 
+New Transformer.XFM28-29  Phases=3   Windings=2  XHL=2
+~ wdg=1 bus=node28       conn=Wye kv=14.4    kva=75    %r=.5     
+~ wdg=2 bus=node29       conn=Wye kv=0.12    kva=75    %r=.5 
+
+!LINE DEFINITIONS
+
+//line code: I choosed it arbitrarily from an openDSS demo 
+//example DG_Prot_Fdr.dss
+New LineCode.Sym nphases=1 r1=0.120079 x1=0.26706 c1=1.85556 Units=km basefreq=60 normamps=660 faultrate=0.1
+// c1=18.35 c0=7.08
+// line between node2 to node 3, here also parameters are chosen
+// arbitarily 
+new Line.N2-N3 bus1=node2 bus2=node3   linecode=Sym   units=kft length=0.01
+!line between node3 to node4 
+new Line.N3-N4 bus1=node3 bus2=node4   linecode=Sym   units=kft length=0.01
+!line between node3 to node30 (added in)
+new Line.N3-N30 bus1=node3 bus2=node30   linecode=Sym   units=kft length=0.01
+!line between node3 to node31 (added in)
+new Line.N3-N31 bus1=node3 bus2=node31   linecode=Sym   units=kft length=0.01
+!line between node3 to node32 (added in)
+new Line.N3-N32 bus1=node3 bus2=node32   linecode=Sym   units=kft length=0.01
+!line between node3 to node33 (added in)
+new Line.N3-N33 bus1=node3 bus2=node33   linecode=Sym   units=kft length=0.01
+!line between node3 to node34 (added in)
+new Line.N3-N34 bus1=node3 bus2=node34   linecode=Sym   units=kft length=0.01
+!line between node3 to node35 (added in)
+new Line.N3-N35 bus1=node3 bus2=node35   linecode=Sym   units=kft length=0.01
+!line between node3 to node36 (added in)
+new Line.N3-N36 bus1=node3 bus2=node36   linecode=Sym   units=kft length=0.01
+!line between node3 to node37 (added in)
+new Line.N3-N37 bus1=node3 bus2=node37   linecode=Sym   units=kft length=0.01
+!line between node3 to node38 (added in)
+new Line.N3-N38 bus1=node3 bus2=node38   linecode=Sym   units=kft length=0.01
+!line between node3 to node39 (added in)
+new Line.N3-N39 bus1=node3 bus2=node39   linecode=Sym   units=kft length=0.01
+!line between node3 to node5 
+new Line.N3-N5 bus1=node3 bus2=node5   linecode=Sym   units=kft length=0.01
+!line between node3 to node6 
+new Line.N3-N6 bus1=node3 bus2=node6   linecode=Sym   units=kft length=0.01
+!line between node3 to node7 
+new Line.N3-N7 bus1=node3 bus2=node7   linecode=Sym   units=kft length=0.01
+!line between node3 to node8 
+new Line.N3-N8 bus1=node3 bus2=node8   linecode=Sym   units=kft length=0.01
+!line between node10 to node11 
+new Line.N10-N11 bus1=node10 bus2=node11   linecode=Sym   units=kft length=0.01
+!line between node11 to node12 
+new Line.N11-N12 bus1=node11 bus2=node12   linecode=Sym   units=kft length=0.01
+!line between node11 to node13 
+new Line.N11-N13 bus1=node11 bus2=node13   linecode=Sym   units=kft length=0.01
+!line between node11 to node14 
+new Line.N11-N14 bus1=node11 bus2=node14   linecode=Sym   units=kft length=0.01
+!line between node11 to node15 
+new Line.N11-N15 bus1=node11 bus2=node15   linecode=Sym   units=kft length=0.01
+!line between node11 to node16 
+new Line.N11-N16 bus1=node11 bus2=node16   linecode=Sym   units=kft length=0.01
+new Line.N19-N20 bus1=node19 bus2=node20   linecode=Sym   units=kft length=0.01
+new Line.N19-N21 bus1=node19 bus2=node21   linecode=Sym   units=kft length=0.01
+new Line.N20-N22 bus1=node20 bus2=node22   linecode=Sym   units=kft length=0.01
+new Line.N20-N23 bus1=node20 bus2=node23   linecode=Sym   units=kft length=0.01
+new Line.N20-N24 bus1=node20 bus2=node24   linecode=Sym   units=kft length=0.01
+new Line.N21-N25 bus1=node21 bus2=node25   linecode=Sym   units=kft length=0.01
+new Line.N21-N26 bus1=node21 bus2=node26   linecode=Sym   units=kft length=0.01
+new Line.N21-N27 bus1=node21 bus2=node27   linecode=Sym   units=kft length=0.01
+new Line.N21-N28 bus1=node21 bus2=node28   linecode=Sym   units=kft length=0.01
+new Line.N8-N20 bus1=node8 bus2=node20   linecode=Sym   units=kft length=0.01
+new Line.N11-N27 bus1=node11 bus2=node27   linecode=Sym   units=kft length=0.01
+
+
+
+
+
+
+!SWITCH DEFINITIONS 
+
+
+
+
+
+
+
+
+
+!CIRCUIT BREAKER DEFINITION
+! here circuit breaker is modeled as relay
+
+// breaker between node2 to node3, default and arbitary //parameters are used
+new Relay.breaker2-3 monitoredobj=Line.N2-N3 monitoredterm=1 switchedobj=Line.N2-N3 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// another breaker between node2 to node3
+new Relay.breaker2-3-2 monitoredobj=Line.N2-N3 monitoredterm=1 switchedobj=Line.N2-N3 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node3 to node4
+new Relay.breaker3-30 monitoredobj=Line.N3-N30 monitoredterm=1 switchedobj=Line.N3-N30 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-31 monitoredobj=Line.N3-N31 monitoredterm=1 switchedobj=Line.N3-31 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-32 monitoredobj=Line.N3-N32 monitoredterm=1 switchedobj=Line.N3-N32 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-33 monitoredobj=Line.N3-N33 monitoredterm=1 switchedobj=Line.N3-N33 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-34 monitoredobj=Line.N3-N34 monitoredterm=1 switchedobj=Line.N3-N34 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-35 monitoredobj=Line.N3-N35 monitoredterm=1 switchedobj=Line.N3-N35 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-36 monitoredobj=Line.N3-N36 monitoredterm=1 switchedobj=Line.N3-N36 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-37 monitoredobj=Line.N3-N37 monitoredterm=1 switchedobj=Line.N3-N37 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-38 monitoredobj=Line.N3-N38 monitoredterm=1 switchedobj=Line.N3-N38 switchedterm=1 delay=0.0  
+// breaker between node3 to node4
+new Relay.breaker3-39 monitoredobj=Line.N3-N39 monitoredterm=1 switchedobj=Line.N3-N39 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node3 to node5
+new Relay.breaker3-5 monitoredobj=Line.N3-N5 monitoredterm=1 switchedobj=Line.N3-N5 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node3 to node6
+new Relay.breaker3-6 monitoredobj=Line.N3-N6 monitoredterm=1 switchedobj=Line.N3-N6 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node3 to node7
+new Relay.breaker3-7 monitoredobj=Line.N3-N7 monitoredterm=1 switchedobj=Line.N3-N7 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node3 to node8
+new Relay.breaker3-8 monitoredobj=Line.N3-N8 monitoredterm=1 switchedobj=Line.N3-N8 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node10 to node11
+new Relay.breaker10-11 monitoredobj=Line.N10-N11 monitoredterm=1 switchedobj=Line.N10-N11 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// the another breaker between node10 to node11
+new Relay.breaker10-11-2 monitoredobj=Line.N10-N11 monitoredterm=1 switchedobj=Line.N10-N11 switchedterm=1 delay=0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node11 to node12
+new Relay.breaker11-12 monitoredobj=Line.N11-N12 monitoredterm=1 switchedobj=Line.N11-N12 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node11 to node13
+new Relay.breaker11-13 monitoredobj=Line.N11-N13 monitoredterm=1 switchedobj=Line.N11-N13 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node11 to node14
+new Relay.breaker11-14 monitoredobj=Line.N11-N14 monitoredterm=1 switchedobj=Line.N11-N14 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node11 to node15
+new Relay.breaker11-15 monitoredobj=Line.N11-N15 monitoredterm=1 switchedobj=Line.N11-N15 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node19 to node20
+new Relay.breaker19-20 monitoredobj=Line.N19-N20 monitoredterm=1 switchedobj=Line.N19-N20 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node19 to node21
+new Relay.breaker19-21 monitoredobj=Line.N19-N21 monitoredterm=1 switchedobj=Line.N19-N21 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node20 to node22
+new Relay.breaker20-22 monitoredobj=Line.N20-N22 monitoredterm=1 switchedobj=Line.N20-N22 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node20 to node23
+new Relay.breaker20-23 monitoredobj=Line.N20-N23 monitoredterm=1 switchedobj=Line.N20-N23 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node20 to node24
+new Relay.breaker20-24 monitoredobj=Line.N20-N24 monitoredterm=1 switchedobj=Line.N20-N24 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node21 to node25
+new Relay.breaker21-25 monitoredobj=Line.N21-N25 monitoredterm=1 switchedobj=Line.N21-N25 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node21 to node26
+new Relay.breaker21-26 monitoredobj=Line.N21-N26 monitoredterm=1 switchedobj=Line.N21-N26 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node21 to node27
+new Relay.breaker21-27 monitoredobj=Line.N21-N27 monitoredterm=1 switchedobj=Line.N21-N27 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+
+
+
+!FUSE DEFINITIONS
+
+!REACTOR DEFINITIONS
+
+!CAPACITOR DEFINITIONS
+
+!MONITOR
+New Monitor.M1 element=Transformer.Sub_tran1 Terminal=2 mode=32
+New Monitor.M2 element=Line.N3-N4 Terminal=1 mode=32
+New Monitor.M3 element=Transformer.Sub_tran2 Terminal=2 mode=32
+New Monitor.M4 element=Line.N11-N12 Terminal=1 mode=32
+New Monitor.M5 element=Line.N11-N16 Terminal=1 mode=32
+New Monitor.M6 element=Line.N11-N14 Terminal=1 mode=32
+New Monitor.M7 element=Transformer.Sub_tran3 Terminal=2 mode=32
+New Monitor.M8 element=Line.N19-N20 Terminal=1 mode=32
+New Monitor.M9 element=Line.N21-N27 Terminal=1 mode=32
+New Monitor.M10 element=Line.N21-N28 Terminal=1 mode=32
+
+!---------------------------------------------------------------------------------------------------------------------------------------------------
+!----------------Show some Results -----------------------------------------------------------------------------------------------------------------
+!---------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,118 @@
+
+! need to know the exact value
+!TRANSFORMER DEFINITION
+! Substation transformer
+New Transformer.Sub_tran phases=3 windings=2 buses=(SourceBus,node2.1.2.3.4)  conns=(delta,wye) kvs=(69,12.47) kvas=(30000, 30000) XHL=0.1 %loadloss=0.1 %noloadloss=0.12 basefreq=60 sub=Yes
+New Regcontrol.SubXFMR_Regulator  transformer=Sub_tran  winding=2   vreg=123.0 band=3 ptratio=60 ctprim=600 R=7 X=0 enabled=True delay=45
+! secondary side of the transformer is not grounded directly
+New Reactor.SubGround phases=1 bus1=node2.4 bus2=node2.0 R=0 X=0.3   ! x=0.3 is used as arbitary. 
+!Padmont distribution transformer
+New Transformer.XFM16-17  phases=3 wdg=1 bus=node16 kv=12.47 kva=75 conn=wye %r=.5 wdg=2 bus=node17 kv=0.12 kva=75 conn=wye %r=.5 XHL=2
+!LINE DEFINITION
+
+//line code: I choosed it arbitrarily from an openDSS demo 
+//example DG_Prot_Fdr.dss
+New LineCode.Sym nphases=1 r1=0.120079 x1=0.26706 c1=1.85556 Units=km basefreq=60 normamps=660 faultrate=0.1
+
+// line between node2 to node 3, here also parameters are chosen
+// arbitarily 
+new Line.N2-N3 bus1=node2 bus2=node3   linecode=Sym   units=kft length=0.01
+!line between node2 to node4 
+new Line.N2-N4 bus1=node2 bus2=node4   linecode=Sym   units=kft length=0.01
+!line between node3 to node5
+new Line.N3-N5 bus1=node3 bus2=node5   linecode=Sym   units=kft length=0.01
+!line between node3 to node6
+new Line.N3-N6 bus1=node3 bus2=node6   linecode=Sym   units=kft length=0.01
+!line between node3 to node7
+new Line.N3-N7 bus1=node3 bus2=node7   linecode=Sym   units=kft length=0.01
+!line between node3 to node8
+new Line.N3-N8 bus1=node3 bus2=node8   linecode=Sym   units=kft length=0.01
+!line between node4 to node9
+new Line.N4-N9 bus1=node4 bus2=node9   linecode=Sym   units=kft length=0.01
+!line between node4 to node10
+new Line.N4-N10 bus1=node4 bus2=node10  linecode=Sym   units=kft length=0.01
+!line between node4 to node11
+new Line.N4-N11 bus1=node4 bus2=node11  linecode=Sym   units=kft length=0.01
+!line between node4 to node12
+new Line.N4-N12 bus1=node4 bus2=node12  linecode=Sym   units=kft length=0.01
+!line between node4 to node13
+new Line.N4-N13 bus1=node4 bus2=node13  linecode=Sym   units=kft length=0.01
+new Line.N4-N16 bus1=node4 bus2=node16  linecode=Sym   units=kft length=0.01
+
+
+
+!SWITCH DEFINITIONS 
+!switch between node11 to node14
+new Line.N11-N14    Phases=3 Bus1=node11  Bus2=node14  Switch=y linecode=Sym   units=kft length=0.01 
+!switch between node11 to node15
+new Line.N11-N15    Phases=3 Bus1=node11  Bus2=node15  Switch=y  linecode=Sym   units=kft length=0.01 
+
+
+!BREAKER DEFINITION
+
+// breaker between node2 to node3, default and arbitary //parameters are used
+new Relay.breaker2-3 monitoredobj=Line.N2-N3 monitoredterm=1 switchedobj=Line.N2-N3 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3 
+// breaker between node2 to node4
+new Relay.breaker2-4 monitoredobj=Line.N2-N4 monitoredterm=1 switchedobj=Line.N2-N4 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3  GroundTrip=23e3 
+// breaker between node3 to node5
+new Relay.breaker3-5 monitoredobj=Line.N3-N5 monitoredterm=1 switchedobj=Line.N3-N5 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3 
+// breaker between node3 to node6
+new Relay.breaker3-6 monitoredobj=Line.N3-N6 monitoredterm=1 switchedobj=Line.N3-N6 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node3 to node7
+new Relay.breaker3-7 monitoredobj=Line.N3-N7 monitoredterm=1 switchedobj=Line.N3-N7 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node3 to node8
+new Relay.breaker3-8 monitoredobj=Line.N3-N8 monitoredterm=1 switchedobj=Line.N3-N8 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node4 to node9
+new Relay.breaker4-9 monitoredobj=Line.N4-N9 monitoredterm=1 switchedobj=Line.N4-N9 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node4 to node10
+new Relay.breaker4-10 monitoredobj=Line.N4-N10 monitoredterm=1 switchedobj=Line.N4-N10 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node4 to node11
+new Relay.breaker4-11 monitoredobj=Line.N4-N11 monitoredterm=1 switchedobj=Line.N4-N11 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node4 to node12
+new Relay.breaker4-12 monitoredobj=Line.N4-N12 monitoredterm=1 switchedobj=Line.N4-N12 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+// breaker between node4 to node13
+new Relay.breaker4-13 monitoredobj=Line.N4-N13 monitoredterm=1 switchedobj=Line.N4-N13 switchedterm=1 delay=0.0  
+~ PhaseTrip=23e3 GroundTrip=23e3
+
+
+!FUSE DEFINITION
+
+!REACTOR DEFINITION
+
+!CAPACITOR DEFINITIONS
+New Capacitor.Cap14 Bus1=node14 phases=3  kVAR=5400 kV=12.47 
+New Capacitor.Cap15 Bus1=node15 phases=3 kVAR=5400 kV=12.47
+New CapControl.Ctr-Cap14 element=Line.N11-N14 Capacitor=Cap14
+~ Type=Voltage ON=12.42e3 OFF=15e3 Delay=10
+New CapControl.Ctr-Cap15 element=Line.N11-N15 Capacitor=Cap15
+~ Type=Voltage ON=12.42e3 OFF=15e3 Delay=10
+
+!MONITOR
+New Monitor.M1 element=Transformer.Sub_tran Terminal=2 mode=32
+New Monitor.M2 element=Line.N3-N8 Terminal=1 mode=32
+New Monitor.M3 element=Line.N4-N16 Terminal=1 mode=32
+New Monitor.M4 element=Line.N4-N12 Terminal=1 mode=32
+
+Show Voltages LN Nodes
+// Show Currents Elem
+// Show Powers kVA Elem
+
+
+
+
+
+
+
+
+
+

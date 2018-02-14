@@ -1,0 +1,9 @@
+Clear
+
+new circuit.Substation_S2 basekv=69 pu=1.0001 phases=3 bus1=SourceBus  MVAsc3=30000 MVAsc1=30000    ! stiffen the source to approximate inf source
+Redirect substation.dss
+
+Set Voltagebases=[69, 12.47]
+Calcvoltagebases 
+
+Buscoords BusCoord.dss
