@@ -63,3 +63,6 @@ target/
 
 # test outputs
 tests/outputs/
+
+# stack runs
+**/*run_dir*
