@@ -1,6 +1,6 @@
 {
     "name": "DiTTo Test Stack Dataset3",
-    "uuid": "8fd12b7e-0a54-4ae7-8949-f2dc92bcedac",
+    "uuid": "3859a474-3186-490b-a221-b32fde2a9033",
     "version": "v0.1.0",
     "run_dir": null,
     "model": null,
@@ -9,11 +9,11 @@
             "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
             "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\from_opendss",
             "version": "v0.1.0",
-            "checksum": "b2e6da11f3ba1520e5f3f499921d2f62",
+            "checksum": "b46647e9a7a1e71a0e881c5e985f61c9",
             "args": [
                 {
                     "name": "opendss_model",
-                    "value": "mixed_humid\\industrial\\master.dss",
+                    "value": "mixed_humid\\industrial\\OpenDSS\\master.dss",
                     "description": "Path to OpenDSS model to be loaded",
                     "parser": "<class 'str'>",
                     "choices": null,

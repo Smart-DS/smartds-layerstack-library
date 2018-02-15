@@ -45,6 +45,11 @@ class FromOpenDSS(LayerBase):
         if base_dir and (not os.path.exists(bus_coords)):
             bus_coords = os.path.join(base_dir,bus_coords)
 
+        if not os.path.exists(opendss_model):
+            raise ValueError("No opendss_model file exists at {}".format(opendss_model))
+        if not os.path.exists(bus_coords):
+            raise ValueError("No bus_coords model file exists at {}".format(bus_coords))
+
         base_model = Store()
         reader = OpenDSSReader()
         reader.build_opendssdirect(opendss_model)

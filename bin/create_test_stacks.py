@@ -44,7 +44,7 @@ def create_test_stack(dataset_dir,dataset_name='dataset3'):
 
     if dataset_name == 'dataset3':
         from_opendss = stack[0]
-        from_opendss.args[0] = os.path.join('mixed_humid','industrial','master.dss')
+        from_opendss.args[0] = os.path.join('mixed_humid','industrial','OpenDSS','master.dss')
         from_opendss.args[1] = os.path.join('mixed_humid','industrial','OpenDSS','buscoords.dss')
         from_opendss.kwargs['base_dir'] = dataset_dir
 
