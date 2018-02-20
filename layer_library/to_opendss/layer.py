@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+import os
 from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
@@ -34,10 +35,11 @@ class ToOpenDSS(LayerBase):
 
     @classmethod
     def apply(cls, stack, output_path, base_dir=None):
+        opendss_model = output_path
         if base_dir and (not os.path.exists(output_path)):
             opendss_model = os.path.join(base_dir,output_path)
 
-        writer = Writer(linecodes_flag=True, output_path=output_path)
+        writer = Writer(linecodes_flag=True, output_path=opendss_model)
         writer.write(stack.model, verbose=True)
         return True
 
