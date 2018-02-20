@@ -1,6 +1,6 @@
 {
-    "name": "DiTTo Test Stack Dataset3",
-    "uuid": "34a85e16-3260-4e55-95e3-08e1de0f1a99",
+    "name": "DiTTo Test Stack Substations Dataset3",
+    "uuid": "6dba47d5-3010-49a8-afe4-2266cbb00871",
     "version": "v0.1.0",
     "run_dir": null,
     "model": null,
@@ -90,70 +90,6 @@
                     "value": null,
                     "default": null,
                     "description": "Defaults to this layer's resources folder",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                }
-            }
-        },
-        "Add Timeseries Load": {
-            "uuid": "51f48260-a314-4dfb-aa5c-b64b98a219c8",
-            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_timeseries_load",
-            "version": "v0.1.0",
-            "checksum": "f8e01d086cc2433b0b8d413d13f34430",
-            "args": [
-                {
-                    "name": "load_path",
-                    "value": "mixed_humid\\industrial\\consumers&street_map\\customers_extended.csv",
-                    "description": "",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                }
-            ],
-            "kwargs": {
-                "base_dir": {
-                    "value": "C:/projects/smartds-dataset3/",
-                    "default": null,
-                    "description": "Base directory for argument paths.",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                }
-            }
-        },
-        "Scale Loads": {
-            "uuid": "9aa14dff-f1c1-4c16-abc0-d6ff2ee9606c",
-            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\scale_loads",
-            "version": "v0.1.0",
-            "checksum": "c14d3502de3ff9ab331621a8442136d5",
-            "args": [],
-            "kwargs": {
-                "random_percent": {
-                    "value": null,
-                    "default": null,
-                    "description": "",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                },
-                "scale_factor": {
-                    "value": 1.1,
-                    "default": null,
-                    "description": "",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                },
-                "timeseries_path": {
-                    "value": null,
-                    "default": null,
-                    "description": "",
                     "parser": "None",
                     "choices": null,
                     "nargs": null,

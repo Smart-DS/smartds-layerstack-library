@@ -1,0 +1,83 @@
+{
+    "name": "DiTTo Test Stack Basic Dataset3",
+    "uuid": "34e50336-d9b3-4745-bbc6-7396b4061916",
+    "version": "v0.1.0",
+    "run_dir": null,
+    "model": null,
+    "layers": {
+        "From OpenDSS": {
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\from_opendss",
+            "version": "v0.1.0",
+            "checksum": "b46647e9a7a1e71a0e881c5e985f61c9",
+            "args": [
+                {
+                    "name": "opendss_model",
+                    "value": "mixed_humid\\industrial\\OpenDSS\\master.dss",
+                    "description": "Path to OpenDSS model to be loaded",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "bus_coords",
+                    "value": "mixed_humid\\industrial\\OpenDSS\\buscoords.dss",
+                    "description": "Bus Coords for OpenDSS Model",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/smartds-dataset3/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "read_power_source": {
+                    "value": true,
+                    "default": true,
+                    "description": "",
+                    "parser": "<class 'bool'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        "To OpenDSS": {
+            "uuid": "293a0dd3-4065-4602-bb91-919c2001d47d",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\to_opendss",
+            "version": "v0.1.0",
+            "checksum": "76e552757a2144d46c9ce7cbb67f442a",
+            "args": [
+                {
+                    "name": "output_path",
+                    "value": "post_process\\mixed_humid\\industrial",
+                    "description": "Path to output model to",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/smartds-dataset3/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        }
+    }
+}
