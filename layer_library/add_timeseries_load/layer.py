@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+import os
 from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
@@ -36,11 +37,18 @@ class AddTimeseriesLoad(DiTToLayerBase):
     @classmethod
     def apply(cls, stack, model, load_path, base_dir=None):
         if base_dir and (not os.path.exists(load_path)):
-            opendss_model = os.path.join(base_dir,load_path)
+            load_path = os.path.join(base_dir,load_path)
+
+        dtypes = {'Load.positions[0].elevation': float,
+                  'Load.rooftop_area': float,
+                  'Load.num_levels': float,
+                  'Load.num_users': float,
+                  'Load.timeseries[0].interval': float,
+                  'Load.timeseries[0].loaded': int}
 
         loads = Store()
         reader = CsvReader()
-        reader.parse(loads, load_path)
+        reader.parse(loads, load_path, dtypes=dtypes)
         modifier = Modifier()
         intermediate_model = modifier.merge(model, loads)
         return intermediate_model

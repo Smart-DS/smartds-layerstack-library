@@ -6,7 +6,7 @@ import os
 import shutil
 from uuid import UUID
 
-from layerstack.args import Arg, Kwarg
+from layerstack.args import Arg, Kwarg, ArgMode
 from layerstack.layer import Layer
 from layerstack.stack import Stack
 from ditto.dittolayers import DiTToLayerBase
@@ -60,10 +60,11 @@ class AddSubstations(DiTToLayerBase):
 
     @classmethod
     def apply(cls, stack, model, feeder_file, output_substation_folder, base_dir=None, substation_folder=None):
+        logger.debug("Starting add_substations")
         if base_dir and (not os.path.exists(feeder_file)):
-            opendss_model = os.path.join(base_dir,feeder_file)
+            feeder_file = os.path.join(base_dir,feeder_file)
         if base_dir and (not os.path.exists(output_substation_folder)):
-            bus_coords = os.path.join(base_dir,output_substation_folder)
+            output_substation_folder = os.path.join(base_dir,output_substation_folder)
 
         if substation_folder == None:
             substation_folder = os.path.join(os.path.dirname(__file__),'resources')
@@ -83,7 +84,9 @@ class AddSubstations(DiTToLayerBase):
             logger.error(msg)
             raise Exception(msg)
 
-        model.build_networkx() # Used to remove internal edges in substation
+        logger.debug("Building the model network")
+
+        model.build_networkx(source=None) # Used to remove internal edges in substation
         df = pd.read_csv(feeder_file,' ') #The RNM file specifying which feeders belong to which substation
         substations = {}
         for index,row in df.iterrows():
@@ -101,9 +104,13 @@ class AddSubstations(DiTToLayerBase):
             else:
                 substations[substation]=set([adjusted_feeder])
 
+        logger.debug("Building to_delete and modifier")
+
         to_delete = Store()
         modifier = Modifier()
         for sub in substations: #sub is the name of the substation and substations[sub] is a set of all the connected feeders
+            logger.debug("Processing substation {}. There are {} in total.".format(sub,len(substations)))
+
             all_nodes = []
             subname = sub.replace('.','')
             subname = subname.lower()
@@ -199,19 +206,26 @@ class AddSubstations(DiTToLayerBase):
             if not_allocated:
                 raise('Substation too small. %d feeders needed.  Exiting...'%(num_model_feeders))
 
+        logger.debug("Creating reduced and final models")
+
         reduced_model = modifier.delete(model, to_delete) 
         final_model = reduced_model
-        for sub_folder in os.listdir(output_substation_folder):
-            sub_master = os.path.join(output_substation_folder,sub_folder,'master.dss')
-            sub_bus_coords = os.path.join(output_substation_folder, sub_folder, 'Buscoords.dss')
-            stack_sub = Stack([Layer(from_opendss_layer_dir)],run_dir=stack.run_dir)
-            stack_sub.layers[0].args[0].value = sub_master
-            stack_sub.layers[0].args[1].value = sub_bus_coords
-            stack_sub.layers[0].kwargs['read_power_source'].value = False
-            stack_sub.run(archive=False)
-            substation_model = stack_sub.model
-
-            final_model = modifier.add(final_model, substation_model)
+        from_opendss_layer = Layer(from_opendss_layer_dir)
+        from_opendss_layer.args.mode = ArgMode.USE
+        from_opendss_layer.kwargs.mode = ArgMode.USE
+        for p, dirnames, filenames in os.walk(output_substation_folder):
+            for sub_folder in dirnames:
+                logger.debug("Processing output_substation_folder/{}".format(sub_folder))
+                from_opendss_layer.args[0] = os.path.join(output_substation_folder,sub_folder,'master.dss')
+                from_opendss_layer.args[1] = os.path.join(output_substation_folder, sub_folder, 'Buscoords.dss')
+                from_opendss_layer.kwargs['read_power_source'] = False
+                s = Stack()
+                from_opendss_layer.run_layer(s)
+                substation_model = s.model
+                logger.debug("Adding model from {} to final_model".format(sub_folder))
+                final_model = modifier.add(final_model, substation_model)
+            break
+        logger.debug("Returning {!r}".format(final_model))
         return final_model
 
 

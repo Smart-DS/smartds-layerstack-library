@@ -54,7 +54,7 @@ class FromOpenDSS(LayerBase):
         reader = OpenDSSReader()
         reader.build_opendssdirect(opendss_model)
         reader.set_dss_file_names({'Nodes': bus_coords})
-        reader.parse(base_model, verbose=True, read_power_source=read_power_source)
+        reader.parse(base_model, read_power_source=read_power_source)
         base_model.set_names()
         stack.model = base_model
         return True

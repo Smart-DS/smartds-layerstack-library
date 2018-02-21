@@ -35,12 +35,12 @@ class ToOpenDSS(LayerBase):
 
     @classmethod
     def apply(cls, stack, output_path, base_dir=None):
-        opendss_model = output_path
         if base_dir and (not os.path.exists(output_path)):
-            opendss_model = os.path.join(base_dir,output_path)
+            output_path = os.path.join(base_dir,output_path)
 
-        writer = Writer(linecodes_flag=True, output_path=opendss_model)
-        writer.write(stack.model, verbose=True)
+        writer = Writer(linecodes_flag=True, output_path=output_path)
+        logger.debug("Writing {!r} out to {!r}.".format(stack.model,output_path))
+        writer.write(stack.model, verbose=False)
         return True
 
 
