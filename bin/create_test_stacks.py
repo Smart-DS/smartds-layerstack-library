@@ -89,6 +89,14 @@ def create_test_stack_substations(dataset_dir,dataset_name='dataset3'):
 
 
 def create_test_stack(dataset_dir,dataset_name='dataset3'):
+    """
+    Saves a DiTTo test stack to the stack_library.
+
+    :param dataset_dir: Directory where the Smart-DS dataset resides
+    :type dataset_dir: str
+    :param dataset_name: Name of the Smart-DS dataset
+    :type dataset_name: str
+    """
     stack = Stack(name='DiTTo Test Stack {}'.format(dataset_name.title()))
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
     stack.append(Layer(os.path.join(layer_library_dir,'add_substations')))
@@ -128,4 +136,3 @@ def create_test_stack(dataset_dir,dataset_name='dataset3'):
         raise NotImplementedError("Unknown dataset_name {!r}".format(dataset_name))
 
     stack.save(os.path.join(stack_library_dir,stack.suggested_filename))
-    
