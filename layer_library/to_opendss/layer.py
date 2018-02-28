@@ -8,7 +8,7 @@ from uuid import UUID
 from layerstack.args import Arg, Kwarg
 from layerstack.layer import LayerBase
 
-from ditto.writers.opendss.write import writer as Writer
+from ditto.writers.opendss.write import Writer as Writer
 
 logger = logging.getLogger('layerstack.layers.ToOpenDSS')
 
