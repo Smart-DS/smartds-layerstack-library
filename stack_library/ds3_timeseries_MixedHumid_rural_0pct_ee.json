@@ -1,0 +1,193 @@
+{
+    "name": "Dataset3 Timeseries MixedHumid, rural, 0 Percent Energy Efficient",
+    "uuid": "35c26b4b-c649-41f8-841e-d579894d1ed0",
+    "version": "v0.1.0",
+    "run_dir": null,
+    "model": null,
+    "layers": {
+        "From OpenDSS": {
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\from_opendss",
+            "version": "v0.1.0",
+            "checksum": "b35181c0f598a2b67f55d12751b6b966",
+            "args": [
+                {
+                    "name": "opendss_model",
+                    "value": "MixedHumid\\rural\\OpenDSS\\master.dss",
+                    "description": "Path to OpenDSS model to be loaded",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "bus_coords",
+                    "value": "MixedHumid\\rural\\OpenDSS\\buscoords.dss",
+                    "description": "Bus Coords for OpenDSS Model",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/dataset3-raw/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "read_power_source": {
+                    "value": true,
+                    "default": true,
+                    "description": "",
+                    "parser": "<class 'bool'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        "Add Substations": {
+            "uuid": "3a5c2446-2836-4744-8a5f-0aa187f6ea75",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_substations",
+            "version": "v0.1.0",
+            "checksum": "ebe5ef0cf3bf2797a130b260fd4ae43e",
+            "args": [
+                {
+                    "name": "feeder_file",
+                    "value": "MixedHumid\\rural\\feeders\\feeders.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "output_substation_folder",
+                    "value": "post_process\\modified_substations",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/dataset3-raw/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "substation_folder": {
+                    "value": null,
+                    "default": null,
+                    "description": "Defaults to this layer's resources folder",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        "Add Timeseries Load": {
+            "uuid": "51f48260-a314-4dfb-aa5c-b64b98a219c8",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_timeseries_load",
+            "version": "v0.1.0",
+            "checksum": "66002402a9a7bd35651e35d37fdf626f",
+            "args": [
+                {
+                    "name": "load_path",
+                    "value": "MixedHumid\\rural\\Inputs\\customers_extended.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/dataset3-raw/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        "Scale Loads": {
+            "uuid": "9aa14dff-f1c1-4c16-abc0-d6ff2ee9606c",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\scale_loads",
+            "version": "v0.1.0",
+            "checksum": "c14d3502de3ff9ab331621a8442136d5",
+            "args": [],
+            "kwargs": {
+                "random_percent": {
+                    "value": null,
+                    "default": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "scale_factor": {
+                    "value": 1.0,
+                    "default": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "timeseries_path": {
+                    "value": null,
+                    "default": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        "To OpenDSS": {
+            "uuid": "293a0dd3-4065-4602-bb91-919c2001d47d",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\to_opendss",
+            "version": "v0.1.0",
+            "checksum": "71d0ad2ff931dbe47bcc1b2b5429de09",
+            "args": [
+                {
+                    "name": "output_path",
+                    "value": ".",
+                    "description": "Path to output model to",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": null,
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        }
+    }
+}

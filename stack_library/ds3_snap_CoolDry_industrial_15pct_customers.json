@@ -1,0 +1,221 @@
+{
+    "name": "Dataset3 Snapshot CoolDry, industrial, 15 Percent of Customers",
+    "uuid": "e5b22172-ce29-41c5-b692-00b89cf4b774",
+    "version": "v0.1.0",
+    "run_dir": null,
+    "model": null,
+    "layers": {
+        "From OpenDSS": {
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\from_opendss",
+            "version": "v0.1.0",
+            "checksum": "b35181c0f598a2b67f55d12751b6b966",
+            "args": [
+                {
+                    "name": "opendss_model",
+                    "value": "CoolDry\\industrial\\OpenDSS\\master.dss",
+                    "description": "Path to OpenDSS model to be loaded",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "bus_coords",
+                    "value": "CoolDry\\industrial\\OpenDSS\\buscoords.dss",
+                    "description": "Bus Coords for OpenDSS Model",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "C:/projects/dataset3-raw/",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "read_power_source": {
+                    "value": true,
+                    "default": true,
+                    "description": "",
+                    "parser": "<class 'bool'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        "create_placement": {
+            "uuid": "a9440343-3a0b-4922-9d05-81af35b228da",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\create_placement",
+            "version": "v0.1.0",
+            "checksum": "541014180f1fa13ee6ad2edda5e74693",
+            "args": [
+                {
+                    "name": "feeders",
+                    "value": "all",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "equipment_type",
+                    "value": "ditto.models.load.Load",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "selection",
+                    "value": [
+                        "Random",
+                        15
+                    ],
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "seed",
+                    "value": 1,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "placement_folder",
+                    "value": "C:\\projects\\smartds-layerstack-library\\placement_library",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "file_name",
+                    "value": "all_Load_Random-15_1.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {}
+        },
+        "add_PV": {
+            "uuid": "004096a7-c5b8-4b11-9b74-2d449a48d16b",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_pv",
+            "version": "v0.1.0",
+            "checksum": "04e231ca4c1354ba5c38991a9f448d7e",
+            "args": [
+                {
+                    "name": "placement",
+                    "value": "C:\\projects\\smartds-layerstack-library\\placement_library\\dataset3\\CoolDry\\industrial\\all_Load_Random-15_1.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "rated_power",
+                    "value": 10,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "power_factor",
+                    "value": 1.0,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {}
+        },
+        "add_storage": {
+            "uuid": "ceae532c-7fce-4674-b7aa-eaa69e219c9c",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\add_storage",
+            "version": "v0.1.0",
+            "checksum": "3480f40778c1d39d08ff99c7e84ccd31",
+            "args": [
+                {
+                    "name": "placement",
+                    "value": "C:\\projects\\smartds-layerstack-library\\placement_library\\dataset3\\CoolDry\\industrial\\all_Load_Random-15_1.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "rated_power",
+                    "value": 8,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "rated_kWh",
+                    "value": 16,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {}
+        },
+        "To OpenDSS": {
+            "uuid": "293a0dd3-4065-4602-bb91-919c2001d47d",
+            "layer_dir": "C:\\projects\\smartds-layerstack-library\\layer_library\\to_opendss",
+            "version": "v0.1.0",
+            "checksum": "71d0ad2ff931dbe47bcc1b2b5429de09",
+            "args": [
+                {
+                    "name": "output_path",
+                    "value": ".",
+                    "description": "Path to output model to",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": null,
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        }
+    }
+}
