@@ -6,30 +6,10 @@ logger = logging.getLogger(__name__)
 from layerstack.args import ArgMode
 from layerstack.layer import Layer
 from layerstack.stack import Stack
-
-repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # This is in bin so need to go one level up
-layer_library_dir = os.path.join(repo_dir,'layer_library')
-stack_library_dir = os.path.join(repo_dir,'stack_library')
-placement_library_dir = os.path.join(repo_dir,'placement_library')
-
-
-def update_stack_base_dir(stack_name,new_base_dir):
-    """
-    In this repo, base_dir typically points to a Smart-DS dataset directory. To
-    run these stacks on different systems, update them to point to the base_dir
-    as it occurs on your system.
-    """
-    stack_path = os.path.join(stack_library_dir,stack_name)
-    stack = Stack.load(stack_path)
-    for layer in stack:
-        layer.kwargs.mode = ArgMode.USE
-        if 'base_dir' in layer.kwargs:
-            layer.kwargs['base_dir'] = new_base_dir
-    stack.save(stack_path)
+from .helpers import layer_library_dir, stack_library_dir, placement_library_dir
 
 
 def create_test_stack_basic(dataset_dir,dataset_name='dataset3'):
-    global placement_library_dir, layer_library_dir, stack_library_dir,repo_dir
     stack = Stack(name='DiTTo Test Stack Basic {}'.format(dataset_name.title()))
 
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
@@ -58,7 +38,6 @@ def create_test_stack_basic(dataset_dir,dataset_name='dataset3'):
 
 
 def create_test_stack_substations(dataset_dir,dataset_name='dataset3'):
-    global placement_library_dir, layer_library_dir, stack_library_dir,repo_dir
     stack = Stack(name='DiTTo Test Stack Substations {}'.format(dataset_name.title()))
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
     stack.append(Layer(os.path.join(layer_library_dir,'add_substations')))
@@ -92,7 +71,6 @@ def create_test_stack_substations(dataset_dir,dataset_name='dataset3'):
     
 
 def create_test_stack_DERs(dataset_dir,dataset_name='dataset3'):
-    global placement_library_dir, layer_library_dir, stack_library_dir,repo_dir
     stack = Stack(name='DiTTo Test Stack DERs {}'.format(dataset_name.title()))
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
     stack.append(Layer(os.path.join(layer_library_dir,'create_placement')))
@@ -158,7 +136,6 @@ def create_test_stack(dataset_dir,dataset_name='dataset3'):
     :param dataset_name: Name of the Smart-DS dataset
     :type dataset_name: str
     """
-    global placement_library_dir, layer_library_dir, stack_library_dir,repo_dir
     stack = Stack(name='DiTTo Test Stack {}'.format(dataset_name.title()))
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
     stack.append(Layer(os.path.join(layer_library_dir,'add_substations')))
