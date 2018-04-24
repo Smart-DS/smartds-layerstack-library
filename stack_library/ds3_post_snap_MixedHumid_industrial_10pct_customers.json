@@ -1,0 +1,249 @@
+{
+    "name": "Dataset3 Postprocessed Snapshot MixedHumid, industrial, 10 Percent of Customers",
+    "uuid": "76ce04eb-8c0c-4d5f-9dd9-aa5ed0687d84",
+    "version": "v0.1.0",
+    "run_dir": null,
+    "model": null,
+    "layers": {
+        "From Cyme": {
+            "checksum": "d854c5e787b1dfc61ad1c1b0e1bc5063",
+            "args": [
+                {
+                    "name": "cyme_model",
+                    "value": "MixedHumid\\industrial",
+                    "description": "Path to Cyme model to be loaded",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "..\\..\\dataset_3",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "version": "v0.1.0",
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
+            "layer_dir": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\layer_library\\from_cyme"
+        },
+        "Add Substations": {
+            "checksum": "a036213bb852b04c7722621536c89edf",
+            "args": [
+                {
+                    "name": "feeder_file",
+                    "value": "MixedHumid\\industrial\\feeders.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "output_substation_folder",
+                    "value": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "..\\..\\dataset_3",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "substation_folder": {
+                    "value": null,
+                    "default": null,
+                    "description": "Defaults to this layer's resources folder",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "version": "v0.1.0",
+            "uuid": "3a5c2446-2836-4744-8a5f-0aa187f6ea75",
+            "layer_dir": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\layer_library\\add_cyme_substations"
+        },
+        "create_placement": {
+            "checksum": "541014180f1fa13ee6ad2edda5e74693",
+            "args": [
+                {
+                    "name": "feeders",
+                    "value": "all",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "equipment_type",
+                    "value": "ditto.models.load.Load",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "selection",
+                    "value": [
+                        "Random",
+                        10
+                    ],
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "seed",
+                    "value": 1,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "placement_folder",
+                    "value": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\placement_library",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "file_name",
+                    "value": "all_Load_Random-10_1.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {},
+            "version": "v0.1.0",
+            "uuid": "a9440343-3a0b-4922-9d05-81af35b228da",
+            "layer_dir": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\layer_library\\create_placement"
+        },
+        "add_PV": {
+            "checksum": "04e231ca4c1354ba5c38991a9f448d7e",
+            "args": [
+                {
+                    "name": "placement",
+                    "value": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\placement_library\\dataset3\\MixedHumid\\industrial\\all_Load_Random-10_1.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "rated_power",
+                    "value": 10,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "power_factor",
+                    "value": 1.0,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {},
+            "version": "v0.1.0",
+            "uuid": "004096a7-c5b8-4b11-9b74-2d449a48d16b",
+            "layer_dir": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\layer_library\\add_pv"
+        },
+        "add_storage": {
+            "checksum": "3480f40778c1d39d08ff99c7e84ccd31",
+            "args": [
+                {
+                    "name": "placement",
+                    "value": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\placement_library\\dataset3\\MixedHumid\\industrial\\all_Load_Random-10_1.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "rated_power",
+                    "value": 8,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "rated_kWh",
+                    "value": 16,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {},
+            "version": "v0.1.0",
+            "uuid": "ceae532c-7fce-4674-b7aa-eaa69e219c9c",
+            "layer_dir": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\layer_library\\add_storage"
+        },
+        "To OpenDSS": {
+            "checksum": "71d0ad2ff931dbe47bcc1b2b5429de09",
+            "args": [
+                {
+                    "name": "output_path",
+                    "value": ".",
+                    "description": "Path to output model to",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": null,
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "version": "v0.1.0",
+            "uuid": "293a0dd3-4065-4602-bb91-919c2001d47d",
+            "layer_dir": "C:\\Users\\telgindy\\Documents\\ditto\\public_facing\\smartds-layerstack-library\\layer_library\\to_opendss"
+        }
+    }
+}

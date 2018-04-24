@@ -13,7 +13,7 @@ from ditto.dittolayers import DiTToLayerBase
 
 from ditto.store import Store
 from ditto.readers.csv.read import reader as CsvReader
-from ditto.readers.cyme.read import reader as CymeReader
+from ditto.readers.cyme.read import Reader as CymeReader
 from ditto.modify.modify import Modifier
 from ditto.modify.system_structure import system_structure_modifier
 from ditto.models.node import Node

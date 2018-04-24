@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum
 import logging
 import os
 
@@ -16,13 +16,14 @@ def dataset3_snapshot(dataset_dir,
                       climate_zone='MixedHumid',
                       feeder_type='industrial',
                       pct_customers=10):
-    stack_name = "Dataset3 Snapshot {}, {}, {} Percent of Customers".format(
+    stack_name = "Dataset3 Postprocessed Snapshot {}, {}, {} Percent of Customers".format(
         climate_zone,feeder_type,pct_customers)
-    short_name = 'ds3_snap_{}_{}_{}pct_customers'.format(
+    short_name = 'ds3_post_snap_{}_{}_{}pct_customers'.format(
         climate_zone,feeder_type,pct_customers)
 
     stack = Stack(name=stack_name)
-    stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
+    stack.append(Layer(os.path.join(layer_library_dir,'from_cyme')))
+    stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
     stack.append(Layer(os.path.join(layer_library_dir,'create_placement')))
     stack.append(Layer(os.path.join(layer_library_dir,'add_pv')))
     stack.append(Layer(os.path.join(layer_library_dir,'add_storage')))
@@ -32,10 +33,14 @@ def dataset3_snapshot(dataset_dir,
         layer.args.mode = ArgMode.USE
         layer.kwargs.mode = ArgMode.USE
 
-    from_opendss = stack[0]
-    from_opendss.args[0] = os.path.join(climate_zone,feeder_type,'OpenDSS','master.dss')
-    from_opendss.args[1] = os.path.join(climate_zone,feeder_type,'OpenDSS','buscoords.dss')
-    from_opendss.kwargs['base_dir'] = dataset_dir
+    from_cyme = stack[0]
+    from_cyme.args[0] = os.path.join(climate_zone,feeder_type)
+    from_cyme.kwargs['base_dir'] = dataset_dir
+
+
+    add_substations = stack[1]
+    add_substations.args[0] = os.path.join(climate_zone,feeder_type,'feeders.txt')
+    add_substations.kwargs['base_dir'] = dataset_dir
 
     feeders = 'all'
     equipment_type = 'ditto.models.load.Load'
@@ -44,7 +49,7 @@ def dataset3_snapshot(dataset_dir,
     placement_folder = os.path.join(placement_library_dir,'dataset3',climate_zone,feeder_type)
     file_name = feeders+'_'+equipment_type.split('.')[-1]+'_'+selection[0]+'-'+str(selection[1])+'_'+str(seed)+'.txt'
     
-    create_placement = stack[1]
+    create_placement = stack[2]
     create_placement.args[0] = feeders
     create_placement.args[1] = equipment_type
     create_placement.args[2] = selection
@@ -52,17 +57,17 @@ def dataset3_snapshot(dataset_dir,
     create_placement.args[4] = placement_library_dir
     create_placement.args[5] = file_name
 
-    add_pv = stack[2]
+    add_pv = stack[3]
     add_pv.args[0] = os.path.join(placement_folder,file_name) # placement
     add_pv.args[1] = 10                                       # rated power
     add_pv.args[2] = 1.0                                      # power factor
 
-    add_storage = stack[3]
+    add_storage = stack[4]
     add_storage.args[0] = os.path.join(placement_folder,file_name) # placement
     add_storage.args[1] = 8                                        # rated power
     add_storage.args[2] = 16                                       # rated kWh
 
-    to_opendss = stack[4]
+    to_opendss = stack[5]
     to_opendss.args[0] = '.' # output to run directory
 
     stack.save(os.path.join(stack_library_dir,short_name + '.json'))
@@ -109,3 +114,12 @@ def dataset3_timeseries(dataset_dir,
     to_opendss.args[0] = '.'
 
     stack.save(os.path.join(stack_library_dir,short_name + '.json'))
+
+def main():
+    dataset3_snapshot(os.path.join('..','..','dataset_3'))
+    from layerstack.stack import Stack
+    s = Stack.load('../stack_library/ds3_post_snap_MixedHumid_industrial_10pct_customers.json')
+    s.run_dir = '.'
+    s.run()
+if __name__ =='__main__':
+    main()
