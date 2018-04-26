@@ -4,6 +4,7 @@ from builtins import super
 import logging
 import os
 import shutil
+import numpy as np
 from uuid import UUID
 
 from layerstack.args import Arg, Kwarg, ArgMode
@@ -25,10 +26,12 @@ from ditto.models.wire import Wire
 from ditto.models.capacitor import Capacitor
 from ditto.models.phase_capacitor import PhaseCapacitor
 from ditto.models.powertransformer import PowerTransformer
+from ditto.models.power_source import PowerSource
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.timeseries import Timeseries
 from ditto.models.position import Position
+from ditto.models.feeder_metadata import Feeder_metadata
 
 import pandas as pd
 
@@ -64,13 +67,12 @@ class AddSubstations(DiTToLayerBase):
         logger.debug("Starting add_cyme_substations")
         if base_dir and (not os.path.exists(feeder_file)):
             feeder_file = os.path.join(base_dir,feeder_file)
-        if base_dir and (not os.path.exists(output_substation_folder)):
-            output_substation_folder = os.path.join(base_dir,output_substation_folder)
 
         if substation_folder == None:
             substation_folder = os.path.join(os.path.dirname(__file__),'resources')
+        elif base_dir and (not os.path.exists(output_substation_folder)):
+            output_substation_folder = os.path.join(base_dir,output_substation_folder)
 
-        # Need to load OpenDSS files later. Make sure we can find the required layer.
         from_cyme_layer_dir = None
         # first look in stack
         for layer in stack:
@@ -87,40 +89,83 @@ class AddSubstations(DiTToLayerBase):
 
         logger.debug("Building the model network")
 
-        model.build_networkx(source=None) # Used to remove internal edges in substation
+        srcs = []
+        for obj in model.models:
+            if isinstance(obj, PowerSource) and obj.is_sourcebus == 1:
+                srcs.append(obj.name)
+        srcs = np.unique(srcs)
+        if len(srcs)==0:
+            raise ValueError('No PowerSource object found in the model.')
+        elif len(srcs)>1:
+            raise ValueError('Mupltiple sourcebus found: {srcs}'.format(srcs=srcs))
+        else:
+            source = srcs[0]
+        logger.debug("Identifying the Source Bus as {src}".format(src=source))
+	
+
+
+        ''' 
+           Substation nodes have the form ***_1247. 
+           The boundary of the substation is ***_69 on the high side.
+           The boundary of the substation in a node with no % on the low side
+           A feeder defines these boundaries.
+           e.g. IHS0_1247->IDT706 is a substation of IHS0_1247 with a boundary of IDT706
+           We remove everything between the high and low boundaries when updating a substation
+        '''
+
+        model.build_networkx(source) # Used to remove internal edges in substation
         df = pd.read_csv(feeder_file,' ') #The RNM file specifying which feeders belong to which substation
-        substations = {}
+        substation_boundaries_low= {}
+        substation_boundaries_high = {}
+        substation_transformers = {}
         for index,row in df.iterrows():
-            substation = row.iloc[1]
-            feeder = row.iloc[2]
+            substation = row.iloc[1].lower()
+            feeder = row.iloc[2].lower()
+            transformer = row.iloc[3].lower()
+            transformer = 'tr'+transformer[6:] #The prefix is slightly different with the feeder.txt file
             buses = feeder.split('->')
-            bus1 = buses[1]
-            bus2 = buses[0]
-            if bus1[0:4].lower() == 'ucmv': # Not swapped if MV load connected to it
-                bus1 = buses[0]
-                bus2 = buses[1]
-            adjusted_feeder = bus1+'->'+bus2 #In the feeder file bus1 and bus2 are swapped
-            if substation in substations:
-                substations[substation].add(adjusted_feeder)
+            bus2 = buses[1]
+            if substation in substation_boundaries_low:
+                substation_boundaries_low[substation].add(bus2)
             else:
-                substations[substation]=set([adjusted_feeder])
+                substation_boundaries_low[substation]=set([bus2])
 
-        logger.debug("Building to_delete and modifier")
+            if substation not in substation_boundaries_high:
+                substation_boundaries_high[substation] = set([substation.replace('_1247','_69')])
 
-        to_delete = Store()
-        modifier = Modifier()
-        for sub in substations: #sub is the name of the substation and substations[sub] is a set of all the connected feeders
-            logger.debug("Processing substation {}. There are {} in total.".format(sub,len(substations)))
+            if substation not in substation_transformers:
+                substation_transformers[substation] = set([transformer])
+
+
+        for sub in substation_boundaries_low.keys(): #sub is the name of the substation and substation_boundaries_low[sub] is a set of all the connected feeders
+            logger.debug("Building to_delete and modifier")
+            to_delete = Store()
+            modifier = Modifier()
+            logger.info("Processing substation {}. There are {} in total.".format(sub,len(substation_boundaries_low)))
+
+            all_boundaries = substation_boundaries_low[sub].union(substation_boundaries_high[sub])
+            
+            # TODO: do a search from the high boundary to the low boundary and include everything inside
+            #get_internal_nodes(substation_boundaries_high[sub],substation_boundaries_low[sub])
+            
 
             all_nodes = []
-            subname = sub.replace('.','')
-            subname = subname.lower()
-            all_nodes.append(subname)
-            hv_subname = subname+'->'+subname.replace('1247','69')+'_s'
-            all_nodes.append(hv_subname)
-            sourcenode = hv_subname+'_s' #Source point of connection to the substation
-            all_nodes.append(sourcenode)
-            feeder_names = [] # Feeder point of connection to the substation
+
+            high_boundary = list(substation_boundaries_high[sub])[0] #Should only be one high side boundary point in the set
+            all_nodes.append(high_boundary)
+            all_nodes.append(sub+'>'+high_boundary+'%%%')
+            all_nodes.append(sub+'>'+high_boundary+'%%')
+            all_nodes.append(sub+'>'+high_boundary+'%')
+            all_nodes.append(sub)
+            for low_val in substation_boundaries_low[sub]:
+                all_nodes.append(low_val+'>'+sub+'%%')
+                all_nodes.append(low_val+'>'+sub+'%')
+                all_nodes.append(low_val)
+                
+            all_nodes_set = set(all_nodes)
+            internal_edges = model.get_internal_edges(all_nodes_set)
+
+            feeder_names = list(substation_boundaries_low[sub]) # Feeder point of connection to the substation
             # These attribuetes will be used to inform which substation is selected
             rated_power = None
             emergency_power = None
@@ -129,79 +174,123 @@ class AddSubstations(DiTToLayerBase):
             reactance = None
             lat = None
             long = None
-            for feeder in substations[sub]:
-                feeder_name = feeder.replace('.','')+'_s'
-                feeder_name = feeder_name.lower()
-                feeder_names.append(feeder_name)
-                all_nodes.append(feeder_name)
+            transformer = list(substation_transformers[sub])[0] # Assume only one transformer per substation in RNM
 
-            all_nodes_set = set(all_nodes)
-            internal_edges = model.get_internal_edges(all_nodes_set)
+# Currently using CYME reader which has different names for the transformers to the feeders.txt file                
+#            reactance = model[transformer].reactances[0] # Assume the same for all windings in a substation
+#            loadloss = model[transformer].loadloss
+#            noloadloss = model[transformer].noload_loss
+#            rated_power = model[transformer].windings[0].rated_power # Assume the same for all windings in a substation
+#            emergency_power = model[transformer].windings[0].emergency_power # Assume the same for all windings in a substation
+            try:
+                lat = model[sub].positions[0].lat
+                long = model[sub].positions[0].long
+            except:
+                raise ValueError('{} missing position elements'.format(model[sub].name))
+
+            # Mark the internals of the substation for deletion
             for n in all_nodes_set:
                 obj_name = type(model[n]).__name__
                 base_obj = globals()[obj_name](to_delete)
                 base_obj.name = n
             for e in internal_edges:
                 obj_name = type(model[e]).__name__
-                if obj_name == 'PowerTransformer':
-                    reactance = model[e].reactances[0] # Assume the same for all windings in a substation
-                    loadloss = model[e].loadloss
-                    noloadloss = model[e].noload_loss
-                    rated_power = model[e].windings[0].rated_power # Assume the same for all windings in a substation
-                    emergency_power = model[e].windings[0].emergency_power # Assume the same for all windings in a substationr
-                    lat = model[e].positions[0].lat
-                    long = model[e].positions[0].long
-
                 base_obj = globals()[obj_name](to_delete)
                 base_obj.name = e
 
-            num_model_feeders = len(substations[sub])
+            num_model_feeders = len(feeder_names)
             not_allocated = True
+            
+            low_voltage = 12470
+            high_voltage = 69000
+
             # Read the CYME models
-            for sub_file in os.listdir(substation_folder): # Important these must be listed in increasing order
+            for sub_file in os.listdir(substation_folder): # Insert extra logic here to determine which one to use
                 sub_model = Store()
-                reader  = CymeReader(data_folder_path=os.path.join(current_directory, 'resources',sub_model))
+                reader  = CymeReader(data_folder_path=os.path.join(os.path.dirname(__file__),'resources',sub_file))
                 reader.parse(sub_model)
                 sub_model.set_names()
+                                     
+                # Set the nominal voltages within the substation using the cyme model transformer and source voltage
                 modifier = system_structure_modifier(sub_model)
                 modifier.set_nominal_voltages_recur()
+
+                # Determine which nodes in the CYME model connect feeders/HV
                 all_substation_connections = []
+                available_feeders = 0
                 for i in sub_model.models:
                     if isinstance(i,Node) and hasattr(i,'is_substation_connection') and i.is_substation_connection == 1:
                         all_substation_connections.append(i)
-                if len(all_substation_connections) > num_model_feeders:
+                        try:
+                            if i.nominal_voltage == low_voltage:
+                                available_feeders+=1
+                        except:
+                            import pdb;pdb.set_trace()
+                            raise ValueError("Nominal Voltages not set correctly in substation")
+
+
+                logger.info("Processing substation {}. There are {} feeders available and {} feeders in RNM".format(sub,available_feeders,num_model_feeders))
+                if available_feeders >= num_model_feeders:
                     feeder_cnt = 0
+                    ref_lat = 0
+                    ref_long = 0
                     for i in sub_model.models:
                         if isinstance(i,PowerTransformer) and hasattr(i,'positions') and len(i.positions) >0 and hasattr(i.positions[0],'lat') and i.positions[0].lat is not None and hasattr(i.positions[0],'long') and i.positions[0].long is not None:
                             ref_lat = i.positions[0].lat
                             ref_long = i.positions[0].long
                     for i in sub_model.models:
+
+                        # Remove feeder name from substation elements. This is normally set automatically when reading from CYME
+                        if hasattr(i,'feeder_name'): 
+                            i.feeder_name = None 
+
+
+                        # Assign feeder names to the endpoints of the substation 
                         if isinstance(i,Node) and hasattr(i,'is_substation_connection') and i.is_substation_connection == 1:
-                            if hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage>=69:
-                                i.name = sourcenode #TODO: issue of multiple high voltage inputs needs to be addressed
-                            elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<69:
-                                if feeder_cnt<len(feeder_name):
-                                    i.name = feeder_name[feeder_cnt] 
-                                    feeder_cnt+=1
+                            if hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage>=high_voltage:
+                            
+#########  USE no_feeders.txt to inform how many connection points there should be. Skip this substation if the number isn't correct-->>>>
+#### Need to discuss with Carlos                            
+                                i.name = high_boundary #TODO: issue of multiple high voltage inputs needs to be addressed
+                                i.feeder = 'subtransmission' #i.e. connect to the subtransmission network
+                            elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<high_voltage:
+                                feeder_cnt+=1
+                                if feeder_cnt<=num_model_feeders:
+                                    i.name = feeder_names[feeder_cnt-1] 
+                                    i.feeder_name = i.name #Set the feeder the be this node
                                 else:
-                                    i.name = sub_file+'_'+subname+'_'+i.name #ie. No feeders assigned to this berth
+                                    i.name = sub_file+'_'+sub+'_'+i.name #ie. No feeders assigned to this berth so using the substation identifiers
                             else:
-                                raise('Nominal voltage unknown - upable to assign feeders')
+                                raise ValueError("Nominal Voltages not set correctly in substation")
 
-                        else: 
-                            i.name = sub_file+'_'+subname+'_'+i.name
+                        elif hasattr(i,'name') and (not isinstance(i,Feeder_metadata)): 
+                            i.name = sub_file+'_'+sub+'_'+i.name
+                        if isinstance(i,Regulator) and hasattr(i,'connected_transformer') and i.connected_transformer is not None:
+                            i.connected_transformer = sub_file+'_'+sub+'_'+i.connected_transformer
 
-                        i.positions[0].lat = i.positions[0].lat-ref_lat + lat
-                        i.positions[0].long = i.positions[0].long-ref_long + long
-                    reduced_model = modifier.delete(model, to_delete) 
-                    logger.debug("Adding model from {} to final_model".format(sub_folder))
-                    model = modifier.add(reduced_model, sub_model) #Is it a problem to be modifying the model directly? 
+                        if hasattr(i,'from_element') and i.from_element is not None:
+                            i.from_element = sub_file + '_'+sub + '_'+i.from_element
+                        if hasattr(i,'to_element') and i.to_element is not None:
+                            i.to_element = sub_file + '_'+sub + '_'+i.to_element
+
+
+                        if hasattr(i,'positions') and i.positions is not None and len(i.positions)>0:
+                            if ref_long ==0 and ref_lat ==0:
+                                logger.warning("Warning: Reference co-ords are (0,0)")
+                            i.positions[0].lat = i.positions[0].lat-ref_lat + lat
+                            i.positions[0].long = i.positions[0].long-ref_long + long
                     not_allocated = False
+                    reduced_model = modifier.delete(model, to_delete) 
+                    logger.info("Adding model from {} to model".format(substation_folder))
+                    model = modifier.add(reduced_model, sub_model) #Is it a problem to be modifying the model directly? 
                     break
             if not_allocated:
-                raise('Substation too small. %d feeders needed.  Exiting...'%(num_model_feeders))
+                raise ValueError('Substation too small. {num} feeders needed.  Exiting...'.format(num=num_model_feeders))
 
-        logger.debug("Returning {!r}".format(final_model))
+        model.set_names()
+# modifier = system_structure_modifier(model,'st_mat_src')
+#        modifier.set_nominal_voltages_recur()
+        logger.debug("Returning {!r}".format(model))
         return model
 
 
