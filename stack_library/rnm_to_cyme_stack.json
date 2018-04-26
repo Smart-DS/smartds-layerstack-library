@@ -1,0 +1,206 @@
+{
+    "name": "RNM to CYME Stack",
+    "uuid": "b6c12dfb-5756-474c-a5fa-18401b327f9b",
+    "version": "v0.1.0",
+    "run_dir": null,
+    "model": null,
+    "layers": [
+        {
+            "uuid": "bd8fef77-93aa-4869-85ed-26507f9b086d",
+            "checksum": "5e27998fee7437e8954610bcd76a36f7",
+            "kwargs": {
+                "input_filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Loads_IntermediateFormat.csv",
+                    "default": null,
+                    "description": "Name of the CSV input file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "output_filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Loads_IntermediateFormat2.csv",
+                    "default": null,
+                    "description": "Name of the CSV output file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "object_name": {
+                    "value": "Load",
+                    "default": null,
+                    "description": "Name of the object (ex: Load)",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "name": "csv_processing",
+            "args": [],
+            "layer_dir": "../layer_library\\csv_processing",
+            "version": "0.1.0"
+        },
+        {
+            "uuid": "bd8fef77-93aa-4869-85ed-26507f9b086d",
+            "checksum": "5e27998fee7437e8954610bcd76a36f7",
+            "kwargs": {
+                "input_filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Capacitors_IntermediateFormat.csv",
+                    "default": null,
+                    "description": "Name of the CSV input file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "output_filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Capacitors_IntermediateFormat2.csv",
+                    "default": null,
+                    "description": "Name of the CSV output file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "object_name": {
+                    "value": "Capacitor",
+                    "default": null,
+                    "description": "Name of the object (ex: Load)",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "name": "csv_processing",
+            "args": [],
+            "layer_dir": "../layer_library\\csv_processing",
+            "version": "0.1.0"
+        },
+        {
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
+            "checksum": "87ec5449c229955de9908a585e7f5bb8",
+            "kwargs": {
+                "base_dir": {
+                    "value": "..\\..\\dataset3\\MixedHumid",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "name": "From OpenDSS",
+            "args": [
+                {
+                    "name": "opendss_model",
+                    "value": "industrial\\OpenDSS\\Master.dss",
+                    "description": "Path to OpenDSS model to be loaded",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "bus_coords",
+                    "value": "industrial\\OpenDSS\\Buscoord.dss",
+                    "description": "Bus Coords for OpenDSS Model",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "layer_dir": "../layer_library\\from_opendss",
+            "version": "v0.1.0"
+        },
+        {
+            "uuid": "958b5e41-be14-49c4-8a1b-f03a412d003e",
+            "checksum": "856eac4b45482f86aa0c301e629fc676",
+            "kwargs": {},
+            "name": "post-processing",
+            "args": [],
+            "layer_dir": "../layer_library\\post-processing",
+            "version": "0.1.0"
+        },
+        {
+            "uuid": "67ec2cc6-d36d-4576-af37-60ffd5178af9",
+            "checksum": "1b5ce2205ee8b22195187a82d6806981",
+            "kwargs": {
+                "filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Loads_IntermediateFormat2.csv",
+                    "default": null,
+                    "description": "Path to the CSV input file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "name": "merging-layer",
+            "args": [],
+            "layer_dir": "../layer_library\\merging-layer",
+            "version": "0.1.0"
+        },
+        {
+            "uuid": "67ec2cc6-d36d-4576-af37-60ffd5178af9",
+            "checksum": "1b5ce2205ee8b22195187a82d6806981",
+            "kwargs": {
+                "filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Capacitors_IntermediateFormat2.csv",
+                    "default": null,
+                    "description": "Path to the CSV input file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "name": "merging-layer",
+            "args": [],
+            "layer_dir": "../layer_library\\merging-layer",
+            "version": "0.1.0"
+        },
+        {
+            "uuid": "5e2849d9-7f25-499b-a5f7-b1f85e97dde9",
+            "checksum": "934be4c37796d043ea925bf43a5b0dae",
+            "kwargs": {
+                "path_to_feeder_file": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\Feeders\\feeders.txt",
+                    "default": null,
+                    "description": "Path to feeder.txt",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "name": "network_split",
+            "args": [],
+            "layer_dir": "../layer_library\\network_split",
+            "version": "0.1.0"
+        },
+        {
+            "uuid": "a83d13b8-8293-4ecc-bfec-fc922fbb3764",
+            "checksum": "a7951cfeac3e2c90179a763a113e27e1",
+            "kwargs": {
+                "filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\OpenDSS\\LineCoord.txt",
+                    "default": null,
+                    "description": "Path to LineCoord.txt",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "name": "intermediate_node",
+            "args": [],
+            "layer_dir": "../layer_library\\intermediate_node",
+            "version": "0.1.0"
+        }
+    ]
+}

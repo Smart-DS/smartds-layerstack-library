@@ -1,4 +1,6 @@
 from __future__ import print_function, division, absolute_import
+import pandas as pd
+import os
 
 from builtins import super
 import logging
@@ -12,7 +14,7 @@ logger = logging.getLogger('layerstack.layers.Csv_Processing')
 
 class Csv_Processing(LayerBase):
     name = "csv_processing"
-    uuid = "UUID(bd8fef77-93aa-4869-85ed-26507f9b086d)"
+    uuid = UUID("bd8fef77-93aa-4869-85ed-26507f9b086d")
     version = '0.1.0'
     desc = "read the load/capacitor intermediate csv files, and output a csv file that can be used by the csv reader from ditto"
 
@@ -55,7 +57,7 @@ class Csv_Processing(LayerBase):
 
         #Read the file using Pandas
         #If the file does not exist, the do nothing and return
-        if not os.path.exist(input_filename):
+        if not os.path.exists(input_filename):
             return True
 
         df = pd.read_csv(input_filename, delimiter=";")

@@ -14,7 +14,7 @@ logger = logging.getLogger('layerstack.layers.Intermediate_Node')
 
 class Intermediate_Node(DiTToLayerBase):
     name = "intermediate_node"
-    uuid = "UUID(a83d13b8-8293-4ecc-bfec-fc922fbb3764)"
+    uuid = UUID("a83d13b8-8293-4ecc-bfec-fc922fbb3764")
     version = '0.1.0'
     desc = "Use information from LineCoord.txt to create intermediate nodes with their coordinates"
 

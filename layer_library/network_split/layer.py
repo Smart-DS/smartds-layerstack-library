@@ -14,7 +14,7 @@ logger = logging.getLogger('layerstack.layers.Network_Split')
 
 class Network_Split(DiTToLayerBase):
     name = "network_split"
-    uuid = "UUID(5e2849d9-7f25-499b-a5f7-b1f85e97dde9)"
+    uuid = UUID("5e2849d9-7f25-499b-a5f7-b1f85e97dde9")
     version = '0.1.0'
     desc = "Use information from feeder.txt to split the network into different feeders"
 

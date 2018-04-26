@@ -17,7 +17,7 @@ logger = logging.getLogger('layerstack.layers.PostProcessing')
 
 class PostProcessing(DiTToLayerBase):
     name = "post-processing"
-    uuid = "UUID(958b5e41-be14-49c4-8a1b-f03a412d003e)"
+    uuid = UUID("958b5e41-be14-49c4-8a1b-f03a412d003e")
     version = '0.1.0'
     desc = "runs multiple post-processing operations"
 

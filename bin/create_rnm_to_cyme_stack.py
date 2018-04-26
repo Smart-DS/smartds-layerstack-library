@@ -58,8 +58,8 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
 
     #Read OpenDSS layer
     from_opendss = stack[2]
-    from_opendss.args[0] = os.path.join(dataset_dir,feeder,'OpenDSS','master.dss')
-    from_opendss.args[1] = os.path.join(dataset_dir,feeder,'OpenDSS','buscoords.dss')
+    from_opendss.args[0] = os.path.join(feeder,'OpenDSS','Master.dss')
+    from_opendss.args[1] = os.path.join(feeder,'OpenDSS','Buscoord.dss')
     from_opendss.kwargs['base_dir'] = dataset_dir
 
     #Modify layer
@@ -85,7 +85,8 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
 
 
 def main():
-    create_rnm_to_cyme_stack('Users/ngensoll/Downloads/dataset3_20180404', 'industrial')
+    # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
+    create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_cyme_stack.json')
     s.run_dir = 'run_dir'

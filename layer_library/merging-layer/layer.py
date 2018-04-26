@@ -9,13 +9,15 @@ from ditto.dittolayers import DiTToLayerBase
 
 from ditto.readers.csv.read import reader as CSVReader
 from ditto.modify.modify import Modifier
+from ditto.store import Store
+import os
 
 logger = logging.getLogger('layerstack.layers.MergingLayer')
 
 
 class MergingLayer(DiTToLayerBase):
     name = "merging-layer"
-    uuid = "UUID(67ec2cc6-d36d-4576-af37-60ffd5178af9)"
+    uuid = UUID("67ec2cc6-d36d-4576-af37-60ffd5178af9")
     version = '0.1.0'
     desc = "create a DiTTo model for Load and/or Capacitor coordinates and merge them to the main model"
 
@@ -39,7 +41,7 @@ class MergingLayer(DiTToLayerBase):
             filename = kwargs['filename']
 	
         #If the file does not exist, do nothing and return the input model
-        if not os.path.exist(filename):
+        if not os.path.exists(filename):
             return model
 
         #Create a CSV reader
