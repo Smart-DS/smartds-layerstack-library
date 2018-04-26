@@ -9,7 +9,7 @@ from layerstack.args import Arg, Kwarg
 from layerstack.layer import LayerBase
 
 from ditto.store import Store
-from ditto.readers.opendss.read import reader as OpenDSSReader
+from ditto.readers.opendss.read import Reader as OpenDSSReader
 
 logger = logging.getLogger('layerstack.layers.FromOpenDSS')
 
