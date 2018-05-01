@@ -63,7 +63,10 @@ class Csv_Processing(LayerBase):
         df = pd.read_csv(input_filename, delimiter=";")
 
         #Set the column names
-        df['{obj}.name'.format(obj=object_name)] = '{objl}_'.format(objl=object_name.lower())+df['{obj}'.format(obj=object_name)]
+        if object_name.lower() == 'load':
+            df['{obj}.name'.format(obj=object_name)] = '{objl}_'.format(objl=object_name.lower())+df['{obj}'.format(obj=object_name)]
+        else:
+            df['{obj}.name'.format(obj=object_name)] = df['{obj}'.format(obj=object_name)]
 
         #Put everything to lower case
         df['{obj}.name'.format(obj=object_name)] = df['{obj}.name'.format(obj=object_name)].apply(lambda x:x.lower())
