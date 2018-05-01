@@ -1,13 +1,11 @@
 {
     "name": "RNM to CYME Stack",
-    "uuid": "b6c12dfb-5756-474c-a5fa-18401b327f9b",
+    "uuid": "3ae89f29-29d9-4dbd-8065-296029d5eb0d",
     "version": "v0.1.0",
     "run_dir": null,
     "model": null,
     "layers": [
         {
-            "uuid": "bd8fef77-93aa-4869-85ed-26507f9b086d",
-            "checksum": "5e27998fee7437e8954610bcd76a36f7",
             "kwargs": {
                 "input_filename": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Loads_IntermediateFormat.csv",
@@ -37,14 +35,14 @@
                     "list_parser": "None"
                 }
             },
+            "checksum": "ef1a3a654947deccaa2c11345bef83c2",
+            "uuid": "bd8fef77-93aa-4869-85ed-26507f9b086d",
             "name": "csv_processing",
             "args": [],
-            "layer_dir": "../layer_library\\csv_processing",
-            "version": "0.1.0"
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\csv_processing"
         },
         {
-            "uuid": "bd8fef77-93aa-4869-85ed-26507f9b086d",
-            "checksum": "5e27998fee7437e8954610bcd76a36f7",
             "kwargs": {
                 "input_filename": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Capacitors_IntermediateFormat.csv",
@@ -74,14 +72,14 @@
                     "list_parser": "None"
                 }
             },
+            "checksum": "ef1a3a654947deccaa2c11345bef83c2",
+            "uuid": "bd8fef77-93aa-4869-85ed-26507f9b086d",
             "name": "csv_processing",
             "args": [],
-            "layer_dir": "../layer_library\\csv_processing",
-            "version": "0.1.0"
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\csv_processing"
         },
         {
-            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
-            "checksum": "87ec5449c229955de9908a585e7f5bb8",
             "kwargs": {
                 "base_dir": {
                     "value": "..\\..\\dataset3\\MixedHumid",
@@ -93,6 +91,8 @@
                     "list_parser": "None"
                 }
             },
+            "checksum": "87ec5449c229955de9908a585e7f5bb8",
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
             "name": "From OpenDSS",
             "args": [
                 {
@@ -114,59 +114,10 @@
                     "list_parser": "None"
                 }
             ],
-            "layer_dir": "../layer_library\\from_opendss",
-            "version": "v0.1.0"
+            "version": "v0.1.0",
+            "layer_dir": "../layer_library\\from_opendss"
         },
         {
-            "uuid": "958b5e41-be14-49c4-8a1b-f03a412d003e",
-            "checksum": "856eac4b45482f86aa0c301e629fc676",
-            "kwargs": {},
-            "name": "post-processing",
-            "args": [],
-            "layer_dir": "../layer_library\\post-processing",
-            "version": "0.1.0"
-        },
-        {
-            "uuid": "67ec2cc6-d36d-4576-af37-60ffd5178af9",
-            "checksum": "1b5ce2205ee8b22195187a82d6806981",
-            "kwargs": {
-                "filename": {
-                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Loads_IntermediateFormat2.csv",
-                    "default": null,
-                    "description": "Path to the CSV input file",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                }
-            },
-            "name": "merging-layer",
-            "args": [],
-            "layer_dir": "../layer_library\\merging-layer",
-            "version": "0.1.0"
-        },
-        {
-            "uuid": "67ec2cc6-d36d-4576-af37-60ffd5178af9",
-            "checksum": "1b5ce2205ee8b22195187a82d6806981",
-            "kwargs": {
-                "filename": {
-                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Capacitors_IntermediateFormat2.csv",
-                    "default": null,
-                    "description": "Path to the CSV input file",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                }
-            },
-            "name": "merging-layer",
-            "args": [],
-            "layer_dir": "../layer_library\\merging-layer",
-            "version": "0.1.0"
-        },
-        {
-            "uuid": "5e2849d9-7f25-499b-a5f7-b1f85e97dde9",
-            "checksum": "934be4c37796d043ea925bf43a5b0dae",
             "kwargs": {
                 "path_to_feeder_file": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\Feeders\\feeders.txt",
@@ -178,14 +129,71 @@
                     "list_parser": "None"
                 }
             },
-            "name": "network_split",
+            "checksum": "47d19be0502c15328f5b47579cf333d8",
+            "uuid": "958b5e41-be14-49c4-8a1b-f03a412d003e",
+            "name": "post-processing",
             "args": [],
-            "layer_dir": "../layer_library\\network_split",
-            "version": "0.1.0"
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\post-processing"
         },
         {
-            "uuid": "a83d13b8-8293-4ecc-bfec-fc922fbb3764",
-            "checksum": "a7951cfeac3e2c90179a763a113e27e1",
+            "kwargs": {
+                "filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Loads_IntermediateFormat2.csv",
+                    "default": null,
+                    "description": "Path to the CSV input file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "checksum": "1b5ce2205ee8b22195187a82d6806981",
+            "uuid": "67ec2cc6-d36d-4576-af37-60ffd5178af9",
+            "name": "merging-layer",
+            "args": [],
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\merging-layer"
+        },
+        {
+            "kwargs": {
+                "filename": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Capacitors_IntermediateFormat2.csv",
+                    "default": null,
+                    "description": "Path to the CSV input file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "checksum": "1b5ce2205ee8b22195187a82d6806981",
+            "uuid": "67ec2cc6-d36d-4576-af37-60ffd5178af9",
+            "name": "merging-layer",
+            "args": [],
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\merging-layer"
+        },
+        {
+            "kwargs": {
+                "path_to_feeder_file": {
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\Feeders\\feeders.txt",
+                    "default": null,
+                    "description": "Path to feeder.txt",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "checksum": "768ef0df588654c959259c332c295db5",
+            "uuid": "5e2849d9-7f25-499b-a5f7-b1f85e97dde9",
+            "name": "network_split",
+            "args": [],
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\network_split"
+        },
+        {
             "kwargs": {
                 "filename": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\OpenDSS\\LineCoord.txt",
@@ -197,10 +205,50 @@
                     "list_parser": "None"
                 }
             },
+            "checksum": "a7951cfeac3e2c90179a763a113e27e1",
+            "uuid": "a83d13b8-8293-4ecc-bfec-fc922fbb3764",
             "name": "intermediate_node",
             "args": [],
-            "layer_dir": "../layer_library\\intermediate_node",
-            "version": "0.1.0"
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\intermediate_node"
+        },
+        {
+            "kwargs": {},
+            "checksum": "39c980c095d400562c3d35685a53125d",
+            "uuid": "a7605902-8508-4e73-b4e9-b4e42c4ac6a5",
+            "name": "find_missing_coords",
+            "args": [],
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\find_missing_coords"
+        },
+        {
+            "kwargs": {
+                "base_dir": {
+                    "value": null,
+                    "default": null,
+                    "description": "Base directory for argument paths",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "checksum": "efb2bae2cddf0d408b3a2de85dd12d04",
+            "uuid": "39bd3f89-9f08-4ef6-873a-28c393fb32dd",
+            "name": "to_cyme",
+            "args": [
+                {
+                    "name": "output_path",
+                    "value": ".\\results",
+                    "description": "path to folder where cyme files are written",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "version": "0.1.0",
+            "layer_dir": "../layer_library\\to_cyme"
         }
     ]
 }

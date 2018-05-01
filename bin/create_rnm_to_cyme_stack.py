@@ -39,6 +39,16 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     #Add intermediate node coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'intermediate_node')))
 
+    #Add cyme substations
+#stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
+
+
+    #Find missing coordinates
+    stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
+
+    #Write to CYME
+    stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
+
 
     for layer in stack:
         layer.args.mode = ArgMode.USE
@@ -64,6 +74,9 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
 
     #Modify layer
     #No input except the model. Nothing to do here...
+    post_processing = stack[3]
+    post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
+
 
     #Merging Load layer
     merging_load = stack[4]
@@ -80,6 +93,19 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     #Intermediate node layer
     inter = stack[7]
     inter.kwargs['filename'] = os.path.join(dataset_dir,feeder,'OpenDSS','LineCoord.txt')
+
+    #Substations
+
+#    add_substations = stack[8]
+#    add_substations.args[0] = os.path.join(dataset_dir,feeder,'Feeders', 'feeders.txt')
+#    add_substations.kwargs['base_dir'] = dataset_dir
+
+    # Missing coords
+    # No args/kwargs for this layer
+
+    #Write to CYME
+    final = stack[9]
+    final.args[0] = os.path.join('.','results')
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack.json'))
 
