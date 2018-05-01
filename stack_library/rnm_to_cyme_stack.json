@@ -1,11 +1,14 @@
 {
     "name": "RNM to CYME Stack",
-    "uuid": "3ae89f29-29d9-4dbd-8065-296029d5eb0d",
+    "uuid": "7732f953-0858-4b61-8286-dba6b6faef58",
     "version": "v0.1.0",
     "run_dir": null,
     "model": null,
     "layers": [
         {
+            "name": "csv_processing",
+            "args": [],
+            "version": "0.1.0",
             "kwargs": {
                 "input_filename": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Loads_IntermediateFormat.csv",
@@ -35,14 +38,14 @@
                     "list_parser": "None"
                 }
             },
-            "checksum": "ef1a3a654947deccaa2c11345bef83c2",
+            "layer_dir": "../layer_library\\csv_processing",
             "uuid": "bd8fef77-93aa-4869-85ed-26507f9b086d",
+            "checksum": "ef1a3a654947deccaa2c11345bef83c2"
+        },
+        {
             "name": "csv_processing",
             "args": [],
             "version": "0.1.0",
-            "layer_dir": "../layer_library\\csv_processing"
-        },
-        {
             "kwargs": {
                 "input_filename": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Capacitors_IntermediateFormat.csv",
@@ -72,27 +75,11 @@
                     "list_parser": "None"
                 }
             },
-            "checksum": "ef1a3a654947deccaa2c11345bef83c2",
+            "layer_dir": "../layer_library\\csv_processing",
             "uuid": "bd8fef77-93aa-4869-85ed-26507f9b086d",
-            "name": "csv_processing",
-            "args": [],
-            "version": "0.1.0",
-            "layer_dir": "../layer_library\\csv_processing"
+            "checksum": "ef1a3a654947deccaa2c11345bef83c2"
         },
         {
-            "kwargs": {
-                "base_dir": {
-                    "value": "..\\..\\dataset3\\MixedHumid",
-                    "default": null,
-                    "description": "Base directory for argument paths.",
-                    "parser": "None",
-                    "choices": null,
-                    "nargs": null,
-                    "list_parser": "None"
-                }
-            },
-            "checksum": "87ec5449c229955de9908a585e7f5bb8",
-            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
             "name": "From OpenDSS",
             "args": [
                 {
@@ -115,9 +102,25 @@
                 }
             ],
             "version": "v0.1.0",
-            "layer_dir": "../layer_library\\from_opendss"
+            "kwargs": {
+                "base_dir": {
+                    "value": "..\\..\\dataset3\\MixedHumid",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "layer_dir": "../layer_library\\from_opendss",
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
+            "checksum": "87ec5449c229955de9908a585e7f5bb8"
         },
         {
+            "name": "post-processing",
+            "args": [],
+            "version": "0.1.0",
             "kwargs": {
                 "path_to_feeder_file": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\Feeders\\feeders.txt",
@@ -129,14 +132,14 @@
                     "list_parser": "None"
                 }
             },
-            "checksum": "47d19be0502c15328f5b47579cf333d8",
+            "layer_dir": "../layer_library\\post-processing",
             "uuid": "958b5e41-be14-49c4-8a1b-f03a412d003e",
-            "name": "post-processing",
-            "args": [],
-            "version": "0.1.0",
-            "layer_dir": "../layer_library\\post-processing"
+            "checksum": "47d19be0502c15328f5b47579cf333d8"
         },
         {
+            "name": "merging-layer",
+            "args": [],
+            "version": "0.1.0",
             "kwargs": {
                 "filename": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Loads_IntermediateFormat2.csv",
@@ -148,14 +151,14 @@
                     "list_parser": "None"
                 }
             },
-            "checksum": "1b5ce2205ee8b22195187a82d6806981",
+            "layer_dir": "../layer_library\\merging-layer",
             "uuid": "67ec2cc6-d36d-4576-af37-60ffd5178af9",
+            "checksum": "1b5ce2205ee8b22195187a82d6806981"
+        },
+        {
             "name": "merging-layer",
             "args": [],
             "version": "0.1.0",
-            "layer_dir": "../layer_library\\merging-layer"
-        },
-        {
             "kwargs": {
                 "filename": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\IntermediateFormat\\Capacitors_IntermediateFormat2.csv",
@@ -167,14 +170,14 @@
                     "list_parser": "None"
                 }
             },
-            "checksum": "1b5ce2205ee8b22195187a82d6806981",
+            "layer_dir": "../layer_library\\merging-layer",
             "uuid": "67ec2cc6-d36d-4576-af37-60ffd5178af9",
-            "name": "merging-layer",
-            "args": [],
-            "version": "0.1.0",
-            "layer_dir": "../layer_library\\merging-layer"
+            "checksum": "1b5ce2205ee8b22195187a82d6806981"
         },
         {
+            "name": "network_split",
+            "args": [],
+            "version": "0.1.0",
             "kwargs": {
                 "path_to_feeder_file": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\Feeders\\feeders.txt",
@@ -186,14 +189,14 @@
                     "list_parser": "None"
                 }
             },
-            "checksum": "768ef0df588654c959259c332c295db5",
+            "layer_dir": "../layer_library\\network_split",
             "uuid": "5e2849d9-7f25-499b-a5f7-b1f85e97dde9",
-            "name": "network_split",
-            "args": [],
-            "version": "0.1.0",
-            "layer_dir": "../layer_library\\network_split"
+            "checksum": "768ef0df588654c959259c332c295db5"
         },
         {
+            "name": "intermediate_node",
+            "args": [],
+            "version": "0.1.0",
             "kwargs": {
                 "filename": {
                     "value": "..\\..\\dataset3\\MixedHumid\\industrial\\OpenDSS\\LineCoord.txt",
@@ -205,36 +208,67 @@
                     "list_parser": "None"
                 }
             },
-            "checksum": "a7951cfeac3e2c90179a763a113e27e1",
+            "layer_dir": "../layer_library\\intermediate_node",
             "uuid": "a83d13b8-8293-4ecc-bfec-fc922fbb3764",
-            "name": "intermediate_node",
-            "args": [],
-            "version": "0.1.0",
-            "layer_dir": "../layer_library\\intermediate_node"
+            "checksum": "a7951cfeac3e2c90179a763a113e27e1"
         },
         {
-            "kwargs": {},
-            "checksum": "39c980c095d400562c3d35685a53125d",
-            "uuid": "a7605902-8508-4e73-b4e9-b4e42c4ac6a5",
-            "name": "find_missing_coords",
-            "args": [],
-            "version": "0.1.0",
-            "layer_dir": "../layer_library\\find_missing_coords"
-        },
-        {
+            "name": "Add Substations",
+            "args": [
+                {
+                    "name": "feeder_file",
+                    "value": "..\\..\\dataset3\\MixedHumid\\industrial\\Feeders\\feeders.txt",
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                {
+                    "name": "output_substation_folder",
+                    "value": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "version": "v0.1.0",
             "kwargs": {
                 "base_dir": {
+                    "value": "..\\..\\dataset3\\MixedHumid",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "substation_folder": {
                     "value": null,
                     "default": null,
-                    "description": "Base directory for argument paths",
+                    "description": "Defaults to this layer's resources folder",
                     "parser": "None",
                     "choices": null,
                     "nargs": null,
                     "list_parser": "None"
                 }
             },
-            "checksum": "efb2bae2cddf0d408b3a2de85dd12d04",
-            "uuid": "39bd3f89-9f08-4ef6-873a-28c393fb32dd",
+            "layer_dir": "../layer_library\\add_cyme_substations",
+            "uuid": "3a5c2446-2836-4744-8a5f-0aa187f6ea75",
+            "checksum": "1b5cfca9f8c2ee27f45cf08301320e29"
+        },
+        {
+            "name": "find_missing_coords",
+            "args": [],
+            "version": "0.1.0",
+            "kwargs": {},
+            "layer_dir": "../layer_library\\find_missing_coords",
+            "uuid": "a7605902-8508-4e73-b4e9-b4e42c4ac6a5",
+            "checksum": "39c980c095d400562c3d35685a53125d"
+        },
+        {
             "name": "to_cyme",
             "args": [
                 {
@@ -248,7 +282,20 @@
                 }
             ],
             "version": "0.1.0",
-            "layer_dir": "../layer_library\\to_cyme"
+            "kwargs": {
+                "base_dir": {
+                    "value": null,
+                    "default": null,
+                    "description": "Base directory for argument paths",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            },
+            "layer_dir": "../layer_library\\to_cyme",
+            "uuid": "39bd3f89-9f08-4ef6-873a-28c393fb32dd",
+            "checksum": "efb2bae2cddf0d408b3a2de85dd12d04"
         }
     ]
 }
