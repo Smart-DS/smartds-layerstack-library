@@ -48,7 +48,7 @@ class Network_Split(DiTToLayerBase):
         for line in lines[1:]:
     
             #Parse the line
-            node,sub,feed,sub_trans = map(lambda x:x.strip(), line.split(' '))
+            node,sub,feed,sub_trans = map(lambda x:x.strip().lower(), line.split(' '))
     
             #If feeder is new, then add it to the feeders dict
             if feed not in feeders:
