@@ -40,7 +40,7 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     stack.append(Layer(os.path.join(layer_library_dir,'intermediate_node')))
 
     #Add cyme substations
-#stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
+    stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
 
 
     #Find missing coordinates
@@ -96,15 +96,15 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
 
     #Substations
 
-#    add_substations = stack[8]
-#    add_substations.args[0] = os.path.join(dataset_dir,feeder,'Feeders', 'feeders.txt')
-#    add_substations.kwargs['base_dir'] = dataset_dir
+    add_substations = stack[8]
+    add_substations.args[0] = os.path.join(dataset_dir,feeder,'Feeders', 'feeders.txt')
+    add_substations.kwargs['base_dir'] = dataset_dir
 
     # Missing coords
     # No args/kwargs for this layer
 
     #Write to CYME
-    final = stack[9]
+    final = stack[10]
     final.args[0] = os.path.join('.','results')
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack.json'))

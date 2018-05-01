@@ -125,10 +125,11 @@ class AddSubstations(DiTToLayerBase):
             transformer = 'tr'+transformer[6:] #The prefix is slightly different with the feeder.txt file
             buses = feeder.split('->')
             bus2 = buses[1]
+            bus1 = buses[0]
             if substation in substation_boundaries_low:
-                substation_boundaries_low[substation].add(bus2)
+                substation_boundaries_low[substation].add(bus2+'>'+bus1+'%%')
             else:
-                substation_boundaries_low[substation]=set([bus2])
+                substation_boundaries_low[substation]=set([bus2+'>'+bus1+'%%'])
 
             if substation not in substation_boundaries_high:
                 substation_boundaries_high[substation] = set([substation.replace('_1247','_69')])
@@ -158,9 +159,9 @@ class AddSubstations(DiTToLayerBase):
             all_nodes.append(sub+'>'+high_boundary+'%')
             all_nodes.append(sub)
             for low_val in substation_boundaries_low[sub]:
-                all_nodes.append(low_val+'>'+sub+'%%')
-                all_nodes.append(low_val+'>'+sub+'%')
-                all_nodes.append(low_val)
+                all_nodes.append(low_val)  # End at these nodes. There are then lines out to the reclosers
+                if low_val+'%' in model.model_names:
+                    all_nodes.append(low_val+'%') #This extra node sometimes exists too
                 
             all_nodes_set = set(all_nodes)
             internal_edges = model.get_internal_edges(all_nodes_set)
@@ -225,24 +226,31 @@ class AddSubstations(DiTToLayerBase):
                             if i.nominal_voltage == low_voltage:
                                 available_feeders+=1
                         except:
-                            import pdb;pdb.set_trace()
                             raise ValueError("Nominal Voltages not set correctly in substation")
 
 
                 logger.info("Processing substation {}. There are {} feeders available and {} feeders in RNM".format(sub,available_feeders,num_model_feeders))
                 if available_feeders >= num_model_feeders:
+                    boundry_map = {}
                     feeder_cnt = 0
                     ref_lat = 0
                     ref_long = 0
                     for i in sub_model.models:
-                        if isinstance(i,PowerTransformer) and hasattr(i,'positions') and len(i.positions) >0 and hasattr(i.positions[0],'lat') and i.positions[0].lat is not None and hasattr(i.positions[0],'long') and i.positions[0].long is not None:
+                        # Remove the source node. This is no longer needed
+                        if isinstance(i,PowerSource):
+                            sub_model.remove_element(i)
+
+
+
+                        # Set a random node as the reference node
+                        if isinstance(i,Node) and hasattr(i,'positions') and len(i.positions) >0 and hasattr(i.positions[0],'lat') and i.positions[0].lat is not None and hasattr(i.positions[0],'long') and i.positions[0].long is not None:
                             ref_lat = i.positions[0].lat
                             ref_long = i.positions[0].long
                     for i in sub_model.models:
 
                         # Remove feeder name from substation elements. This is normally set automatically when reading from CYME
                         if hasattr(i,'feeder_name'): 
-                            i.feeder_name = None 
+                            i.feeder_name = 'subtransmission' 
 
 
                         # Assign feeder names to the endpoints of the substation 
@@ -251,27 +259,35 @@ class AddSubstations(DiTToLayerBase):
                             
 #########  USE no_feeders.txt to inform how many connection points there should be. Skip this substation if the number isn't correct-->>>>
 #### Need to discuss with Carlos                            
+                                boundry_map[i.name] = high_boundary
                                 i.name = high_boundary #TODO: issue of multiple high voltage inputs needs to be addressed
                                 i.feeder = 'subtransmission' #i.e. connect to the subtransmission network
                             elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<high_voltage:
                                 feeder_cnt+=1
                                 if feeder_cnt<=num_model_feeders:
-                                    i.name = feeder_names[feeder_cnt-1] 
+                                    boundry_map[i.name] = feeder_names[feeder_cnt-1]
+                                    i.name = feeder_names[feeder_cnt-1].lower() 
                                     i.feeder_name = i.name #Set the feeder the be this node
                                 else:
-                                    i.name = sub_file+'_'+sub+'_'+i.name #ie. No feeders assigned to this berth so using the substation identifiers
+                                    i.name = str(sub_file+'_'+sub+'_'+i.name).lower() #ie. No feeders assigned to this berth so using the substation identifiers
                             else:
                                 raise ValueError("Nominal Voltages not set correctly in substation")
 
                         elif hasattr(i,'name') and (not isinstance(i,Feeder_metadata)): 
-                            i.name = sub_file+'_'+sub+'_'+i.name
+                            i.name = str(sub_file+'_'+sub+'_'+i.name).lower()
                         if isinstance(i,Regulator) and hasattr(i,'connected_transformer') and i.connected_transformer is not None:
-                            i.connected_transformer = sub_file+'_'+sub+'_'+i.connected_transformer
+                            i.connected_transformer = str(sub_file+'_'+sub+'_'+i.connected_transformer).lower()
 
                         if hasattr(i,'from_element') and i.from_element is not None:
-                            i.from_element = sub_file + '_'+sub + '_'+i.from_element
+                            if i.from_element in boundry_map:
+                                i.from_element = boundry_map[i.from_element]
+                            else:
+                                i.from_element = str(sub_file + '_'+sub + '_'+i.from_element).lower()
                         if hasattr(i,'to_element') and i.to_element is not None:
-                            i.to_element = sub_file + '_'+sub + '_'+i.to_element
+                            if i.to_element in boundry_map:
+                                i.to_element = boundry_map[i.to_element]
+                            else:
+                                i.to_element = str(sub_file + '_'+sub + '_'+i.to_element).lower()
 
 
                         if hasattr(i,'positions') and i.positions is not None and len(i.positions)>0:
@@ -279,7 +295,10 @@ class AddSubstations(DiTToLayerBase):
                                 logger.warning("Warning: Reference co-ords are (0,0)")
                             i.positions[0].lat = i.positions[0].lat-ref_lat + lat
                             i.positions[0].long = i.positions[0].long-ref_long + long
+#import pdb;pdb.set_trace()
                     not_allocated = False
+                    sub_model.set_names()
+                    to_delete.set_names()
                     reduced_model = modifier.delete(model, to_delete) 
                     logger.info("Adding model from {} to model".format(substation_folder))
                     model = modifier.add(reduced_model, sub_model) #Is it a problem to be modifying the model directly? 
