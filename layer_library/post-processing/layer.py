@@ -29,13 +29,18 @@ class PostProcessing(DiTToLayerBase):
     @classmethod
     def kwargs(cls, model=None):
         kwarg_dict = super().kwargs()
+        kwarg_dict['path_to_feeder_file'] = Kwarg(default=None, description='Path to feeder.txt',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         return kwarg_dict
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
+        if 'path_to_feeder_file' in kwargs:
+            path_to_feeder_file = kwargs['path_to_feeder_file']       
         
         #Create the modifier object
-        modifier=system_structure_modifier(model)
+        modifier=system_structure_modifier(model,'st_mat')
 
         #Center-tap loads
         modifier.center_tap_load_preprocessing()
@@ -45,6 +50,25 @@ class PostProcessing(DiTToLayerBase):
 
         #Set line nominal voltages
         modifier.set_nominal_voltages_recur_line()
+
+        #Create Feeder_metadata objects for each feeder    
+
+        #Open and read feeder.txt
+        with open(path_to_feeder_file, 'r') as f:
+            lines = f.readlines()
+
+        all_feeder_data = set()
+        for line in lines[1:]:
+            #Parse the line
+            node,sub,feed,sub_trans = map(lambda x:x.strip().lower(), line.split(' '))
+            sub_trans = sub_trans.replace('ctrafo','tr')
+            all_feeder_data.add((feed,sub,sub_trans))
+
+        for feeder in all_feeder_data:
+            modifier.set_feeder_metadata(feeder[0],feeder[1],feeder[2])
+
+        
+    
 
         #Set headnodes for each feeder
         modifier.set_feeder_headnodes()
