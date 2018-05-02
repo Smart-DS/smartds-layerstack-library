@@ -29,12 +29,37 @@ class Network_Split(DiTToLayerBase):
         kwarg_dict['path_to_feeder_file'] = Kwarg(default=None, description='Path to feeder.txt',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+        kwarg_dict['compute_metrics'] = Kwarg(default=False, description='Triggers the metrics computation if set to True',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['excel_output'] = Kwarg(default=None, description='path to the output file for xlsx export',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['json_output'] = Kwarg(default=None, description='path to the output file for json export',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         return kwarg_dict
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
         if 'path_to_feeder_file' in kwargs:
-            path_to_feeder_file = kwargs['path_to_feeder_file']       
+            path_to_feeder_file = kwargs['path_to_feeder_file']
+
+        if 'compute_metrics' in kwargs:
+            compute_metrics = kwargs['compute_metrics']
+        else:
+            compute_metrics = False
+
+        if compute_metrics:
+            if 'excel_output' in kwargs:
+                excel_output = kwargs['excel_output']
+            else:
+                raise ValueError('Missing output file name for excel')
+
+            if 'json_output' in kwargs:
+                json_output = kwargs['json_output']
+            else:
+                raise ValueError('Missing output file name for json')       
 
         #Open and read feeder.txt
         with open(path_to_feeder_file, 'r') as f:
@@ -85,6 +110,18 @@ class Network_Split(DiTToLayerBase):
 
         #Set the names
         network_analyst.model.set_names()
+
+        #Compute the metrics if needed
+        if compute_metrics:
+
+            #Compute metrics
+            network_analyst.compute_all_metrics_per_feeder()
+
+            #Export metrics to Excel
+            network_analyst.export(excel_output)
+
+            #Export metrics to JSON
+            network_analyst.export_json(json_output)
 
         #Return the model
         return network_analyst.model
