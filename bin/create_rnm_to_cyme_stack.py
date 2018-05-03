@@ -113,14 +113,15 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
 
     #Write to CYME
     final = stack[11]
-    final.args[0] = os.path.join('.','results')
+    final.args[0] = os.path.join('.','results',feeder)
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack.json'))
 
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-    create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+#create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+    create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'urban-suburban')
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_cyme_stack.json')
     s.run_dir = 'run_dir'
