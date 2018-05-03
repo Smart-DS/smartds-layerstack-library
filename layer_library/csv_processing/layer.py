@@ -60,7 +60,12 @@ class Csv_Processing(LayerBase):
         if not os.path.exists(input_filename):
             return True
 
-        df = pd.read_csv(input_filename, delimiter=";")
+        try:
+            df = pd.read_csv(input_filename, delimiter=";")
+        except pd.errors.EmptyDataError:
+            logging.warning("Empty Dataframe loaded for {}".format(input_filename))
+            return True
+            
 
         #Set the column names
         if object_name.lower() == 'load':

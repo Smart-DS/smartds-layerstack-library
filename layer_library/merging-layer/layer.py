@@ -11,6 +11,7 @@ from ditto.readers.csv.read import reader as CSVReader
 from ditto.modify.modify import Modifier
 from ditto.store import Store
 import os
+import pandas as pd
 
 logger = logging.getLogger('layerstack.layers.MergingLayer')
 
@@ -42,6 +43,13 @@ class MergingLayer(DiTToLayerBase):
 	
         #If the file does not exist, do nothing and return the input model
         if not os.path.exists(filename):
+            return model
+
+        # If the file is empty also do nothing and return the input model
+        try:
+            df = pd.read_csv(filename)
+        except pd.errors.EmptyDataError:
+            logging.warning("Empty Dataframe loaded for {}".format(filename))
             return model
 
         #Create a CSV reader
