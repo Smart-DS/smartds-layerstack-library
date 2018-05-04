@@ -32,12 +32,18 @@ class PostProcessing(DiTToLayerBase):
         kwarg_dict['path_to_feeder_file'] = Kwarg(default=None, description='Path to feeder.txt',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+        kwarg_dict['path_to_switching_devices_file'] = Kwarg(default=None, description='Path to switching_devices.dss',
+                                                            parser=None, choices=None,
+                                                            nargs=None, action=None)
         return kwarg_dict
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
         if 'path_to_feeder_file' in kwargs:
-            path_to_feeder_file = kwargs['path_to_feeder_file']       
+            path_to_feeder_file = kwargs['path_to_feeder_file']   
+
+        if 'path_to_switching_devices_file' in kwargs:
+            path_to_switching_devices_file = kwargs['path_to_switching_devices_file']    
         
         #Create the modifier object
         modifier=system_structure_modifier(model,'st_mat')
@@ -84,6 +90,9 @@ class PostProcessing(DiTToLayerBase):
                     
         #Do the actual mdifications
         modifier.set_switching_devices_ampacity()
+
+        #Open the switches which need to be opened.
+        modifier.open_close_switches(path_to_switching_devices_file)
 
         #Create the sub-transmission Feeder_metadata
         if not 'subtransmission' in modifier.model.model_names.keys():
