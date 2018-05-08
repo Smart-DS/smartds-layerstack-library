@@ -14,7 +14,7 @@ logger = logging.getLogger('layerstack.layers.Compute_Metrics')
 
 class Compute_Metrics(LayerBase):
     name = "compute_metrics"
-    uuid = "UUID(18b94030-ca09-40ca-9ea0-b9cb1c9090fb)"
+    uuid = UUID("18b94030-ca09-40ca-9ea0-b9cb1c9090fb")
     version = '0.1.0'
     desc = "Layer to compute the metrics and write them out to xlsx and json"
 
