@@ -77,7 +77,7 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
     #No input except the model. Nothing to do here...
     post_processing = stack[3]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
-
+    post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,feeder,'OpenDSS','SwitchingDevices.dss')
 
     #Merging Load layer
     merging_load = stack[4]
