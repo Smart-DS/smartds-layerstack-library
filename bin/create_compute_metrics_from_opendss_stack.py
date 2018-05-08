@@ -38,17 +38,17 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
     #Add the capacitor coordinates with a model merge
     stack.append(Layer(os.path.join(layer_library_dir,'merging-layer')))
 
-    #Split the network into feeders
-    stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
-
     #Add intermediate node coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'intermediate_node')))
 
     #Find missing coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
 
+    #Split the network into feeders
+    stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
+
     #Compute the metrics
-    stack.append(Layer(os.path.join(layer_library_dir,'compute_metrics')))
+    #stack.append(Layer(os.path.join(layer_library_dir,'compute_metrics')))
 
 
     for layer in stack:
@@ -87,21 +87,25 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
     merging_caps = stack[5]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
-    #Splitting layer
-    split = stack[6]
-    split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
 
     #Intermediate node layer
-    inter = stack[7]
+    inter = stack[6]
     inter.kwargs['filename'] = os.path.join(dataset_dir,feeder,'OpenDSS','LineCoord.txt')
 
     # Missing coords
     # No args/kwargs for this layer
 
+    #Splitting layer
+    split = stack[8]
+    split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
+    split.kwargs['compute_metrics'] = True
+    split.kwargs['excel_output'] = os.path.join('./results','metrics.xlsx')
+    split.kwargs['json_output'] = os.path.join('./results','metrics.json')
+
     #Compute metrics
-    final = stack[9]
-    final.kwargs['excel_output'] = os.path.join('.','results/metrics.xlsx')
-    final.kwargs['json_output']  = os.path.join('.','results/metrics.json')
+    #final = stack[9]
+    #final.kwargs['excel_output'] = os.path.join('.','results/metrics.xlsx')
+    #final.kwargs['json_output']  = os.path.join('.','results/metrics.json')
 
     stack.save(os.path.join(stack_library_dir,'compute_metrics_from_opendss.json'))
 
