@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super
 import logging
+import networkx as nx
 from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
@@ -10,6 +11,8 @@ from ditto.dittolayers import DiTToLayerBase
 from ditto.modify.system_structure import system_structure_modifier
 from ditto.models.feeder_metadata import Feeder_metadata
 from ditto.models.line import Line
+from ditto.models.power_source import PowerSource
+from ditto.network.network import Network
 import numpy as np
 
 logger = logging.getLogger('layerstack.layers.PostProcessing')
@@ -74,7 +77,11 @@ class PostProcessing(DiTToLayerBase):
             modifier.set_feeder_metadata(feeder[0],feeder[1],feeder[2])
 
         
-    
+        for i in modifier.model.models:
+            if isinstance(i,PowerSource) and hasattr(i,'is_sourcebus') and i.is_sourcebus ==1:
+                i.positive_sequence_impedance = complex(1.1208,3.5169)
+                i.zero_sequence_impedance = complex(1.1208,3.5169)
+        
 
         #Set headnodes for each feeder
         modifier.set_feeder_headnodes()
@@ -93,6 +100,13 @@ class PostProcessing(DiTToLayerBase):
 
         #Open the switches which need to be opened.
         modifier.open_close_switches(path_to_switching_devices_file)
+
+        tmp_net = Network()    
+        tmp_net.build(modifier.model,'st_mat')
+        tmp_net.set_attributes(modifier.model)
+        tmp_net.remove_open_switches(modifier.model)
+        print(len(nx.cycle_basis(tmp_net.graph)))
+        print(nx.cycle_basis(tmp_net.graph))
 
         #Create the sub-transmission Feeder_metadata
         if not 'subtransmission' in modifier.model.model_names.keys():
