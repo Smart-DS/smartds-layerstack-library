@@ -99,6 +99,7 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
     split = stack[8]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
     split.kwargs['compute_metrics'] = True
+    split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
     split.kwargs['excel_output'] = os.path.join('./results','metrics.xlsx')
     split.kwargs['json_output'] = os.path.join('./results','metrics.json')
 
