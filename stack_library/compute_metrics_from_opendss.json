@@ -1,6 +1,6 @@
 {
     "name": "RNM to CYME Stack",
-    "uuid": "b9f3713e-48a6-4b58-a913-43eb7c260ed7",
+    "uuid": "9dfd370f-b766-41e8-8dcb-3fa85a1d319b",
     "version": "v0.1.0",
     "run_dir": null,
     "model": null,
@@ -122,7 +122,7 @@
             "uuid": "958b5e41-be14-49c4-8a1b-f03a412d003e",
             "layer_dir": "../layer_library/post-processing",
             "version": "0.1.0",
-            "checksum": "ed6f09c94ee5c22eb36535bebbfd5caa",
+            "checksum": "985db348a24c88eb624511fefbfdffd5",
             "args": [],
             "kwargs": {
                 "path_to_feeder_file": {
@@ -216,7 +216,7 @@
             "uuid": "5e2849d9-7f25-499b-a5f7-b1f85e97dde9",
             "layer_dir": "../layer_library/network_split",
             "version": "0.1.0",
-            "checksum": "9109e308b0ede344123819aeb49a1f57",
+            "checksum": "ce3f0f3366e8509c0d75d4289afe2422",
             "args": [],
             "kwargs": {
                 "path_to_feeder_file": {
@@ -250,6 +250,15 @@
                     "value": "./results/metrics.json",
                     "default": null,
                     "description": "path to the output file for json export",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "compute_kva_density_with_transformers": {
+                    "value": true,
+                    "default": null,
+                    "description": "Flag to use transformers or loads to compute the kva density metric",
                     "parser": "None",
                     "choices": null,
                     "nargs": null,

@@ -38,6 +38,9 @@ class Network_Split(DiTToLayerBase):
         kwarg_dict['json_output'] = Kwarg(default=None, description='path to the output file for json export',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+        kwarg_dict['compute_kva_density_with_transformers'] = Kwarg(default=None, description='Flag to use transformers or loads to compute the kva density metric',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         return kwarg_dict
 
     @classmethod
@@ -49,6 +52,11 @@ class Network_Split(DiTToLayerBase):
             compute_metrics = kwargs['compute_metrics']
         else:
             compute_metrics = False
+
+        if 'compute_kva_density_with_transformers' in kwargs:
+            compute_kva_density_with_transformers = kwargs['compute_kva_density_with_transformers']
+        else:
+            compute_kva_density_with_transformers = True
 
         if compute_metrics:
             if 'excel_output' in kwargs:
@@ -115,7 +123,7 @@ class Network_Split(DiTToLayerBase):
         if compute_metrics:
 
             #Compute metrics
-            network_analyst.compute_all_metrics_per_feeder()
+            network_analyst.compute_all_metrics_per_feeder(compute_kva_density_with_transformers=compute_kva_density_with_transformers)
 
             #Export metrics to Excel
             network_analyst.export(excel_output)
