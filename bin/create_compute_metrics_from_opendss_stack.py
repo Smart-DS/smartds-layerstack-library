@@ -70,7 +70,7 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
     #Read OpenDSS layer
     from_opendss = stack[2]
     from_opendss.args[0] = os.path.join(feeder,'OpenDSS','Master.dss')
-    from_opendss.args[1] = os.path.join(feeder,'OpenDSS','Buscoord.dss')
+    from_opendss.args[1] = os.path.join(feeder,'OpenDSS','BusCoord.dss')
     from_opendss.kwargs['base_dir'] = dataset_dir
 
     #Modify layer
