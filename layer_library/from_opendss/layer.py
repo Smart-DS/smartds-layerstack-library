@@ -35,7 +35,6 @@ class FromOpenDSS(LayerBase):
     def kwargs(cls):
         kwarg_dict = super().kwargs()
         kwarg_dict['base_dir'] = Kwarg(default=None, description='Base directory for argument paths.')
-        kwarg_dict['read_power_source'] = Kwarg(default=True, parser=bool)
         return kwarg_dict
 
     @classmethod
@@ -51,10 +50,8 @@ class FromOpenDSS(LayerBase):
             raise ValueError("No bus_coords model file exists at {}".format(bus_coords))
 
         base_model = Store()
-        reader = OpenDSSReader()
-        reader.build_opendssdirect(opendss_model)
-        reader.set_dss_file_names({'Nodes': bus_coords})
-        reader.parse(base_model, read_power_source=read_power_source)
+        reader = OpenDSSReader(master_file=opendss_model,buscoordinates_file=bus_coords)
+        reader.parse(base_model)
         base_model.set_names()
         stack.model = base_model
         return True

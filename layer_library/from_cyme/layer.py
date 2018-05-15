@@ -44,7 +44,8 @@ class FromCyme(LayerBase):
         reader = CymeReader(data_folder_path=os.path.join(base_dir,cyme_location))
         reader.parse(base_model)
         base_model.set_names()
-        return base_model
+        stack.model = base_model
+        return True
 
 
 if __name__ == '__main__':
