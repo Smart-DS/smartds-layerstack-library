@@ -1,0 +1,139 @@
+{
+    "name": "Metrics_from_Duke",
+    "uuid": "28a7efb2-4c03-4c9b-a41a-6b802c01cc15",
+    "version": "v0.1.0",
+    "run_dir": null,
+    "model": null,
+    "layers": [
+        {
+            "name": "From Cyme",
+            "uuid": "f6a6cd1d-193f-475d-96a2-b9f5d88de202",
+            "layer_dir": "../layer_library/from_cyme",
+            "version": "v0.1.0",
+            "checksum": "77f974d499e72b7a1be2ff38ba867809",
+            "args": [
+                {
+                    "name": "cyme_model",
+                    "value": null,
+                    "description": "Path to Cyme model to be loaded",
+                    "parser": "<class 'str'>",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "base_dir": {
+                    "value": "../../../Projects/DiTTo/data/Cyme/Cleaned_DUKE_data/duke_01",
+                    "default": null,
+                    "description": "Base directory for argument paths.",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "network_filename": {
+                    "value": "network.txt",
+                    "default": null,
+                    "description": "Name of the network file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "equipment_filename": {
+                    "value": "equipment.txt",
+                    "default": null,
+                    "description": "Name of the equipment file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "load_filename": {
+                    "value": "load.txt",
+                    "default": null,
+                    "description": "Name of the load file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        },
+        {
+            "name": "compute_metrics_from_duke",
+            "uuid": "cc8c7460-bb10-4968-9265-f4ea0b50d147",
+            "layer_dir": "../layer_library/compute_metrics_from_duke",
+            "version": "0.1.0",
+            "checksum": "99fabcbeebdcc007e29a409d8599ef44",
+            "args": [
+                {
+                    "name": "arg_name",
+                    "value": null,
+                    "description": "",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            ],
+            "kwargs": {
+                "data_folder_path": {
+                    "value": "../../../Projects/DiTTo/data/Cyme/Cleaned_DUKE_data/duke_01",
+                    "default": null,
+                    "description": "Path to the folder holding the cyme files",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "network_filename": {
+                    "value": "network.txt",
+                    "default": null,
+                    "description": "Name of the network file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "equipment_filename": {
+                    "value": "equipment.txt",
+                    "default": null,
+                    "description": "Name of the equipment file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "excel_output_filename": {
+                    "value": "./results/duke_01/metrics.xlsx",
+                    "default": null,
+                    "description": "Path to the excel output metric file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "json_output_filename": {
+                    "value": "./results/duke_01/metrics.json",
+                    "default": null,
+                    "description": "Path to the excel output metric file",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "compute_kva_density_with_transformers": {
+                    "value": false,
+                    "default": null,
+                    "description": "Flag to use transformers or loads to compute the kva density metric",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                }
+            }
+        }
+    ]
+}
