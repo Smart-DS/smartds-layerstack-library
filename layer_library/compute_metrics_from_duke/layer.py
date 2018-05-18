@@ -161,13 +161,13 @@ class Compute_Metrics_From_Duke(DiTToLayerBase):
         
         #Set the nominal voltages using the mapping
         for src in nx.neighbors(giant,mega_source):
-            #try:
-            m=set_nominal_voltages_recur(m, mega_source, edge_equipment, edge_equipment_name, digraph, src,
+            try:
+                m=set_nominal_voltages_recur(m, mega_source, edge_equipment, edge_equipment_name, digraph, src,
                                        _f.mapp_source_voltage[_f.mapp_headnode_source[src]],
                                        src)
-            m=set_nominal_voltages_recur_line(m)
-            #except:
-            #    pass
+                m=set_nominal_voltages_recur_line(m)
+            except:
+                pass
 
     
         #Create an empty Network object
