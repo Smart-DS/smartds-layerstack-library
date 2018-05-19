@@ -100,8 +100,8 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('./results','metrics.xlsx')
-    split.kwargs['json_output'] = os.path.join('./results','metrics.json')
+    split.kwargs['excel_output'] = os.path.join('./results', feeder, 'metrics.xlsx')
+    split.kwargs['json_output'] = os.path.join('./results',feeder, 'metrics.json')
 
     #Compute metrics
     #final = stack[9]
@@ -113,11 +113,13 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-    create_compute_metrics_from_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
-    from layerstack.stack import Stack
-    s = Stack.load('../stack_library/compute_metrics_from_opendss.json')
-    s.run_dir = 'run_dir'
-    s.run()
+    all_feeders = ['industrial','rural','demo2','urban-suburban']
+    for feeder in all_feeders:
+        create_compute_metrics_from_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), feeder)
+        from layerstack.stack import Stack
+        s = Stack.load('../stack_library/compute_metrics_from_opendss.json')
+        s.run_dir = 'run_dir'
+        s.run()
 
 if __name__ == "__main__":
     main()

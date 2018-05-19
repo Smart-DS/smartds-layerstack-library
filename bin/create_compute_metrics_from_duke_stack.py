@@ -1,4 +1,5 @@
 import logging
+import sys
 import os
 
 logger = logging.getLogger(__name__)
@@ -39,11 +40,11 @@ def create_compute_metrics_from_duke_stack(dataset_dir, region):
     metrics.kwargs['data_folder_path'] = os.path.join(dataset_dir,region)
     metrics.kwargs['network_filename'] = 'network.txt'
     metrics.kwargs['equipment_filename'] = 'equipment.txt'
-    metrics.kwargs['excel_output_filename'] = os.path.join('./results', region, 'metrics.xlsx')
-    metrics.kwargs['json_output_filename'] = os.path.join('./results', region, 'metrics.json')
+    metrics.kwargs['excel_output_filename'] = os.path.join('./results/duke', region, 'metrics.xlsx')
+    metrics.kwargs['json_output_filename'] = os.path.join('./results/duke', region, 'metrics.json')
     metrics.kwargs['compute_kva_density_with_transformers'] = False
 
-    stack.save(os.path.join(stack_library_dir,'compute_metrics_from_duke.json'))
+    stack.save(os.path.join(stack_library_dir,'compute_metrics_from_duke_{dirname}.json'.format(dirname=region)))
 
 
 def main():
@@ -51,7 +52,8 @@ def main():
         TODO.
     '''
     from layerstack.stack import Stack
-    path_to_data = os.path.join('..', '..', '..', 'Projects/DiTTo/data/Cyme/Cleaned_DUKE_data')
+    #path_to_data = os.path.join('..', '..', '..', 'Projects/DiTTo/data/Cyme/Cleaned_DUKE_data')
+    path_to_data = os.path.join('..', '..', 'duke_data','Cleaned_DUKE_data')
     #Loop over the folders here
     #for area in os.listdir(path_to_data):
     #.   if not os.path.exists(os.path.join('./results', area)):
@@ -60,9 +62,10 @@ def main():
     #.   s = Stack.load('../stack_library/compute_metrics_from_duke.json')
     #.   s.run_dir = 'run_dir'
     #.   s.run()
-    create_compute_metrics_from_duke_stack(path_to_data, 'duke_01')
+    dirname = sys.argv[1]
+    create_compute_metrics_from_duke_stack(path_to_data, dirname)
     
-    s = Stack.load('../stack_library/compute_metrics_from_duke.json')
+    s = Stack.load('../stack_library/compute_metrics_from_duke_{dirname}.json'.format(dirname=dirname))
     s.run_dir = 'run_dir'
     s.run()
 
