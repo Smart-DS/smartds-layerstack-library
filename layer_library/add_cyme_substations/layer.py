@@ -251,6 +251,8 @@ class AddSubstations(DiTToLayerBase):
                         # Remove feeder name from substation elements. This is normally set automatically when reading from CYME
                         if hasattr(i,'feeder_name'): 
                             i.feeder_name = 'subtransmission' 
+                        if hasattr(i,'substation_name'): 
+                            i.substation_name = '' 
 
 
                         # Assign feeder names to the endpoints of the substation 
@@ -261,13 +263,14 @@ class AddSubstations(DiTToLayerBase):
 #### Need to discuss with Carlos                            
                                 boundry_map[i.name] = high_boundary
                                 i.name = high_boundary #TODO: issue of multiple high voltage inputs needs to be addressed
-                                i.feeder = 'subtransmission' #i.e. connect to the subtransmission network
                             elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<high_voltage:
                                 feeder_cnt+=1
                                 if feeder_cnt<=num_model_feeders:
                                     boundry_map[i.name] = feeder_names[feeder_cnt-1]
                                     i.name = feeder_names[feeder_cnt-1].lower() 
-                                    i.feeder_name = i.name #Set the feeder the be this node
+                                    split_name = i.name.split('>')
+                                    i.feeder_name = split_name[1].replace('%','')+'->'+split_name[0] #Set the feeder the be this node
+                                    i.substation_name = split_name[1][:-2] # This is very specific to the current naming convention
                                 else:
                                     i.name = str(sub_file+'_'+sub+'_'+i.name).lower() #ie. No feeders assigned to this berth so using the substation identifiers
                             else:
