@@ -38,6 +38,9 @@ class PostProcessing(DiTToLayerBase):
         kwarg_dict['path_to_switching_devices_file'] = Kwarg(default=None, description='Path to switching_devices.dss',
                                                             parser=None, choices=None,
                                                             nargs=None, action=None)
+        kwarg_dict['switch_to_recloser'] = Kwarg(default=False, description='If True does the switch to recloser post-processing',
+                                                            parser=None, choices=None,
+                                                            nargs=None, action=None)
         return kwarg_dict
 
     @classmethod
@@ -115,6 +118,10 @@ class PostProcessing(DiTToLayerBase):
             api_feeder_metadata.substation = modifier.source
             api_feeder_metadata.headnode = modifier.source
             api_feeder_metadata.transformer = modifier.source
+
+        #switch to recloser post-processing
+        if kwargs['switch_to_recloser']:
+            modifier.replace_first_switch_with_recloser()
                     
         #Return the modified model
         return modifier.model
