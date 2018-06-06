@@ -114,6 +114,8 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     #Write to OpenDSS
     final = stack[11]
     final.args[0] = os.path.join('.','results',feeder)
+    final.kwargs['separate_feeders'] = False
+    final.kwargs['separate_substations'] = False
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack.json'))
 
