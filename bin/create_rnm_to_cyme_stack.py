@@ -80,11 +80,12 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     post_processing = stack[3]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,feeder,'OpenDSS','SwitchingDevices.dss')
+    post_processing.kwargs['switch_to_recloser'] = True
 
     #Merging Load layer
     merging_load = stack[4]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Loads_IntermediateFormat2.csv')
-	
+
     #Merging Capacitor Layer
     merging_caps = stack[5]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
