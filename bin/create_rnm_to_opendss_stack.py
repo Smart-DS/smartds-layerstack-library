@@ -24,6 +24,9 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     #Read the OpenDSS input model
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
 	
+    #Attach timeseries loads
+    stack.append(Layer(os.path.join(layer_library_dir,'connect_timeseries_loads')))
+
     #Modify the model
     stack.append(Layer(os.path.join(layer_library_dir,'post-processing')))
 
@@ -75,44 +78,55 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     from_opendss.args[1] = os.path.join(feeder,'OpenDSS','BusCoord.dss')
     from_opendss.kwargs['base_dir'] = dataset_dir
 
+    #Timeseries Loads
+    add_timeseries = stack[3]
+    add_timeseries.kwargs['customer_file'] = os.path.join(dataset_dir,feeder,'Inputs','customers_ext.txt')
+    add_timeseries.kwargs['residential_load_data'] = os.path.join(dataset_dir,'GSO_loads','residential','guilford_real_power.dsg')
+    add_timeseries.kwargs['residential_load_metadata'] = os.path.join(dataset_dir,'GSO_loads','residential','results.csv')
+    add_timeseries.kwargs['commercial_load_data'] = os.path.join(dataset_dir,'GSO_loads','commercial','com_guilford_real_power.dsg')
+    add_timeseries.kwargs['commercial_load_metadata'] = os.path.join(dataset_dir,'GSO_loads','commercial','results.csv')
+    add_timeseries.kwargs['output_folder'] = os.path.join('.','results',feeder)
+
     #Modify layer
-    #No input except the model. Nothing to do here...
-    post_processing = stack[3]
+    post_processing = stack[4]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,feeder,'OpenDSS','SwitchingDevices.dss')
 
     #Merging Load layer
-    merging_load = stack[4]
+    merging_load = stack[5]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Loads_IntermediateFormat2.csv')
 	
     #Merging Capacitor Layer
-    merging_caps = stack[5]
+    merging_caps = stack[6]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
     #Splitting layer
-    split = stack[6]
+    split = stack[7]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
 
     #Intermediate node layer
-    inter = stack[7]
+    inter = stack[8]
     inter.kwargs['filename'] = os.path.join(dataset_dir,feeder,'OpenDSS','LineCoord.txt')
 
     #Substations
 
-    add_substations = stack[8]
+    add_substations = stack[9]
     add_substations.args[0] = os.path.join(dataset_dir,feeder,'Feeders', 'feeders.txt')
     add_substations.kwargs['base_dir'] = dataset_dir
 
     #LTC Controls
 
-    ltc_controls = stack[9]
+    ltc_controls = stack[10]
     ltc_controls.kwargs['setpoint'] = 105
 
     # Missing coords
     # No args/kwargs for this layer
 
+
+
+
     #Write to OpenDSS
-    final = stack[11]
+    final = stack[12]
     final.args[0] = os.path.join('.','results',feeder)
     final.kwargs['separate_feeders'] = False
     final.kwargs['separate_substations'] = False
