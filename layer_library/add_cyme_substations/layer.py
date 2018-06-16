@@ -246,11 +246,18 @@ class AddSubstations(DiTToLayerBase):
                         if isinstance(i,Node) and hasattr(i,'positions') and len(i.positions) >0 and hasattr(i.positions[0],'lat') and i.positions[0].lat is not None and hasattr(i.positions[0],'long') and i.positions[0].long is not None:
                             ref_lat = i.positions[0].lat
                             ref_long = i.positions[0].long
+
+
+                    substation_name = feeder_names[0].lower().split('>')[1][:-2]
                     for i in sub_model.models:
 
                         # Remove feeder name from substation elements. This is normally set automatically when reading from CYME
                         if hasattr(i,'feeder_name'): 
-                            i.feeder_name = 'subtransmission' 
+                            i.feeder_name = '' 
+                        if hasattr(i,'substation_name'): 
+                            i.substation_name = substation_name 
+                        if hasattr(i,'is_substation'): 
+                            i.is_substation = True 
 
 
                         # Assign feeder names to the endpoints of the substation 
@@ -261,13 +268,18 @@ class AddSubstations(DiTToLayerBase):
 #### Need to discuss with Carlos                            
                                 boundry_map[i.name] = high_boundary
                                 i.name = high_boundary #TODO: issue of multiple high voltage inputs needs to be addressed
-                                i.feeder = 'subtransmission' #i.e. connect to the subtransmission network
+                                i.feeder_name = 'subtransmission'
+                                i.substation_name = ''
+                                i.is_substation = False
                             elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<high_voltage:
                                 feeder_cnt+=1
                                 if feeder_cnt<=num_model_feeders:
                                     boundry_map[i.name] = feeder_names[feeder_cnt-1]
                                     i.name = feeder_names[feeder_cnt-1].lower() 
-                                    i.feeder_name = i.name #Set the feeder the be this node
+                                    split_name = i.name.split('>')
+                                    i.feeder_name = split_name[1].replace('%','')+'->'+split_name[0] #Set the feeder the be this node
+                                    i.substation_name = split_name[1][:-2] # This is very specific to the current naming convention
+                                    i.is_substation = False
                                 else:
                                     i.name = str(sub_file+'_'+sub+'_'+i.name).lower() #ie. No feeders assigned to this berth so using the substation identifiers
                             else:

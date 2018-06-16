@@ -49,8 +49,8 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     #Find missing coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
 
-    #Write to CYME
-    stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
+    #Write to OpenDSS
+    stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
 
 
     for layer in stack:
@@ -80,12 +80,11 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     post_processing = stack[3]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,feeder,'OpenDSS','SwitchingDevices.dss')
-    post_processing.kwargs['switch_to_recloser'] = True
 
     #Merging Load layer
     merging_load = stack[4]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Loads_IntermediateFormat2.csv')
-
+	
     #Merging Capacitor Layer
     merging_caps = stack[5]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
@@ -112,9 +111,11 @@ def create_rnm_to_cyme_stack(dataset_dir, feeder):
     # Missing coords
     # No args/kwargs for this layer
 
-    #Write to CYME
+    #Write to OpenDSS
     final = stack[11]
     final.args[0] = os.path.join('.','results',feeder)
+    final.kwargs['separate_feeders'] = False
+    final.kwargs['separate_substations'] = False
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack.json'))
 
