@@ -6,6 +6,7 @@ import os
 import shutil
 import numpy as np
 from uuid import UUID
+import random
 
 from layerstack.args import Arg, Kwarg, ArgMode
 from layerstack.layer import Layer
@@ -57,13 +58,19 @@ class AddSubstations(DiTToLayerBase):
     def kwargs(cls, model=None):
         kwarg_dict = super().kwargs()
         kwarg_dict['base_dir'] = Kwarg(default=None, description='Base directory for argument paths.')
+        kwarg_dict['readme_file'] = Kwarg(default=None,description='Location of readme file')
         kwarg_dict['substation_folder'] = Kwarg(default=None, 
             description="Defaults to this layer's resources folder",
             parser=None, choices=None,nargs=None, action=None)
         return kwarg_dict
 
     @classmethod
-    def apply(cls, stack, model, feeder_file, output_substation_folder, base_dir=None, substation_folder=None):
+    def apply(cls, stack, model, feeder_file, output_substation_folder, base_dir=None, readme_file = None, substation_folder=None):
+        # Format is max number of feeders, list of substation numbers
+        subs_4kv = [(4,[5]),(8,[13]),(12,[14])]
+        subs_25kv = [(6,[11])]
+        subs_1247kv = [(1,[1]),(2,[8]),(3,[2]), (4,[4,10]), (6,[9]), (8,[3,7]), (12,[6]), (16,[12])]
+        sub_list = None
         logger.debug("Starting add_cyme_substations")
         if base_dir and (not os.path.exists(feeder_file)):
             feeder_file = os.path.join(base_dir,feeder_file)
@@ -72,6 +79,27 @@ class AddSubstations(DiTToLayerBase):
             substation_folder = os.path.join(os.path.dirname(__file__),'resources')
         elif base_dir and (not os.path.exists(output_substation_folder)):
             output_substation_folder = os.path.join(base_dir,output_substation_folder)
+
+        transformer_config = 'Y' #Default is Delta-Wye. If specified we set it to be wye-wye
+        if readme_file is not None and os.path.exists(readme_file):
+            f = open(readme_file,'r')
+            info = f.readline().split()
+            suffix = info[1][:-2]
+            config = info[5]
+            if config == 'delta-delta':
+                transformer_config = 'D'
+            kv = int(float(suffix)*1000)
+            suffix = '_'+suffix
+            if kv == 4000:
+                sub_list = subs_4kv
+            elif kv == 25000:
+                sub_list = subs_25kv
+            else:
+                sub_list = subs_1247kv
+        else:
+            kv = 12470
+            suffix = '_1247'
+            sub_list = subs_1247kv
 
         from_cyme_layer_dir = None
         # first look in stack
@@ -86,6 +114,8 @@ class AddSubstations(DiTToLayerBase):
             msg = "Cannot find the 'From CYME' layer."
             logger.error(msg)
             raise Exception(msg)
+
+
 
         logger.debug("Building the model network")
 
@@ -105,7 +135,7 @@ class AddSubstations(DiTToLayerBase):
 
 
         ''' 
-           Substation nodes have the form ***_1247. 
+           Substation nodes have the form ***_1247. (or _4 or _25 for 4kv and 25kv systems) 
            The boundary of the substation is ***_69 on the high side.
            The boundary of the substation in a node with no % on the low side
            A feeder defines these boundaries.
@@ -127,17 +157,17 @@ class AddSubstations(DiTToLayerBase):
             bus2 = buses[1]
             bus1 = buses[0]
             if substation in substation_boundaries_low:
-                substation_boundaries_low[substation].add(bus2+'>'+bus1+'%%')
+                substation_boundaries_low[substation].add(bus2+'>'+bus1+'%') #Set the first node to be the location with one % sign as sometimes there isn't one with %%
             else:
-                substation_boundaries_low[substation]=set([bus2+'>'+bus1+'%%'])
+                substation_boundaries_low[substation]=set([bus2+'>'+bus1+'%'])
 
             if substation not in substation_boundaries_high:
-                substation_boundaries_high[substation] = set([substation.replace('_1247','_69')])
+                substation_boundaries_high[substation] = set([substation.replace(suffix,'_69')]) # All substations are from 69kV
 
             if substation not in substation_transformers:
                 substation_transformers[substation] = set([transformer])
 
-
+        
         for sub in substation_boundaries_low.keys(): #sub is the name of the substation and substation_boundaries_low[sub] is a set of all the connected feeders
             logger.debug("Building to_delete and modifier")
             to_delete = Store()
@@ -161,7 +191,9 @@ class AddSubstations(DiTToLayerBase):
             for low_val in substation_boundaries_low[sub]:
                 all_nodes.append(low_val)  # End at these nodes. There are then lines out to the reclosers
                 if low_val+'%' in model.model_names:
-                    all_nodes.append(low_val+'%') #This extra node sometimes exists too
+                    all_nodes.append(low_val+'%') #This extra node often exists 
+                if low_val+'%%' in model.model_names:
+                    all_nodes.append(low_val+'%%') #This extra node sometimes exists too
                 
             all_nodes_set = set(all_nodes)
             internal_edges = model.get_internal_edges(all_nodes_set)
@@ -191,10 +223,14 @@ class AddSubstations(DiTToLayerBase):
 
             # Mark the internals of the substation for deletion
             for n in all_nodes_set:
+                if not n in model.model_names:
+                    continue
                 obj_name = type(model[n]).__name__
                 base_obj = globals()[obj_name](to_delete)
                 base_obj.name = n
             for e in internal_edges:
+                if not e in model.model_names:
+                    continue
                 obj_name = type(model[e]).__name__
                 base_obj = globals()[obj_name](to_delete)
                 base_obj.name = e
@@ -202,11 +238,17 @@ class AddSubstations(DiTToLayerBase):
             num_model_feeders = len(feeder_names)
             not_allocated = True
             
-            low_voltage = 12470
+            low_voltage = kv
             high_voltage = 69000
 
             # Read the CYME models
-            for sub_file in os.listdir(substation_folder): # Insert extra logic here to determine which one to use
+            random.seed(0)
+            for element in sub_list: # Insert extra logic here to determine which one to use
+                if num_model_feeders>element[0]:
+                    continue
+
+                sub_file = 'sb'+str(element[1][random.randint(0,len(element[1])-1)])
+                print(sub_file)
                 sub_model = Store()
                 reader  = CymeReader(data_folder_path=os.path.join(os.path.dirname(__file__),'resources',sub_file))
                 reader.parse(sub_model)
@@ -258,6 +300,10 @@ class AddSubstations(DiTToLayerBase):
                             i.substation_name = substation_name 
                         if hasattr(i,'is_substation'): 
                             i.is_substation = True 
+                        
+                        if isinstance(i,PowerTransformer) and transformer_config =='D' and i.windings is not None and len(i.windings) == 2 and i.windings[1] is not None:
+                            i.windings[1].connection_type = 'D'
+
 
 
                         # Assign feeder names to the endpoints of the substation 
@@ -280,6 +326,8 @@ class AddSubstations(DiTToLayerBase):
                                     i.feeder_name = split_name[1].replace('%','')+'->'+split_name[0] #Set the feeder the be this node
                                     i.substation_name = split_name[1][:-2] # This is very specific to the current naming convention
                                     i.is_substation = False
+                                    if i.feeder_name in model.model_names: # Set the Feedermetadata headnode to be the correct name.
+                                        model[i.feeder_name].headnode=i.name 
                                 else:
                                     i.name = str(sub_file+'_'+sub+'_'+i.name).lower() #ie. No feeders assigned to this berth so using the substation identifiers
                             else:
