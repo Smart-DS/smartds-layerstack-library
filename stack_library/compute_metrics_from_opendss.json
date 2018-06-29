@@ -1,6 +1,6 @@
 {
     "name": "RNM to CYME Stack",
-    "uuid": "9dfd370f-b766-41e8-8dcb-3fa85a1d319b",
+    "uuid": "bd6bdc1e-46d1-4a57-9a9e-495eea90f518",
     "version": "v0.1.0",
     "run_dir": null,
     "model": null,
@@ -14,7 +14,7 @@
             "args": [],
             "kwargs": {
                 "input_filename": {
-                    "value": "../../dataset3/MixedHumid/industrial/IntermediateFormat/Loads_IntermediateFormat.csv",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/IntermediateFormat/Loads_IntermediateFormat.csv",
                     "default": null,
                     "description": "Name of the CSV input file",
                     "parser": "None",
@@ -23,7 +23,7 @@
                     "list_parser": "None"
                 },
                 "output_filename": {
-                    "value": "../../dataset3/MixedHumid/industrial/IntermediateFormat/Loads_IntermediateFormat2.csv",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/IntermediateFormat/Loads_IntermediateFormat2.csv",
                     "default": null,
                     "description": "Name of the CSV output file",
                     "parser": "None",
@@ -51,7 +51,7 @@
             "args": [],
             "kwargs": {
                 "input_filename": {
-                    "value": "../../dataset3/MixedHumid/industrial/IntermediateFormat/Capacitors_IntermediateFormat.csv",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/IntermediateFormat/Capacitors_IntermediateFormat.csv",
                     "default": null,
                     "description": "Name of the CSV input file",
                     "parser": "None",
@@ -60,7 +60,7 @@
                     "list_parser": "None"
                 },
                 "output_filename": {
-                    "value": "../../dataset3/MixedHumid/industrial/IntermediateFormat/Capacitors_IntermediateFormat2.csv",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/IntermediateFormat/Capacitors_IntermediateFormat2.csv",
                     "default": null,
                     "description": "Name of the CSV output file",
                     "parser": "None",
@@ -88,7 +88,7 @@
             "args": [
                 {
                     "name": "opendss_model",
-                    "value": "industrial/OpenDSS/Master.dss",
+                    "value": "P12U/OpenDSS/Master.dss",
                     "description": "Path to OpenDSS model to be loaded",
                     "parser": "<class 'str'>",
                     "choices": null,
@@ -97,7 +97,7 @@
                 },
                 {
                     "name": "bus_coords",
-                    "value": "industrial/OpenDSS/Buscoord.dss",
+                    "value": "P12U/OpenDSS/Buscoord.dss",
                     "description": "Bus Coords for OpenDSS Model",
                     "parser": "<class 'str'>",
                     "choices": null,
@@ -107,7 +107,7 @@
             ],
             "kwargs": {
                 "base_dir": {
-                    "value": "../../dataset3/MixedHumid",
+                    "value": "../../../Downloads/case_dataset_4_20180616/",
                     "default": null,
                     "description": "Base directory for argument paths.",
                     "parser": "None",
@@ -122,11 +122,11 @@
             "uuid": "958b5e41-be14-49c4-8a1b-f03a412d003e",
             "layer_dir": "../layer_library/post-processing",
             "version": "0.1.0",
-            "checksum": "985db348a24c88eb624511fefbfdffd5",
+            "checksum": "c37d4c5868b6d6d900c59f65e497ffbc",
             "args": [],
             "kwargs": {
                 "path_to_feeder_file": {
-                    "value": "../../dataset3/MixedHumid/industrial/Feeders/feeders.txt",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/Auxiliary/Feeder.txt",
                     "default": null,
                     "description": "Path to feeder.txt",
                     "parser": "None",
@@ -135,9 +135,18 @@
                     "list_parser": "None"
                 },
                 "path_to_switching_devices_file": {
-                    "value": "../../dataset3/MixedHumid/industrial/OpenDSS/SwitchingDevices.dss",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/OpenDSS/SwitchingDevices.dss",
                     "default": null,
                     "description": "Path to switching_devices.dss",
+                    "parser": "None",
+                    "choices": null,
+                    "nargs": null,
+                    "list_parser": "None"
+                },
+                "switch_to_recloser": {
+                    "value": false,
+                    "default": false,
+                    "description": "If True does the switch to recloser post-processing",
                     "parser": "None",
                     "choices": null,
                     "nargs": null,
@@ -154,7 +163,7 @@
             "args": [],
             "kwargs": {
                 "filename": {
-                    "value": "../../dataset3/MixedHumid/industrial/IntermediateFormat/Loads_IntermediateFormat2.csv",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/IntermediateFormat/Loads_IntermediateFormat2.csv",
                     "default": null,
                     "description": "Path to the CSV input file",
                     "parser": "None",
@@ -173,7 +182,7 @@
             "args": [],
             "kwargs": {
                 "filename": {
-                    "value": "../../dataset3/MixedHumid/industrial/IntermediateFormat/Capacitors_IntermediateFormat2.csv",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/IntermediateFormat/Capacitors_IntermediateFormat2.csv",
                     "default": null,
                     "description": "Path to the CSV input file",
                     "parser": "None",
@@ -192,7 +201,7 @@
             "args": [],
             "kwargs": {
                 "filename": {
-                    "value": "../../dataset3/MixedHumid/industrial/OpenDSS/LineCoord.txt",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/OpenDSS/LineCoord.txt",
                     "default": null,
                     "description": "Path to LineCoord.txt",
                     "parser": "None",
@@ -220,7 +229,7 @@
             "args": [],
             "kwargs": {
                 "path_to_feeder_file": {
-                    "value": "../../dataset3/MixedHumid/industrial/Feeders/feeders.txt",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/Auxiliary/Feeder.txt",
                     "default": null,
                     "description": "Path to feeder.txt",
                     "parser": "None",
@@ -238,7 +247,7 @@
                     "list_parser": "None"
                 },
                 "excel_output": {
-                    "value": "./results/metrics.xlsx",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/metrics.xlsx",
                     "default": null,
                     "description": "path to the output file for xlsx export",
                     "parser": "None",
@@ -247,7 +256,7 @@
                     "list_parser": "None"
                 },
                 "json_output": {
-                    "value": "./results/metrics.json",
+                    "value": "../../../Downloads/case_dataset_4_20180616/P12U/metrics.json",
                     "default": null,
                     "description": "path to the output file for json export",
                     "parser": "None",
