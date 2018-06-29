@@ -25,10 +25,10 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
 
     #Parse Capacitor coordinates csv file
     stack.append(Layer(os.path.join(layer_library_dir,'csv_processing')))
-	
+
     #Read the OpenDSS input model
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
-	
+
     #Modify the model
     stack.append(Layer(os.path.join(layer_library_dir,'post-processing')))
 
@@ -76,13 +76,13 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
     #Modify layer
     #No input except the model. Nothing to do here...
     post_processing = stack[3]
-    post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
+    post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,feeder,'OpenDSS','SwitchingDevices.dss')
 
     #Merging Load layer
     merging_load = stack[4]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Loads_IntermediateFormat2.csv')
-	
+
     #Merging Capacitor Layer
     merging_caps = stack[5]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
@@ -97,11 +97,11 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
 
     #Splitting layer
     split = stack[8]
-    split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
+    split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Auxiliary','Feeder.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('./results','metrics.xlsx')
-    split.kwargs['json_output'] = os.path.join('./results','metrics.json')
+    split.kwargs['excel_output'] = os.path.join(dataset_dir,feeder,'metrics.xlsx')
+    split.kwargs['json_output'] = os.path.join(dataset_dir,feeder,'metrics.json')
 
     #Compute metrics
     #final = stack[9]
@@ -113,11 +113,23 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-    create_compute_metrics_from_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
-    from layerstack.stack import Stack
-    s = Stack.load('../stack_library/compute_metrics_from_opendss.json')
-    s.run_dir = 'run_dir'
-    s.run()
+    #create_compute_metrics_from_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+    path = "../../../Downloads/case_dataset_4_20180616/"
+    _dir = [d for d in os.listdir(path) if "." not in d and "P" in d]
+    _dir = sorted(_dir)
+    for d in _dir:
+        print("---- {} ----".format(d))
+        try:
+            create_compute_metrics_from_opendss_stack(path, d)
+            from layerstack.stack import Stack
+            s = Stack.load('../stack_library/compute_metrics_from_opendss.json')
+            s.run_dir = 'run_dir'
+            s.run()
+            print("====> Done!")
+        except:
+            print("XXXX FAIL! XXXX")
+            print("====> Ignoring....")
+            pass
 
 if __name__ == "__main__":
     main()
