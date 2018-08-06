@@ -1,3 +1,4 @@
+import sys
 import logging
 import os
 
@@ -10,7 +11,7 @@ from layerstack.stack import Stack
 layer_library_dir = '../layer_library'
 stack_library_dir = '../stack_library'
 
-def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
+def create_compute_metrics_from_opendss_stack(dataset_dir, region):
     '''
         Create the stack to compute the metrics from RNM OpenDSS output.
 
@@ -57,65 +58,68 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, feeder):
 
     #Load coordinate layer
     load_coordinates = stack[0]
-    load_coordinates.kwargs['input_filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Loads_IntermediateFormat.csv')
-    load_coordinates.kwargs['output_filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Loads_IntermediateFormat2.csv')
+    load_coordinates.kwargs['input_filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat.csv')
+    load_coordinates.kwargs['output_filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat2.csv')
     load_coordinates.kwargs['object_name'] = 'Load'
 
     #Capacitor coordinate layer
     capacitor_coordinates = stack[1]
-    capacitor_coordinates.kwargs['input_filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Capacitors_IntermediateFormat.csv')
-    capacitor_coordinates.kwargs['output_filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
+    capacitor_coordinates.kwargs['input_filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat.csv')
+    capacitor_coordinates.kwargs['output_filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
     capacitor_coordinates.kwargs['object_name'] = 'Capacitor'
 
     #Read OpenDSS layer
     from_opendss = stack[2]
-    from_opendss.args[0] = os.path.join(feeder,'OpenDSS','Master.dss')
-    from_opendss.args[1] = os.path.join(feeder,'OpenDSS','Buscoord.dss')
+    from_opendss.args[0] = os.path.join(region,'OpenDSS','Master.dss')
+    from_opendss.args[1] = os.path.join(region,'OpenDSS','BusCoord.dss')
     from_opendss.kwargs['base_dir'] = dataset_dir
 
     #Modify layer
     #No input except the model. Nothing to do here...
     post_processing = stack[3]
-    post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
-    post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,feeder,'OpenDSS','SwitchingDevices.dss')
+    post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
+    post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
 
     #Merging Load layer
     merging_load = stack[4]
-    merging_load.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Loads_IntermediateFormat2.csv')
+    merging_load.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat2.csv')
 	
     #Merging Capacitor Layer
     merging_caps = stack[5]
-    merging_caps.kwargs['filename'] = os.path.join(dataset_dir,feeder,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
+    merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
 
     #Intermediate node layer
     inter = stack[6]
-    inter.kwargs['filename'] = os.path.join(dataset_dir,feeder,'OpenDSS','LineCoord.txt')
+    inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
     # Missing coords
     # No args/kwargs for this layer
 
     #Splitting layer
     split = stack[8]
-    split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,feeder,'Feeders','feeders.txt')
+    split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('./results','metrics.xlsx')
-    split.kwargs['json_output'] = os.path.join('./results','metrics.json')
+    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'metrics.xlsx')
+    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'metrics.json')
 
     #Compute metrics
     #final = stack[9]
     #final.kwargs['excel_output'] = os.path.join('.','results/metrics.xlsx')
     #final.kwargs['json_output']  = os.path.join('.','results/metrics.json')
 
-    stack.save(os.path.join(stack_library_dir,'compute_metrics_from_opendss.json'))
+    stack.save(os.path.join(stack_library_dir,'compute_metrics_from_opendss_' + region + '.json'))
 
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-    create_compute_metrics_from_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+    region = sys.argv[1]
+    create_compute_metrics_from_opendss_stack(os.path.join("..","..","dataset_4_20180616"), region)    
     from layerstack.stack import Stack
-    s = Stack.load('../stack_library/compute_metrics_from_opendss.json')
+    s = Stack.load("../stack_library/compute_metrics_from_opendss_" + region + ".json")
+    if not os.path.isdir(os.path.join('.', 'results', region)):
+        os.makedirs(os.path.join(".", "results", region))    
     s.run_dir = 'run_dir'
     s.run()
 
