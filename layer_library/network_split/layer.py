@@ -7,7 +7,7 @@ from uuid import UUID
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
 
-from ditto.metrics.network_analysis import network_analyzer
+from ditto.metrics.network_analysis import NetworkAnalyzer
 
 logger = logging.getLogger('layerstack.layers.Network_Split')
 
@@ -102,7 +102,7 @@ class Network_Split(DiTToLayerBase):
                 substation_transformers[feed] = sub.lower().replace('.','')
 
         #Create a network analyzer object
-        network_analyst = network_analyzer(model)
+        network_analyst = NetworkAnalyzer(model)
 
         #Add the feeder information to the network analyzer
         network_analyst.add_feeder_information(list(feeders.keys()),
