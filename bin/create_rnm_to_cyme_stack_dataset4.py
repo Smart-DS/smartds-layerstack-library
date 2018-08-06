@@ -129,7 +129,7 @@ def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
 #create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
-    create_rnm_to_cyme_stack(os.path.join('..','..','dataset_4_20180616'), region)
+    create_rnm_to_cyme_stack(os.path.join('..','..','dataset_4_20180727'), region)
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'.json')
     if not os.path.isdir(os.path.join('.','results',region)):
