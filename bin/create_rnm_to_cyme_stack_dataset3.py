@@ -11,13 +11,8 @@ from layerstack.stack import Stack
 layer_library_dir = '../layer_library'
 stack_library_dir = '../stack_library'
 
-def create_compute_metrics_from_opendss_stack(dataset_dir, region):
-    '''
-        Create the stack to compute the metrics from RNM OpenDSS output.
-
-        .. note:: I kept the coordinates setting layers because of the metrics relying
-                  on the convex hull computation.
-    '''
+def create_rnm_to_cyme_stack(dataset_dir, region):
+    '''Create the stack to convert RNM models in OpenDSS to CYME.'''
 
     stack = Stack(name='RNM to CYME Stack')
 
@@ -26,10 +21,10 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, region):
 
     #Parse Capacitor coordinates csv file
     stack.append(Layer(os.path.join(layer_library_dir,'csv_processing')))
-	
+
     #Read the OpenDSS input model
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
-	
+
     #Modify the model
     stack.append(Layer(os.path.join(layer_library_dir,'post-processing')))
 
@@ -39,17 +34,24 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, region):
     #Add the capacitor coordinates with a model merge
     stack.append(Layer(os.path.join(layer_library_dir,'merging-layer')))
 
+    #Split the network into feeders
+    stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
+
     #Add intermediate node coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'intermediate_node')))
+
+    #Add cyme substations
+    stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
+
+    #Add ltc control settings
+    stack.append(Layer(os.path.join(layer_library_dir,'set_ltc_controls')))
+
 
     #Find missing coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
 
-    #Split the network into feeders
-    stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
-
-    #Compute the metrics
-    #stack.append(Layer(os.path.join(layer_library_dir,'compute_metrics')))
+    #Write to CYME
+    stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
 
 
     for layer in stack:
@@ -79,47 +81,59 @@ def create_compute_metrics_from_opendss_stack(dataset_dir, region):
     post_processing = stack[3]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
+    post_processing.kwargs['switch_to_recloser'] = True
 
     #Merging Load layer
     merging_load = stack[4]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat2.csv')
-	
+
     #Merging Capacitor Layer
     merging_caps = stack[5]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
+    #Splitting layer
+    split = stack[6]
+    split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
 
     #Intermediate node layer
-    inter = stack[6]
+    inter = stack[7]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
+
+    #Substations
+
+    add_substations = stack[8]
+    readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
+    readme = None
+    if len(readme_list)==1:
+        readme = readme_list[0]
+    add_substations.args[0] = os.path.join(dataset_dir,region,'Auxiliary', 'Feeder.txt')
+    add_substations.kwargs['base_dir'] = dataset_dir
+    add_substations.kwargs['readme_file'] = readme
+
+    #LTC Controls
+
+    ltc_controls = stack[9]
+    ltc_controls.kwargs['setpoint'] = 105
 
     # Missing coords
     # No args/kwargs for this layer
 
-    #Splitting layer
-    split = stack[8]
-    split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
-    split.kwargs['compute_metrics'] = True
-    split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'metrics.xlsx')
-    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'metrics.json')
+    #Write to CYME
+    final = stack[11]
+    final.args[0] = os.path.join('.','results',region)
 
-    #Compute metrics
-    #final = stack[9]
-    #final.kwargs['excel_output'] = os.path.join('.','results/metrics.xlsx')
-    #final.kwargs['json_output']  = os.path.join('.','results/metrics.json')
-
-    stack.save(os.path.join(stack_library_dir,'compute_metrics_from_opendss_' + region + '.json'))
+    stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'.json'))
 
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-    region = sys.argv[1]
-    create_compute_metrics_from_opendss_stack(os.path.join("..","..","dataset_4_20180616"), region)    
+#create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+    region= sys.argv[1]
+    create_rnm_to_cyme_stack(os.path.join('..','..','dataset_3_20180716'), region)
     from layerstack.stack import Stack
-    s = Stack.load("../stack_library/compute_metrics_from_opendss_" + region + ".json")
-    if not os.path.isdir(os.path.join('.', 'results', region)):
-        os.makedirs(os.path.join(".", "results", region))    
+    s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'.json')
+    if not os.path.isdir(os.path.join('.','results',region)):
+        os.makedirs(os.path.join('.','results',region))
     s.run_dir = 'run_dir'
     s.run()
 
