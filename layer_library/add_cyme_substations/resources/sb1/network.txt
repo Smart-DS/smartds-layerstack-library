@@ -1,0 +1,97 @@
+[GENERAL]
+DATE=June 21, 2018 at 16:38:06
+CYME_VERSION=8.00
+CYMDIST_REVISION=8
+
+[SI]
+
+[NODE]
+FORMAT_NODE=NodeID,CoordX,CoordY,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,ZoneID,ExposedCircuitType,BusGap,WorkingDistance,UseUserDefinedFaultCurrent,UserDefinedFaultCurrent,OpeningTimeMode,UserDefinedOpeningTime,EnclosureWidth,EnclosureHeight,EnclosureDepth,CoefficientA,CoefficientK,UserDefinedTimeConstant,TimeConstant,OverrideLFVoltageLimit,HighVoltageLimit,LowVoltageLimit,LoadSheddingActive,MaximumLoadShed,ShedLoadCost,UserDefinedBaseVoltage,Installation,RatedVoltage,RatedCurrent,ANSISymCurrent,ANSIAsymCurrent,PeakCurrent,Standard,TestCircuitPowerFactor
+NODE_1_1,-231.296832,108.089696,,3,0.011061,-1.152904,0.000000,0,0,0,-1,-1,-1,0,Arial Unicode MS,1.000000,0.330000,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+HEAD_1,-231.863736,121.695392,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+NODE_1_6,-229.785088,111.869056,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+NODE_1_4,-231.863736,117.916032,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+NODE_1_2,-231.863736,119.994680,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+NODE_1_5,-229.785088,113.380800,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+NODE_1_3,-231.863736,119.427776,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+FORMAT_NODE=NodeID,CoordX1,CoordY1,CoordX2,CoordY2,Width,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,ZoneID,ExposedCircuitType,BusGap,WorkingDistance,UseUserDefinedFaultCurrent,UserDefinedFaultCurrent,OpeningTimeMode,UserDefinedOpeningTime,EnclosureWidth,EnclosureHeight,EnclosureDepth,CoefficientA,CoefficientK,UserDefinedTimeConstant,TimeConstant,OverrideLFVoltageLimit,HighVoltageLimit,LowVoltageLimit,LoadSheddingActive,MaximumLoadShed,ShedLoadCost,UserDefinedBaseVoltage,Installation,RatedVoltage,RatedCurrent,ANSISymCurrent,ANSIAsymCurrent,PeakCurrent,Standard,TestCircuitPowerFactor
+BUS_1_2,-234.698256,109.601440,-228.462312,109.601440,6.235944,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+BUS_1_1,-233.753416,115.648416,-229.218184,115.648416,4.535232,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+
+[HEADNODES]
+FORMAT_HEADNODES=NodeID,NetworkID,ConnectorIndex,StructureID,HarmonicEnveloppe,EquivalentSourceConfiguration,EquivalentSourceSinglePhaseCT,EquivSourceCenterTapPhase,BackgroundHarmonicVoltage
+HEAD_1,SUBSTATION_1,0,SUBSTATION_1,0,0,0,4,0
+
+[SOURCE EQUIVALENT]
+FORMAT_SOURCEEQUIVALENT=NodeID,LoadModelName,Voltage,OperatingAngle1,OperatingAngle2,OperatingAngle3,PositiveSequenceResistance,PositiveSequenceReactance,NegativeSequenceResistance,NegativeSequenceReactance,ZeroSequenceResistance,ZeroSequenceReactance,OperatingVoltage1,OperatingVoltage2,OperatingVoltage3,BaseMVA,ImpedanceUnit
+HEAD_1,DEFAULT,69.000000,0.000000,-120.000000,120.000000,1.120800,3.516900,1.120800,3.516900,1.120800,3.516900,69.000000,69.000000,69.000000,100.000000,0
+
+[LOAD EQUIVALENT]
+FORMAT_LOADEQUIVALENT=NodeID,LoadModelName,Format,Value1A,Value1B,Value1C,Value2A,Value2B,Value2C,ValueSinglePhaseCT11,ValueSinglePhaseCT12,ValueSinglePhaseCT21,ValueSinglePhaseCT22
+HEAD_1,DEFAULT,KW_PF,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000
+
+[DEVICE STAGE]
+FORMAT_DEVICESTAGE=DeviceStageName,DeviceStageID,Description,Color,DefaultStage
+Complete,2,,65535,0
+Estimated,3,,16711680,0
+Incomplete,1,,255,0
+Verified,4,,65280,0
+
+[OVERHEADLINE SETTING]
+FORMAT_OVERHEADLINESETTING=SectionID,DeviceNumber,DeviceStage,Flags,InitFromEquipFlags,LineCableID,Length,ConnectionStatus,CoordX,CoordY,HarmonicModel,FlowConstraintActive,FlowConstraintUnit,MaximumFlow,SeriesCompensationActive,MaxReactanceMultiplier,SeriesCompensationCost
+35,LINE_1_1,,0,0,OVERHEADLINE1,1.511744,0,,,2,,,,,,
+
+[SECTION]
+FORMAT_SECTION=SectionID,FromNodeID,FromNodeIndex,ToNodeID,ToNodeIndex,Phase,ZoneID,SubNetworkId,EnvironmentID
+FORMAT_SUBSTATION=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,LossLoadFactorK,Group1,Group2,Group3,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version,EnvironmentID
+SUBSTATION=SUBSTATION_1,,1,1523396413,,0,,0.150000,,,,NULL,,,,,,,,,,,,,,,-1,0
+33,NODE_1_5,0,NODE_1_6,0,ABC,,SUBSTATION_1,0
+31,BUS_1_1,1,BUS_1_2,0,ABC,,SUBSTATION_1,0
+35,BUS_1_2,3,NODE_1_1,0,ABC,,SUBSTATION_1,0
+350,NODE_1_5,0,BUS_1_1,3,ABC,,SUBSTATION_1,0
+348,NODE_1_2,0,HEAD_1,0,ABC,,SUBSTATION_1,0
+30,NODE_1_4,0,BUS_1_1,0,ABC,,SUBSTATION_1,0
+29,NODE_1_3,0,NODE_1_4,0,ABC,,SUBSTATION_1,0
+34,NODE_1_6,0,BUS_1_2,1,ABC,,SUBSTATION_1,0
+361,NODE_1_2,0,NODE_1_3,0,ABC,,SUBSTATION_1,0
+
+[SUBNETWORKS]
+FORMAT_SUBNETWORKS=SubNetID,Angle,X,Y,Height,Length,ParentSubNetID,ZoneID,SymbolID,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,SubNetTypeId,Version,SymbolReferenceSize,TextReferenceSize,CoordSet
+SUBSTATION_1,0.000000,-231.800295,121.741269,125.000000,125.000000,,,-1,,3,0.000000,0.000000,0.000000,0,0,0,-1,-1,-1,0,Arial Unicode MS,1.000000,0.330000,Schematic,-1,0.755872,0.251957,1
+
+[SUBNETWORK CONNECTIONS]
+FORMAT_SUBNETWORKCONNECTIONS=SubNetID,NodeID,ConnectorCoordX,ConnectorCoordY,ConnectorIndex,SymbolConnectorIndex,Description
+SUBSTATION_1,HEAD_1,-227.363627,184.241269,,,
+SUBSTATION_1,NODE_1_1,-228.854554,59.241269,,,
+
+[TRANSFORMER SETTING]
+FORMAT_TRANSFORMERSETTING=SectionID,Location,EqID,DeviceNumber,DeviceStage,Flags,InitFromEquipFlags,CoordX,CoordY,Conn,PrimTap,SecondaryTap,RgPrim,XgPrim,RgSec,XgSec,ODPrimPh,PrimaryBaseVoltage,SecondaryBaseVoltage,FromNodeID,SettingOption,SetPoint,ControlType,LowerBandWidth,UpperBandWidth,TapLocation,InitialTapPosition,InitialTapPositionMode,Tap,MaxBuck,MaxBoost,CT,PT,Rset,Xset,FirstHouseHigh,FirstHouseLow,PhaseON,AtSectionID,MasterID,FaultIndicator,PhaseShiftType,GammaPhaseShift,CTPhase,PrimaryCornerGroundedPhase,SecondaryCornerGroundedPhase,ConnectionStatus,Reversible
+29,M,SUB_TRANSFORMER_0_13KV,TRANSFORMER_1_1,,0,0,,,1,100.000000,100.000000,0.000000,0.000000,0.000000,0.000000,NONE,0.000000,0.000000,NODE_1_3,2,100.000000,0,0.830000,0.830000,2,0.000000,1,0.000000,10.000000,10.000000,100.000000,60.000000,0.000000,0.000000,0.000000,0.000000,A,NODE_1_3,,0,1,0.000000,1,NONE,NONE,0,1
+
+[SWITCH SETTING]
+FORMAT_SWITCHSETTING=SectionID,Location,EqID,DeviceNumber,DeviceStage,Flags,InitFromEquipFlags,CoordX,CoordY,ClosedPhase,Locked,RC,NStatus,PhPickup,GrdPickup,Alternate,PhAltPickup,GrdAltPickup,FromNodeID,FaultIndicator,Automated,SensorMode,Strategic,RestorationMode,ConnectionStatus,ByPassOnRestoration,Reversible
+31,M,DISCONNECT_SWITCH_13KV,SWITCH_1_4,,0,0,,,NONE,0,0,0,0.000000,0.000000,0,0.000000,0.000000,BUS_1_1,0,0,0,0,0,0,0,1
+350,M,DISCONNECT_SWITCH_13KV,SWITCH_1_3,,0,0,,,ABC,0,0,0,0.000000,0.000000,0,0.000000,0.000000,NODE_1_5,0,0,0,0,0,0,0,1
+348,M,DISCONNECT_SWITCH_69KV,SWITCH_1_1,,0,0,,,ABC,0,0,0,0.000000,0.000000,0,0.000000,0.000000,NODE_1_2,0,0,0,0,0,0,0,1
+30,M,LOADBREAK_SWITCH_13KV,SWITCH_1_2,,0,0,-231.863736,116.782224,ABC,0,0,0,0.000000,0.000000,0,0.000000,0.000000,NODE_1_4,0,0,0,0,0,0,0,1
+34,M,DISCONNECT_SWITCH_13KV,SWITCH_1_5,,0,0,,,ABC,0,0,0,0.000000,0.000000,0,0.000000,0.000000,NODE_1_6,0,0,0,0,0,0,0,1
+
+[BREAKER SETTING]
+FORMAT_BREAKERSETTING=SectionID,Location,EqID,DeviceNumber,DeviceStage,Flags,InitFromEquipFlags,CoordX,CoordY,ClosedPhase,Locked,RC,NStatus,TCCID,PhPickup,GrdPickup,Alternate,PhAltPickup,GrdAltPickup,FromNodeID,EnableReclosing,FaultIndicator,EnableFuseSaving,MinRatedCurrentForFuseSaving,Automated,SensorMode,Strategic,RestorationMode,ConnectionStatus,ByPassOnRestoration,Speed,SeqOpFirstPhase,SeqOpFirstGround,SeqOpLockoutPhase,SeqOpLockoutGround,SeqResetTime,SeqReclosingTime1,SeqReclosingTime2,SeqReclosingTime3,Reversible
+33,M,BREAKER_13KV,BREAKER_1_1,,0,0,,,ABC,0,0,0,BREAKER1,0.000000,0.000000,0,0.000000,0.000000,NODE_1_5,1,1,0,0.000000,0,0,0,0,0,0,0.050000,2,2,4,4,30.000000,2.000000,2.000000,2.000000,1
+
+[FUSE SETTING]
+FORMAT_FUSESETTING=SectionID,Location,EqID,DeviceNumber,DeviceStage,Flags,InitFromEquipFlags,CoordX,CoordY,ClosedPhase,Locked,RC,NStatus,TCCID,PhPickup,GrdPickup,Alternate,PhAltPickup,GrdAltPickup,FromNodeID,FaultIndicator,Strategic,RestorationMode,ConnectionStatus,ByPassOnRestoration,Reversible
+361,M,FUSE_1_69KV,FUSE_1_1,,0,0,,,ABC,0,0,0,FUSE_1_69KV,0.000000,0.000000,0,0.000000,0.000000,NODE_1_2,1,0,0,0,0,1
+
+[NODE CONNECTOR]
+FORMAT_NODECONNECTOR=NodeID,CoordX,CoordY,SectionID
+BUS_1_1,-231.863736,115.648416,30
+BUS_1_1,-233.564448,115.648416,31
+BUS_1_1,-229.785088,115.648416,
+BUS_1_1,-229.785088,115.648416,350
+BUS_1_2,-233.564448,109.601440,31
+BUS_1_2,-229.785088,109.601440,34
+BUS_1_2,-228.840248,109.601440,
+BUS_1_2,-231.296832,109.601440,35
+

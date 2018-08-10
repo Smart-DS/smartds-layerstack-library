@@ -11,10 +11,10 @@ from layerstack.stack import Stack
 layer_library_dir = '../layer_library'
 stack_library_dir = '../stack_library'
 
-def create_rnm_to_opendss_stack(dataset_dir, region):
-    '''Create the stack to convert RNM models in OpenDSS to OpenDSS.'''
+def create_rnm_to_cyme_stack(dataset_dir, region):
+    '''Create the stack to convert RNM models in OpenDSS to CYME.'''
 
-    stack = Stack(name='RNM to OpenDSS Stack')
+    stack = Stack(name='RNM to CYME Stack')
 
     #Parse load coordinates csv file
     stack.append(Layer(os.path.join(layer_library_dir,'csv_processing')))
@@ -46,15 +46,12 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Add ltc control settings
     stack.append(Layer(os.path.join(layer_library_dir,'set_ltc_controls')))
 
-    #Add fuse control settings
-    stack.append(Layer(os.path.join(layer_library_dir,'set_fuse_controls')))
-
 
     #Find missing coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
 
     #Write to CYME
-    stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
+    stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
 
 
     for layer in stack:
@@ -79,16 +76,8 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     from_opendss.args[1] = os.path.join(region,'OpenDSS','BusCoord.dss')
     from_opendss.kwargs['base_dir'] = dataset_dir
 
-    #Timeseries Loads
-  #  add_timeseries = stack[3]
-  #  add_timeseries.kwargs['customer_file'] = os.path.join(dataset_dir,feeder,'Inputs','customers_ext.txt')
-  #  add_timeseries.kwargs['residential_load_data'] = os.path.join(dataset_dir,'GSO_loads','residential','guilford_real_power.dsg')
-  #  add_timeseries.kwargs['residential_load_metadata'] = os.path.join(dataset_dir,'GSO_loads','residential','results.csv')
-  #  add_timeseries.kwargs['commercial_load_data'] = os.path.join(dataset_dir,'GSO_loads','commercial','com_guilford_real_power.dsg')
-  #  add_timeseries.kwargs['commercial_load_metadata'] = os.path.join(dataset_dir,'GSO_loads','commercial','results.csv')
-  #  add_timeseries.kwargs['output_folder'] = os.path.join('.','results',feeder)
-
     #Modify layer
+    #No input except the model. Nothing to do here...
     post_processing = stack[3]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
@@ -126,32 +115,23 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     ltc_controls = stack[9]
     ltc_controls.kwargs['setpoint'] = 105
 
-    #Fuse Controls
-
-    ltc_controls = stack[10]
-    ltc_controls.kwargs['current_rating'] = 65
-
     # Missing coords
     # No args/kwargs for this layer
 
     #Write to CYME
-    final = stack[12]
+    final = stack[11]
     final.args[0] = os.path.join('.','results',region)
-    final.kwargs['separate_feeders'] = False
-    final.kwargs['separate_substations'] = False
 
-    stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_'+region+'.json'))
+    stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'.json'))
 
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-#create_rnm_to_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+#create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
-    dataset = sys.argv[2]
-    dataset_map = {'dataset_4':'20180727','dataset_3':'20180716','dataset_2':'20180716'}
-    create_rnm_to_opendss_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
+    create_rnm_to_cyme_stack(os.path.join('..','..','dataset_4_20180727'), region)
     from layerstack.stack import Stack
-    s = Stack.load('../stack_library/rnm_to_opendss_stack_'+region+'.json')
+    s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'.json')
     if not os.path.isdir(os.path.join('.','results',region)):
         os.makedirs(os.path.join('.','results',region))
     s.run_dir = 'run_dir'
