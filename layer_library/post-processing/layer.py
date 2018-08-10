@@ -55,7 +55,7 @@ class PostProcessing(DiTToLayerBase):
         modifier=system_structure_modifier(model,'st_mat')
 
         #Center-tap loads
-        modifier.center_tap_load_preprocessing()
+        #modifier.center_tap_load_preprocessing()
 
         #Set node nominal voltages
         modifier.set_nominal_voltages_recur()
