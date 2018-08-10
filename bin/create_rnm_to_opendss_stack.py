@@ -134,7 +134,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     # Missing coords
     # No args/kwargs for this layer
 
-    #Write to CYME
+    #Write to OpenDSS
     final = stack[12]
     final.args[0] = os.path.join('.','results',region)
     final.kwargs['separate_feeders'] = False

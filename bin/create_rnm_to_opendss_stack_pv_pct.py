@@ -156,11 +156,13 @@ def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     # Missing coords
     # No args/kwargs for this layer
 
-    #Write to CYME
+    #Write to OpenDSS
     final = stack[14]
-    final.args[0] = os.path.join('.','results',region)
+    final.args[0] = os.path.join('.','results',region,'{pct}_pv'.format(pct=pct_pv))
+    final.kwargs['separate_feeders'] = False
+    final.kwargs['separate_substations'] = False
 
-    stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_'+region+'.json'))
+    stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_pv_'+region+'_'+str(pct_pv)+'_pct.json'))
 
 
 def main():
@@ -168,13 +170,13 @@ def main():
 #create_rnm_to_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
-    percent = sys.argv[3]
+    percent = float(sys.argv[3])
     dataset_map = {'dataset_4':'20180727','dataset_3':'20180716','dataset_2':'20180716'}
-    create_rnm_to_opendss_stack_pv(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region,float(percent))
+    if not os.path.isdir(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent))):
+        os.makedirs(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent)))
+    create_rnm_to_opendss_stack_pv(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region,percent)
     from layerstack.stack import Stack
-    s = Stack.load('../stack_library/rnm_to_opendss_stack_'+region+'.json')
-    if not os.path.isdir(os.path.join('.','results',region)):
-        os.makedirs(os.path.join('.','results',region))
+    s = Stack.load('../stack_library/rnm_to_opendss_stack_pv_'+region+'_'+str(percent)+'_pct.json')
     s.run_dir = 'run_dir'
     s.run()
 
