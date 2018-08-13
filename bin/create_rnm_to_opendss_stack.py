@@ -93,6 +93,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
     post_processing.kwargs['switch_to_recloser'] = True
+    post_processing.kwargs['center_tap_postprocess'] = False
 
     #Merging Load layer
     merging_load = stack[4]

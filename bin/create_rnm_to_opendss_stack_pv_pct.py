@@ -91,6 +91,7 @@ def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     post_processing = stack[3]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
+    post_processing.kwargs['center_tap_postprocess'] = False
     post_processing.kwargs['switch_to_recloser'] = True
 
     #Merging Load layer
@@ -171,7 +172,7 @@ def main():
     region= sys.argv[1]
     dataset = sys.argv[2]
     percent = float(sys.argv[3])
-    dataset_map = {'dataset_4':'20180727','dataset_3':'20180716','dataset_2':'20180716'}
+    dataset_map = {'dataset_4':'20180727','dataset_3':'20180716','dataset_2':'20180727'}
     if not os.path.isdir(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent))):
         os.makedirs(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent)))
     create_rnm_to_opendss_stack_pv(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region,percent)
