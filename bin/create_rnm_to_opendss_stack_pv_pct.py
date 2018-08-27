@@ -15,6 +15,7 @@ placement_library_dir = '../placement_library'
 def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     '''Create the stack to convert RNM models in OpenDSS to OpenDSS.'''
 
+    pct_pv = float(pct_pv)
     stack = Stack(name='RNM to OpenDSS Stack')
 
     #Parse load coordinates csv file

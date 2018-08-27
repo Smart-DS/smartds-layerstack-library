@@ -160,11 +160,11 @@ class AddSubstations(DiTToLayerBase):
             bus2 = buses[1]
             bus1 = buses[0]
             if substation in substation_boundaries_low:
-                substation_boundaries_low[substation].add(bus2) #Set the first node to be the location with one x sign as sometimes there isn't one with xx
-                substation_names[bus2] = substation
+                substation_boundaries_low[substation].add(bus2+'-'+bus1+'x') #Set the first node to be the location with one x sign as sometimes there isn't one with xx
+                substation_names[bus2+'-'+bus1+'x'] = substation
             else:
-                substation_boundaries_low[substation]=set([bus2])
-                substation_names[bus2] = substation
+                substation_boundaries_low[substation]=set([bus2+'-'+bus1+'x'])
+                substation_names[bus2+'-'+bus1+'x'] = substation
 
             if substation not in substation_boundaries_high:
                 substation_boundaries_high[substation] = set([substation.replace(suffix,'_69')]) # All substations are from 69kV
@@ -173,6 +173,7 @@ class AddSubstations(DiTToLayerBase):
                 substation_transformers[substation] = set([transformer])
 
         
+        print(substation_names)
         for sub in substation_boundaries_low.keys(): #sub is the name of the substation and substation_boundaries_low[sub] is a set of all the connected feeders
             logger.debug("Building to_delete and modifier")
             to_delete = Store()
@@ -247,11 +248,20 @@ class AddSubstations(DiTToLayerBase):
             for n in all_nodes_set:
                 if not n in model.model_names:
                     continue
+#                is_endpoint = False
+#                for key in substation_boundaries_low:
+#                    if n in substation_boundaries_low[key]: #Don't delete the boundaries of the substation
+#                        is_endpoint = True
+#                        break
+#                if is_endpoint:
+#                    continue
                 obj_name = type(model[n]).__name__
                 base_obj = globals()[obj_name](to_delete)
                 base_obj.name = n
             for e in internal_edges:
                 if not e in model.model_names:
+                    continue
+                if  model[e].from_element in feeder_names: #Don't remove edge from bus2-bus1-x to the first distribution transformer
                     continue
                 obj_name = type(model[e]).__name__
                 base_obj = globals()[obj_name](to_delete)
@@ -345,11 +355,13 @@ class AddSubstations(DiTToLayerBase):
                                 if feeder_cnt<=num_model_feeders:
                                     boundry_map[i.name] = feeder_names[feeder_cnt-1]
                                     i.name = feeder_names[feeder_cnt-1].lower() 
-                                    i.feeder_name = i.name
                                     i.substation_name = substation_name
                                     i.is_substation = False
-                                    if i.substation_name+'->'+i.feeder_name in model.model_names: # Set the Feedermetadata headnode to be the correct name.
-                                        model[i.substation_name+'->'+i.feeder_name].headnode=i.name 
+                                    endpoint = i.name.split('-')[0]
+                                    i.feeder_name = i.substation_name+'->'+endpoint
+                                    #import pdb;pdb.set_trace()
+                                    if i.substation_name+'->'+endpoint in model.model_names: # Set the Feedermetadata headnode to be the correct name.
+                                        model[i.substation_name+'->'+endpoint].headnode=i.name 
                                 else:
                                     i.name = str(sub_file+'_'+sub+'_'+i.name).lower() #ie. No feeders assigned to this berth so using the substation identifiers
                             else:
@@ -373,17 +385,19 @@ class AddSubstations(DiTToLayerBase):
 
 
                         if hasattr(i,'positions') and i.positions is not None and len(i.positions)>0:
+                           # import pdb;pdb.set_trace()
                             if ref_long ==0 and ref_lat ==0:
                                 logger.warning("Warning: Reference co-ords are (0,0)")
                             i.positions[0].lat = i.positions[0].lat-ref_lat + lat
                             i.positions[0].long = i.positions[0].long-ref_long + long
 #import pdb;pdb.set_trace()
-                    #import pdb;pdb.set_trace()
                     not_allocated = False
                     sub_model.set_names()
                     to_delete.set_names()
+                    #import pdb;pdb.set_trace()
                     reduced_model = modifier.delete(model, to_delete) 
                     logger.info("Adding model from {} to model".format(substation_folder))
+                    #import pdb;pdb.set_trace()
                     model = modifier.add(reduced_model, sub_model) #Is it a problem to be modifying the model directly? 
                     break
             if not_allocated:

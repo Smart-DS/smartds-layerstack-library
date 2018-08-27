@@ -25,6 +25,9 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Read the OpenDSS input model
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
 
+    #Add regulators with setpoints
+    stack.append(Layer(os.path.join(layer_library_dir,'add_rnm_regulators')))
+
     #Modify the model
     stack.append(Layer(os.path.join(layer_library_dir,'post-processing')))
 
@@ -40,6 +43,9 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Add intermediate node coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'intermediate_node')))
 
+    #Find missing coordinates
+    stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
+
     #Add cyme substations
     stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
 
@@ -48,10 +54,6 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
 
     #Add fuse control settings
     stack.append(Layer(os.path.join(layer_library_dir,'set_fuse_controls')))
-
-
-    #Find missing coordinates
-    stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
 
     #Write to CYME
     stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
@@ -79,6 +81,11 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     from_opendss.args[1] = os.path.join(region,'OpenDSS','BusCoord.dss')
     from_opendss.kwargs['base_dir'] = dataset_dir
 
+    #Set regulators with setpoints
+    rnm_regulators = stack[3]
+    rnm_regulators.kwargs['rnm_name'] = 'CRegulador'
+    rnm_regulators.kwargs['setpoint'] = 103
+
     #Timeseries Loads
   #  add_timeseries = stack[3]
   #  add_timeseries.kwargs['customer_file'] = os.path.join(dataset_dir,feeder,'Inputs','customers_ext.txt')
@@ -89,31 +96,34 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
   #  add_timeseries.kwargs['output_folder'] = os.path.join('.','results',feeder)
 
     #Modify layer
-    post_processing = stack[3]
+    post_processing = stack[4]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
     post_processing.kwargs['switch_to_recloser'] = True
     post_processing.kwargs['center_tap_postprocess'] = False
 
     #Merging Load layer
-    merging_load = stack[4]
+    merging_load = stack[5]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat2.csv')
 
     #Merging Capacitor Layer
-    merging_caps = stack[5]
+    merging_caps = stack[6]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
     #Splitting layer
-    split = stack[6]
+    split = stack[7]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
 
     #Intermediate node layer
-    inter = stack[7]
+    inter = stack[8]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
+
+    # Missing coords
+    # No args/kwargs for this layer
 
     #Substations
 
-    add_substations = stack[8]
+    add_substations = stack[10]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -124,22 +134,20 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
 
     #LTC Controls
 
-    ltc_controls = stack[9]
-    ltc_controls.kwargs['setpoint'] = 105
+    ltc_controls = stack[11]
+    ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    ltc_controls = stack[10]
+    ltc_controls = stack[12]
     ltc_controls.kwargs['current_rating'] = 65
 
-    # Missing coords
-    # No args/kwargs for this layer
 
     #Write to OpenDSS
     final = stack[12]
     final.args[0] = os.path.join('.','results',region)
-    final.kwargs['separate_feeders'] = False
-    final.kwargs['separate_substations'] = False
+    final.kwargs['separate_feeders'] = True
+    final.kwargs['separate_substations'] = True
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_'+region+'.json'))
 
