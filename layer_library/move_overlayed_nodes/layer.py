@@ -55,18 +55,25 @@ class Move_Overlayed_Nodes(DiTToLayerBase):
                     else:
                         all_positions[pos] = [m.name]
                 if len(m.positions)>2: #Intermediate nodes
+                    to_remove = set()
                     for i in range(1,len(m.positions)):
                         pos = (float(round(m.positions[i].lat)),float(round(m.positions[i].long))) #x2,y2
                         pos_prev = (float(round(m.positions[i-1].lat)),float(round(m.positions[i-1].long))) #x1,y1
                         norm = ((pos[0]-pos_prev[0])**2 + (pos[1]-pos_prev[1])**2)**0.5
                         if norm !=0:
                             perp = ((pos[1]-pos_prev[1])/norm,(pos_prev[0]-pos[0])/norm) # perpendicular unit vector so that the change ensures the lines are in parallel
+                            if pos in all_positions_intermediate:
+                                all_positions_intermediate[pos].append((m.positions[i],perp)) #Add model not name as position objects exist without names
+                            else:
+                                all_positions_intermediate[pos] = [(m.positions[i],perp)]
                         else:
-                            perp = (1,0)
-                        if pos in all_positions_intermediate:
-                            all_positions_intermediate[pos].append((m.positions[i],perp)) #Add model not name as position objects exist without names
-                        else:
-                            all_positions_intermediate[pos] = [(m.positions[i],perp)]
+                            to_remove.add(i)
+                    new_positions = []
+                    for i in range(1,len(m.positions)):
+                        if not i in to_remove:
+                            new_positions.append(m.positions[i])
+                    m.positions = new_positions
+
         model.build_networkx('st_mat')
         spring = nx.spring_layout(model._network.graph)
         for pos in all_positions:
@@ -83,7 +90,7 @@ class Move_Overlayed_Nodes(DiTToLayerBase):
                     ###model[path[i]].positions[0].long += random.uniform(range2[0],range1[1])
                     factor = 1
                     if len(path)>6:
-                        factor = 1.5
+                        factor = 4
                     model[path[i]].positions[0].lat += spring[path[i]][0]*delta_x *factor
                     model[path[i]].positions[0].long += spring[path[i]][1]*delta_y *factor
 
