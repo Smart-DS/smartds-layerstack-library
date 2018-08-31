@@ -348,7 +348,7 @@ class AddSubstations(DiTToLayerBase):
                                 boundry_map[i.name] = high_boundary
                                 i.name = high_boundary #TODO: issue of multiple high voltage inputs needs to be addressed
                                 i.feeder_name = 'subtransmission'
-                                i.substation_name = ''
+                                i.substation_name = substation_name
                                 i.is_substation = False
                             elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<high_voltage:
                                 feeder_cnt+=1
@@ -388,8 +388,8 @@ class AddSubstations(DiTToLayerBase):
                            # import pdb;pdb.set_trace()
                             if ref_long ==0 and ref_lat ==0:
                                 logger.warning("Warning: Reference co-ords are (0,0)")
-                            i.positions[0].lat = i.positions[0].lat-ref_lat + lat
-                            i.positions[0].long = i.positions[0].long-ref_long + long
+                            i.positions[0].lat = 7*(i.positions[0].lat-ref_lat) + lat
+                            i.positions[0].long = 10*(i.positions[0].long-ref_long) + long
 #import pdb;pdb.set_trace()
                     not_allocated = False
                     sub_model.set_names()
