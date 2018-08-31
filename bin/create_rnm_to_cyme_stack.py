@@ -115,8 +115,8 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
 
     # Move overlayed node layer
     adjust = stack[10]
-    adjust.kwargs['delta_x'] = 4
-    adjust.kwargs['delta_y'] = 4
+    adjust.kwargs['delta_x'] = 30
+    adjust.kwargs['delta_y'] = 30
 
     #Substations
 
