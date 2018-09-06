@@ -105,6 +105,7 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Splitting layer
     split = stack[7]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
+    split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
 
     #Intermediate node layer
     inter = stack[8]
@@ -115,8 +116,8 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
 
     # Move overlayed node layer
     adjust = stack[10]
-    adjust.kwargs['delta_x'] = 30
-    adjust.kwargs['delta_y'] = 30
+    adjust.kwargs['delta_x'] = 10
+    adjust.kwargs['delta_y'] = 10
 
     #Substations
 
