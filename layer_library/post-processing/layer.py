@@ -135,8 +135,8 @@ class PostProcessing(DiTToLayerBase):
             api_feeder_metadata.transformer = modifier.source
 
         #switch to recloser post-processing
-        if switch_to_recloser:
-            modifier.replace_first_switch_with_recloser()
+#        if switch_to_recloser:
+#            modifier.replace_first_switch_with_recloser()
                     
         #Return the modified model
         return modifier.model
