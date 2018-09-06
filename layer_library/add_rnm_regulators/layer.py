@@ -76,6 +76,7 @@ class Add_Rnm_Regulators(DiTToLayerBase):
                 api_regulator.is_subtation = 0
                 api_regulator.pt_ratio = float(m.windings[0].nominal_voltage)/120.0/(3**0.5)
                 api_regulator.ct_ratio = 100.0
+                api_regulator.bandwidth = 2.0
                 if setpoint is not None:
                     api_regulator.setpoint = setpoint
                 modifier = Modifier()
