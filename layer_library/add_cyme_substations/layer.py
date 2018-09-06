@@ -172,7 +172,7 @@ class AddSubstations(DiTToLayerBase):
             if substation not in substation_transformers:
                 substation_transformers[substation] = set([transformer])
 
-        
+
         print(substation_names)
         for sub in substation_boundaries_low.keys(): #sub is the name of the substation and substation_boundaries_low[sub] is a set of all the connected feeders
             logger.debug("Building to_delete and modifier")
@@ -189,11 +189,17 @@ class AddSubstations(DiTToLayerBase):
             feeder_names = list(substation_boundaries_low[sub]) # Feeder point of connection to the substation
             internal_nodes = [i for i in model.model_names if sub in i and isinstance(model[i],Node)]
             internal_edges = [i for i in model.model_names if sub in i and (isinstance(model[i],Line) or isinstance(model[i],PowerTransformer))]
+            tmp_include_edges = []
             for i in internal_edges:
                 if model[i].from_element in feeder_names:
                     internal_nodes.append(model[i].from_element)
                 if model[i].to_element in feeder_names:
                     internal_nodes.append(model[i].to_element)
+                if 'mv' in model[i].to_element and 'mv' in model[i].from_element:
+                    tmp_include_edges.append(i) #Used to address MV loads attached directly to the substation
+            for i in tmp_include_edges:
+                internal_edges.remove(i)
+
             high_boundary = list(substation_boundaries_high[sub])[0] #Should only be one high side boundary point in the set
             internal_nodes.append(high_boundary)
             """
@@ -353,11 +359,15 @@ class AddSubstations(DiTToLayerBase):
                             elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<high_voltage:
                                 feeder_cnt+=1
                                 if feeder_cnt<=num_model_feeders:
-                                    boundry_map[i.name] = feeder_names[feeder_cnt-1]
-                                    i.name = feeder_names[feeder_cnt-1].lower() 
+                                    endpoint = feeder_names[feeder_cnt-1].split('-')[0]
+                                    if 'mv' in endpoint: #The node names for these are reversed for some reason
+                                        boundry_map[i.name] = substation_name+'-'+endpoint+'x'
+                                        i.name = substation_name+'-'+endpoint+'x' 
+                                    else:
+                                        boundry_map[i.name] = feeder_names[feeder_cnt-1]
+                                        i.name = feeder_names[feeder_cnt-1].lower() 
                                     i.substation_name = substation_name
                                     i.is_substation = False
-                                    endpoint = i.name.split('-')[0]
                                     i.feeder_name = i.substation_name+'->'+endpoint
                                     #import pdb;pdb.set_trace()
                                     if i.substation_name+'->'+endpoint in model.model_names: # Set the Feedermetadata headnode to be the correct name.
@@ -394,7 +404,6 @@ class AddSubstations(DiTToLayerBase):
                     not_allocated = False
                     sub_model.set_names()
                     to_delete.set_names()
-                    #import pdb;pdb.set_trace()
                     reduced_model = modifier.delete(model, to_delete) 
                     logger.info("Adding model from {} to model".format(substation_folder))
                     #import pdb;pdb.set_trace()
@@ -404,7 +413,9 @@ class AddSubstations(DiTToLayerBase):
                 raise ValueError('Substation too small. {num} feeders needed.  Exiting...'.format(num=num_model_feeders))
 
         model.set_names()
-# modifier = system_structure_modifier(model,'st_mat_src')
+#        import pdb;pdb.set_trace()
+        modifier = system_structure_modifier(model,'st_mat')
+        modifier.replace_kth_switch_with_recloser()
 #        modifier.set_nominal_voltages_recur()
         logger.debug("Returning {!r}".format(model))
         return model
