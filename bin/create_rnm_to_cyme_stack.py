@@ -55,6 +55,9 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Add ltc control settings
     stack.append(Layer(os.path.join(layer_library_dir,'set_ltc_controls')))
 
+    #Add fuse control settings
+    stack.append(Layer(os.path.join(layer_library_dir,'set_fuse_controls')))
+
     #Write to CYME
     stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
 
@@ -135,8 +138,13 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     ltc_controls = stack[12]
     ltc_controls.kwargs['setpoint'] = 103
 
+    #Fuse Controls
+
+    fuse_controls = stack[13]
+    fuse_controls.kwargs['current_rating'] = 65
+
     #Write to CYME
-    final = stack[13]
+    final = stack[14]
     final.args[0] = os.path.join('.','results',region)
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'.json'))
