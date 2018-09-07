@@ -118,6 +118,8 @@ class Network_Split(DiTToLayerBase):
                         feeders['subtransmission'] = [node.lower().replace('.','')]
                     else:
                         feeders['subtransmission'].append(node.lower().replace('.',''))
+                    if 'subtransmission' not in substations:
+                        substations['subtransmission'] = ''
             
 
         #Create a network analyzer object
