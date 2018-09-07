@@ -46,6 +46,9 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Find missing coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
 
+    #Adjust overlaid nodes
+    stack.append(Layer(os.path.join(layer_library_dir,'move_overlayed_nodes')))
+
     #Add cyme substations
     stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
 
@@ -113,6 +116,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Splitting layer
     split = stack[7]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
+    split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
 
     #Intermediate node layer
     inter = stack[8]
@@ -121,9 +125,14 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     # Missing coords
     # No args/kwargs for this layer
 
+    # Move overlayed node layer
+    adjust = stack[10]
+    adjust.kwargs['delta_x'] = 10
+    adjust.kwargs['delta_y'] = 10
+
     #Substations
 
-    add_substations = stack[10]
+    add_substations = stack[11]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -134,17 +143,17 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
 
     #LTC Controls
 
-    ltc_controls = stack[11]
+    ltc_controls = stack[12]
     ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    ltc_controls = stack[12]
-    ltc_controls.kwargs['current_rating'] = 65
+    fuse_controls = stack[13]
+    fuse_controls.kwargs['current_rating'] = 65
 
 
     #Write to OpenDSS
-    final = stack[12]
+    final = stack[14]
     final.args[0] = os.path.join('.','results',region)
     final.kwargs['separate_feeders'] = True
     final.kwargs['separate_substations'] = True
