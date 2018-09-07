@@ -29,6 +29,9 @@ class Network_Split(DiTToLayerBase):
         kwarg_dict['path_to_feeder_file'] = Kwarg(default=None, description='Path to feeder.txt',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+        kwarg_dict['path_to_no_feeder_file'] = Kwarg(default=None, description='Path to nofeeder.txt',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         kwarg_dict['compute_metrics'] = Kwarg(default=False, description='Triggers the metrics computation if set to True',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
@@ -47,6 +50,10 @@ class Network_Split(DiTToLayerBase):
     def apply(cls, stack, model, *args, **kwargs):
         if 'path_to_feeder_file' in kwargs:
             path_to_feeder_file = kwargs['path_to_feeder_file']
+
+        path_to_no_feeder_file = None
+        if 'path_to_no_feeder_file' in kwargs:
+            path_to_no_feeder_file = kwargs['path_to_no_feeder_file']
 
         if 'compute_metrics' in kwargs:
             compute_metrics = kwargs['compute_metrics']
@@ -100,6 +107,18 @@ class Network_Split(DiTToLayerBase):
             #Same thing for substation_transformers
             if feed not in substation_transformers:
                 substation_transformers[feed] = sub.lower().replace('.','')
+
+        if path_to_no_feeder_file is not None:
+            with open(path_to_no_feeder_file, 'r') as f:
+                lines = f.readlines()
+            for line in lines[1:]:
+                node,feed = map(lambda x:x.strip().lower(), line.split(' '))
+                if feed != 'mv-mesh':
+                    if 'subtransmission' not in feeders:
+                        feeders['subtransmission'] = [node.lower().replace('.','')]
+                    else:
+                        feeders['subtransmission'].append(node.lower().replace('.',''))
+            
 
         #Create a network analyzer object
         network_analyst = NetworkAnalyzer(model)

@@ -53,6 +53,8 @@ class Create_Placement(DiTToLayerBase):
                 subset = random.sample(all_equipment,math.floor(len(all_equipment)*float(selection[1])/100.0))
 
 
+        if not os.path.exists(placement_folder):
+            os.makedirs(placement_folder)
         with open(os.path.join(placement_folder,file_name),'w') as outfile:
             json.dump(subset, outfile)
 

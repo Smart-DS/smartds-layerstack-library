@@ -45,6 +45,9 @@ class Intermediate_Node(DiTToLayerBase):
             raw = line.split(';')
             #Get the name of the line
             line_name = raw[0].replace(' ','').lower()
+            if line_name[-3:] == '_s0' or line_name[-3:] =='_s1' or line_name[-3:] == '_s2':
+                continue
+
     
             #Get the coordinates
             coords = raw[1:]

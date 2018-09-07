@@ -41,21 +41,36 @@ class PostProcessing(DiTToLayerBase):
         kwarg_dict['switch_to_recloser'] = Kwarg(default=False, description='If True does the switch to recloser post-processing',
                                                             parser=None, choices=None,
                                                             nargs=None, action=None)
+        kwarg_dict['center_tap_postprocess'] = Kwarg(default=False, description='If True the phases downstream of center tap transformer are reorganized to reflect the phase of the transformer',
+                                                            parser=None, choices=None,
+                                                            nargs=None, action=None)
+        return kwarg_dict
         return kwarg_dict
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
+        path_to_feeder_file = None
+        path_to_switching_devices_file = None
+        center_tap_postprocess = False
+        switch_to_recloser = False
         if 'path_to_feeder_file' in kwargs:
             path_to_feeder_file = kwargs['path_to_feeder_file']   
 
         if 'path_to_switching_devices_file' in kwargs:
             path_to_switching_devices_file = kwargs['path_to_switching_devices_file']    
+
+        if 'switch_to_recloser' in kwargs:
+            switch_to_recloser = kwargs['switch_to_recloser']
+
+        if 'center_tap_postprocess' in kwargs:
+            center_tap_postprocess = kwargs['center_tap_postprocess']
         
         #Create the modifier object
         modifier=system_structure_modifier(model,'st_mat')
 
         #Center-tap loads
-        modifier.center_tap_load_preprocessing()
+        if center_tap_postprocess:
+            modifier.center_tap_load_preprocessing()
 
         #Set node nominal voltages
         modifier.set_nominal_voltages_recur()
@@ -120,8 +135,8 @@ class PostProcessing(DiTToLayerBase):
             api_feeder_metadata.transformer = modifier.source
 
         #switch to recloser post-processing
-        if kwargs['switch_to_recloser']:
-            modifier.replace_first_switch_with_recloser()
+#        if switch_to_recloser:
+#            modifier.replace_first_switch_with_recloser()
                     
         #Return the modified model
         return modifier.model

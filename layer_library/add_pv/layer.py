@@ -7,8 +7,9 @@ from uuid import UUID
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
-from ditto.models.power_source import PowerSource
+from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.base import Unicode
+from ditto.modify.system_structure import system_structure_modifier
 
 logger = logging.getLogger('layerstack.layers.Add_Pv')
 
@@ -31,14 +32,23 @@ class Add_Pv(DiTToLayerBase):
     def apply(cls, stack, model, placement,rated_power,power_factor):
         loads = json.load(open(placement))
         for load in loads:
-            ps = PowerSource(model)
+            connected_node = model[load].connecting_element
+            upstream_node = model[connected_node] #Connect the PV to the upstream node not directly to the load
+            ps = Photovoltaic(model)
             ps.name = 'pv_'+load
-            ps.connecting_element = load
+            ps.connecting_element = upstream_node.name
             ps.rated_power = rated_power
+            ps.active_rating = rated_power
+            ps.reactive_rating = rated_power
             ps.power_factor = power_factor
+            if hasattr(upstream_node,'feeder_name'):
+                ps.feeder_name = upstream_node.feeder_name
+            if hasattr(upstream_node,'substation_name'):
+                ps.substation_name = upstream_node.substation_name
             phases = []
             for phase_load in model[load].phase_loads:
-                phases.append(Unicode(phase_load.phase))
+                if phase_load.drop != 1:
+                    phases.append(Unicode(phase_load.phase))
             ps.phases = phases
         
         model.set_names()
