@@ -37,6 +37,9 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Add the capacitor coordinates with a model merge
     stack.append(Layer(os.path.join(layer_library_dir,'merging-layer')))
 
+    #Set number of customers
+    stack.append(Layer(os.path.join(layer_library_dir,'set_num_customers')))
+
     #Split the network into feeders
     stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
 
@@ -105,8 +108,12 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     merging_caps = stack[6]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
+    #Resetting customer number layer
+    customer = stack[7]
+    customer.kwargs['num_customers'] = 1
+
     #Splitting layer
-    split = stack[7]
+    split = stack[8]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
     split.kwargs['compute_metrics'] = True
@@ -115,20 +122,20 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     split.kwargs['json_output'] = os.path.join('.', 'results', region, 'metrics.json')
 
     #Intermediate node layer
-    inter = stack[8]
+    inter = stack[9]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
     # Missing coords
     # No args/kwargs for this layer
 
     # Move overlayed node layer
-    adjust = stack[10]
+    adjust = stack[11]
     adjust.kwargs['delta_x'] = 10
     adjust.kwargs['delta_y'] = 10
 
     #Substations
 
-    add_substations = stack[11]
+    add_substations = stack[12]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -139,16 +146,16 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
 
     #LTC Controls
 
-    ltc_controls = stack[12]
+    ltc_controls = stack[13]
     ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    fuse_controls = stack[13]
+    fuse_controls = stack[14]
     fuse_controls.kwargs['current_rating'] = 65
 
     #Write to CYME
-    final = stack[14]
+    final = stack[15]
     final.args[0] = os.path.join('.','results',region)
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'.json'))
