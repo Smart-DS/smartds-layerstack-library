@@ -254,6 +254,10 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
         timestamp = hf_res['enumerations']['time'][:]
         written_timeseries = set()
         # Only the loads that are non-zero in the customers_ext files and are single-family or multi-family buildings attach the timeseries
+        cyme_output = open(os.path.join(output_folder,'cyme_timeseries.txt'),'w')
+        cyme_output.write('[PROFILE_VALUES]\n\n')
+        cyme_output.write('FORMAT=ID,PROFILETYPE,INTERVALFORMAT,TIMEINTERVAL,GLOBALUNIT,NETWORKID,YEAR,MONTH,DAY,UNIT,PHASE,VALUES\n')
+
         for load in timeseries_map:
 
             if 'load_'+load not in model.model_names:
@@ -282,8 +286,33 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
                 timeseries_data = sum(d1[i][:] for i in range(len(d1)))
 
             written_timeseries.add(timeseries.data_label)
+
+            # Need to check that datetimes and timeseries_data are the same length
+            datetimes = pd.date_range('2012-01-01','2013-01-01',freq='15T')[:-1]
             output = pd.DataFrame({'kW':timeseries_data}) #Not including the timestamp in the output
             output.to_csv(os.path.join(output_folder,timeseries.data_location),header=False,index=False)
+            curr_day = -1
+            cyme_str = ''
+            for i in range(len(datetimes)):
+                if curr_day != datetimes[i].day:
+                    if curr_day != -1:
+                        cyme_str+='\n'
+                        cyme_output.write(cyme_str)
+                    curr_day = datetimes[i].day
+                    cyme_str = ''
+                    cyme_str +=timeseries.data_label+','
+                    cyme_str+='CUSTOMERTYPE,365DAYS,15MINUTES,%,P4UHS0_4->P4UDT24,'
+                    cyme_str+=str(datetimes[i].year)+','
+                    cyme_str+=str(datetimes[i].strftime("%B").upper())+','
+                    cyme_str+=str(datetimes[i].day)+','
+                    cyme_str+='AVERAGEKW,'
+                    cyme_str+='TOTAL'
+                cyme_str+=','+str(timeseries_data[i])
+
+            cyme_str+='\n'
+            cyme_output.write(cyme_str)
+
+        cyme_output.close()    
 
         return model
         
