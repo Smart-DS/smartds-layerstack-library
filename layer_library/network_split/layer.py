@@ -3,10 +3,12 @@ from __future__ import print_function, division, absolute_import
 from builtins import super
 import logging
 from uuid import UUID
+import numpy as np
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
 
+from ditto.models.line import Line
 from ditto.metrics.network_analysis import NetworkAnalyzer
 
 logger = logging.getLogger('layerstack.layers.Network_Split')
@@ -139,6 +141,34 @@ class Network_Split(DiTToLayerBase):
 
         #Set the names
         network_analyst.model.set_names()
+
+        recloser_proportion = 0.33
+        all_goabs = {}
+        np.random.seed(0)
+        for i in network_analyst.model.models:
+            if isinstance(i,Line) and i.is_switch is not None and i.is_switch and i.name is not None and 'goab' in i.name.lower(): # includes goabs that are open
+                if hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != 'subtransmission':
+                    if i.feeder_name in all_goabs:
+                        all_goabs[i.feeder_name].append(i.name)
+                    else:
+                        all_goabs[i.feeder_name] = [i.name]
+
+        for key in list(all_goabs.keys()):
+            feeder_goabs = all_goabs[key]
+            selected_goabs = np.random.choice(feeder_goabs,int(len(feeder_goabs)*float(recloser_proportion)))
+
+            for recloser in selected_goabs:
+                network_analyst.model[recloser].is_switch = False
+                network_analyst.model[recloser].is_recloser = True
+                if network_analyst.model[recloser].wires is not None:
+                    for wire in network_analyst.model[recloser].wires:
+                        wire.is_switch = False
+                        wire.is_recloser = True
+                network_analyst.model[recloser].name = network_analyst.model[recloser].name.replace('goab','recloser')
+                network_analyst.model[recloser].nameclass= 'recloser'
+        network_analyst.model.set_names()
+
+
 
         #Compute the metrics if needed
         if compute_metrics:
