@@ -49,11 +49,19 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
         kwarg_dict['output_folder'] = Kwarg(default=None, description='location of the csv files to be attached to timeseries models', 
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+
+        kwarg_dict['write_cyme_file'] = Kwarg(default=True, description='write the cyme timeseries file', 
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+
+        kwarg_dict['write_opendss_file'] = Kwarg(default=True, description='write the many opendss timeseries files', 
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         return kwarg_dict
 
      # Select timeseries with the largest peak value less than the P of the DiTTo load 
     @classmethod
-    def apply(cls, stack, model, residential_load_data=None, residential_load_metadata=None, commercial_load_data=None, commercial_load_metadata=None, customer_file=None, output_folder=None):
+    def apply(cls, stack, model, residential_load_data=None, residential_load_metadata=None, commercial_load_data=None, commercial_load_metadata=None, customer_file=None, output_folder=None, write_cyme_file = True, write_opendss_file= True):
         if residential_load_data is None or residential_load_metadata is None or commercial_load_data is None or commercial_load_metadata is None or customer_file is None:
             logging.warning("Load data not attached")
             return model
@@ -213,6 +221,9 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
                 sorted_peaks_commercial[commercial_mapping[building_code]].append((peak_loads_commercial[building_code][profile],profile,building_code))
         for key in sorted_peaks_commercial:
             sorted_peaks_commercial[key] = sorted(sorted_peaks_commercial[key])
+        sorted_peaks_commercial['industrial'] = sorted_peaks_commercial['warehouse']
+        sorted_peaks_commercial['supermarket'] = sorted_peaks_commercial['stand-alone_retail']
+        sorted_peaks_commercial['NA'] = sorted_peaks_commercial['multi-family']
 
         timeseries_map = {}
         timeseries_category = {}
@@ -232,7 +243,7 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
                         break
                     selected_timeseries = sorted_peaks_residential[i][1]
                 timeseries_map[load_name] = selected_timeseries
-                timeseries_category = 'res__SingleFamilyDetached'
+                timeseries_category[load_name] = 'res__SingleFamilyDetached'
                 timeseries_type[load_name] = 'residential'
             elif total_p>0 and customer_type in sorted_peaks_commercial:
                 selected_timeseries = sorted_peaks_commercial[customer_type][0][1] 
@@ -254,9 +265,10 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
         timestamp = hf_res['enumerations']['time'][:]
         written_timeseries = set()
         # Only the loads that are non-zero in the customers_ext files and are single-family or multi-family buildings attach the timeseries
-        cyme_output = open(os.path.join(output_folder,'cyme_timeseries.txt'),'w')
-        cyme_output.write('[PROFILE_VALUES]\n\n')
-        cyme_output.write('FORMAT=ID,PROFILETYPE,INTERVALFORMAT,TIMEINTERVAL,GLOBALUNIT,NETWORKID,YEAR,MONTH,DAY,UNIT,PHASE,VALUES\n')
+        if write_cyme_file:
+            cyme_output = open(os.path.join(output_folder,'cyme_timeseries.txt'),'w')
+            cyme_output.write('[PROFILE_VALUES]\n\n')
+            cyme_output.write('FORMAT=ID,PROFILETYPE,INTERVALFORMAT,TIMEINTERVAL,GLOBALUNIT,NETWORKID,YEAR,MONTH,DAY,UNIT,PHASE,VALUES\n')
 
         for load in timeseries_map:
 
@@ -264,14 +276,14 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
                 print(load)
                 continue
 
+            profile = timeseries_map[load]
             uuid = metadata_residential['_id'].iloc[timeseries_map[load]]
             timeseries = Timeseries(model)
-            timeseries.data_label=timeseries_type[load]+'_'+str(uuid)+ '_'+str(timeseries_category[load])
+            timeseries.data_label=timeseries_type[load]+'_'+str(profile)+ '_'+str(timeseries_category[load])
             timeseries.interval = 3600 #Hourly data = 60*60 seconds
             timeseries.data_type = 'float'
             timeseries.scale_factor = 1
-            timeseries.data_location = timeseries.data_label+'.csv'
-            profile = timeseries_map[load]
+            timeseries.data_location = os.path.join(output_folder,timeseries.data_label+'.csv')
             category = timeseries_category[load]
 
             model['load_'+load].timeseries = [timeseries]
@@ -289,30 +301,33 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
 
             # Need to check that datetimes and timeseries_data are the same length
             datetimes = pd.date_range('2012-01-01','2013-01-01',freq='15T')[:-1]
-            output = pd.DataFrame({'kW':timeseries_data}) #Not including the timestamp in the output
-            output.to_csv(os.path.join(output_folder,timeseries.data_location),header=False,index=False)
+            if write_opendss_file:
+                output = pd.DataFrame({'kW':timeseries_data}) #Not including the timestamp in the output
+                output.to_csv(timeseries.data_location,header=False,index=False)
             curr_day = -1
             cyme_str = ''
-            for i in range(len(datetimes)):
-                if curr_day != datetimes[i].day:
-                    if curr_day != -1:
-                        cyme_str+='\n'
-                        cyme_output.write(cyme_str)
-                    curr_day = datetimes[i].day
-                    cyme_str = ''
-                    cyme_str +=timeseries.data_label+','
-                    cyme_str+='CUSTOMERTYPE,365DAYS,15MINUTES,%,P4UHS0_4->P4UDT24,'
-                    cyme_str+=str(datetimes[i].year)+','
-                    cyme_str+=str(datetimes[i].strftime("%B").upper())+','
-                    cyme_str+=str(datetimes[i].day)+','
-                    cyme_str+='AVERAGEKW,'
-                    cyme_str+='TOTAL'
-                cyme_str+=','+str(timeseries_data[i])
+            if write_cyme_file:
+                for i in range(len(datetimes)):
+                    if curr_day != datetimes[i].day:
+                        if curr_day != -1:
+                            cyme_str+='\n'
+                            cyme_output.write(cyme_str)
+                        curr_day = datetimes[i].day
+                        cyme_str = ''
+                        cyme_str +=timeseries.data_label+','
+                        cyme_str+='CUSTOMERTYPE,365DAYS,15MINUTES,%,ALL,'
+                        cyme_str+=str(datetimes[i].year)+','
+                        cyme_str+=str(datetimes[i].strftime("%B").upper())+','
+                        cyme_str+=str(datetimes[i].day)+','
+                        cyme_str+='AVERAGEKW,'
+                        cyme_str+='TOTAL'
+                    cyme_str+=','+str(timeseries_data[i])
+    
+                cyme_str+='\n'
+                cyme_output.write(cyme_str)
 
-            cyme_str+='\n'
-            cyme_output.write(cyme_str)
-
-        cyme_output.close()    
+        if write_cyme_file:
+            cyme_output.close()    
 
         return model
         
