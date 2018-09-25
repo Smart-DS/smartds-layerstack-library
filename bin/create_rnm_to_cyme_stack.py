@@ -61,8 +61,14 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Add fuse control settings
     stack.append(Layer(os.path.join(layer_library_dir,'set_fuse_controls')))
 
+    #Add extra switches to long lines 
+    stack.append(Layer(os.path.join(layer_library_dir,'add_switches_to_long_lines')))
+
     #Write to CYME
     stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
+
+    #Copy Tag file over
+    stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
 
 
     for layer in stack:
@@ -118,8 +124,8 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'metrics.xlsx')
-    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'metrics.json')
+    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'base','cyme', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'base', 'cyme','metrics.json')
 
     #Intermediate node layer
     inter = stack[9]
@@ -154,9 +160,20 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     fuse_controls = stack[14]
     fuse_controls.kwargs['current_rating'] = 65
 
+    #Add switch in long lines
+
+    switch_cut = stack[15]
+    switch_cut.kwargs['cutoff_length'] = 800
+
+
     #Write to CYME
-    final = stack[15]
-    final.args[0] = os.path.join('.','results',region)
+    final = stack[16]
+    final.args[0] = os.path.join('.','results',region,'base','cyme')
+
+    #Write Tags 
+    tags = stack[17]
+    tags.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
+    tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'.json'))
 
@@ -166,12 +183,13 @@ def main():
 #create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
-    dataset_map = {'dataset_4':'20180727','dataset_3':'20180910','dataset_2':'20180716'}
+    #dataset_map = {'dataset_4':'20180727','dataset_3':'20180910','dataset_2':'20180716'}
+    dataset_map = {'dataset_4':'20180920','dataset_3':'20180917','dataset_2':'20180716'}
     create_rnm_to_cyme_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'.json')
-    if not os.path.isdir(os.path.join('.','results',region)):
-        os.makedirs(os.path.join('.','results',region))
+    if not os.path.isdir(os.path.join('.','results',region,'base','cyme')):
+        os.makedirs(os.path.join('.','results',region,'base','cyme'))
     s.run_dir = 'run_dir'
     s.run()
 

@@ -10,10 +10,12 @@ from layerstack.stack import Stack
 #from .helpers import layer_library_dir, stack_library_dir, placement_library_dir
 layer_library_dir = '../layer_library'
 stack_library_dir = '../stack_library'
+placement_library_dir = '../placement_library'
 
-def create_rnm_to_opendss_stack(dataset_dir, region):
+def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     '''Create the stack to convert RNM models in OpenDSS to OpenDSS.'''
 
+    pct_pv = float(pct_pv)
     stack = Stack(name='RNM to OpenDSS Stack')
 
     #Parse load coordinates csv file
@@ -49,6 +51,12 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Add intermediate node coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'intermediate_node')))
 
+    #Create placement for PV
+    stack.append(Layer(os.path.join(layer_library_dir,'create_placement')))
+
+    #Add PV
+    stack.append(Layer(os.path.join(layer_library_dir,'add_pv')))
+
     #Find missing coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
 
@@ -72,7 +80,6 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
 
     #Copy Tag file over
     stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
-
 
 
     for layer in stack:
@@ -109,7 +116,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     add_timeseries.kwargs['residential_load_metadata'] = os.path.join('..','..','Loads','residential','Greensboro','results_fips.csv')
     add_timeseries.kwargs['commercial_load_data'] = os.path.join('..','..','Loads','commercial','NC - Guilford','com_guilford_electricity_only.dsg')
     add_timeseries.kwargs['commercial_load_metadata'] = os.path.join('..','..','Loads','commercial','NC - Guilford','results.csv')
-    add_timeseries.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','opendss')
+    add_timeseries.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries_{pct}_pv'.format(pct=pct_pv),'opendss')
     add_timeseries.kwargs['write_cyme_file'] = False
 
     #Modify layer
@@ -139,24 +146,49 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'timeseries','opendss', 'metrics.csv')
-    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'timeseries','opendss', 'metrics.json')
+    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'timeseries_{pct}_pv'.format(pct=pct_pv),'opendss', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results', region,  'timeseries_{pct}_pv'.format(pct=pct_pv),'opendss', 'metrics.json')
+
 
     #Intermediate node layer
     inter = stack[10]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
+    #Create Placement for PV
+    feeders = 'all'
+    equipment_type = 'ditto.models.load.Load'
+    selection = ('Random',pct_pv)
+    seed = 1
+    placement_folder = os.path.join(placement_library_dir,region)
+    file_name = feeders+'_'+equipment_type.split('.')[-1]+'_'+selection[0]+'-'+str(selection[1])+'_'+str(seed)+'.txt'
+
+
+    create_placement = stack[11]
+    create_placement.args[0] = feeders
+    create_placement.args[1] = equipment_type
+    create_placement.args[2] = selection
+    create_placement.args[3] = seed
+    create_placement.args[4] = placement_folder
+    create_placement.args[5] = file_name
+
+    add_pv = stack[12]
+    add_pv.args[0] = os.path.join(placement_folder,file_name) # placement
+    add_pv.args[1] = 4000                                     # rated power (Watts)
+    add_pv.args[2] = 1.0                                      # power factor
+
+
+
     # Missing coords
     # No args/kwargs for this layer
 
     # Move overlayed node layer
-    adjust = stack[12]
+    adjust = stack[14]
     adjust.kwargs['delta_x'] = 10
     adjust.kwargs['delta_y'] = 10
 
     #Substations
 
-    add_substations = stack[13]
+    add_substations = stack[15]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -165,33 +197,34 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     add_substations.kwargs['base_dir'] = dataset_dir
     add_substations.kwargs['readme_file'] = readme
 
+    
     #LTC Controls
 
-    ltc_controls = stack[14]
+    ltc_controls = stack[16]
     ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    fuse_controls = stack[15]
+    fuse_controls = stack[17]
     fuse_controls.kwargs['current_rating'] = 65
 
     #Add switch in long lines
 
-    switch_cut = stack[16]
+    switch_cut = stack[18]
     switch_cut.kwargs['cutoff_length'] = 800
 
     #Write to OpenDSS
-    final = stack[17]
-    final.args[0] = os.path.join('.','results',region,'timeseries','opendss')
+    final = stack[19]
+    final.args[0] = os.path.join('.','results',region,'timeseries_{pct}_pv'.format(pct=pct_pv),'opendss')
     final.kwargs['separate_feeders'] = True
     final.kwargs['separate_substations'] = True
 
     #Write Tags
-    tags = stack[18]
-    tags.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','opendss')
+    tags = stack[20]
+    tags.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries_{pct}_pv'.format(pct=pct_pv),'opendss')
     tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
-    stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_'+region+'_timeseries.json'))
+    stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_timeseries_pv_'+region+'_'+str(pct_pv)+'_pct.json'))
 
 
 def main():
@@ -199,12 +232,13 @@ def main():
 #create_rnm_to_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
+    percent = float(sys.argv[3])
     dataset_map = {'dataset_4':'20180920','dataset_3':'20180917','dataset_2':'20180716'}
-    create_rnm_to_opendss_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
+    if not os.path.isdir(os.path.join('.','results',region,'timeseries_{pct}_pv'.format(pct=percent),'opendss')):
+        os.makedirs(os.path.join('.','results',region,'timeseries_{pct}_pv'.format(pct=percent),'opendss'))
+    create_rnm_to_opendss_stack_pv(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region,percent)
     from layerstack.stack import Stack
-    s = Stack.load('../stack_library/rnm_to_opendss_stack_'+region+'_timeseries.json')
-    if not os.path.isdir(os.path.join('.','results',region,'timeseries','opendss')):
-        os.makedirs(os.path.join('.','results',region,'timeseries','opendss'))
+    s = Stack.load('../stack_library/rnm_to_opendss_stack_timeseries_pv_'+region+'_'+str(percent)+'_pct.json')
     s.run_dir = 'run_dir'
     s.run()
 

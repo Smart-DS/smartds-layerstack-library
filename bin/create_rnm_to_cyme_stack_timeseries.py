@@ -40,6 +40,9 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Add the capacitor coordinates with a model merge
     stack.append(Layer(os.path.join(layer_library_dir,'merging-layer')))
 
+    #Set number of customers
+    stack.append(Layer(os.path.join(layer_library_dir,'set_num_customers')))
+
     #Split the network into feeders
     stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
 
@@ -61,8 +64,15 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Add fuse control settings
     stack.append(Layer(os.path.join(layer_library_dir,'set_fuse_controls')))
 
+    #Add extra switches to long lines 
+    stack.append(Layer(os.path.join(layer_library_dir,'add_switches_to_long_lines')))
+
     #Write to CYME
     stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
+
+    #Copy Tag file over
+    stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
+
 
 
     for layer in stack:
@@ -99,7 +109,8 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     add_timeseries.kwargs['residential_load_metadata'] = os.path.join('..','..','Loads','residential','Greensboro','results_fips.csv')
     add_timeseries.kwargs['commercial_load_data'] = os.path.join('..','..','Loads','commercial','NC - Guilford','com_guilford_electricity_only.dsg')
     add_timeseries.kwargs['commercial_load_metadata'] = os.path.join('..','..','Loads','commercial','NC - Guilford','results.csv')
-    add_timeseries.kwargs['output_folder'] = os.path.join('.','results',region)
+    add_timeseries.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','cyme')
+    add_timeseries.kwargs['write_opendss_file'] = False
 
     #Modify layer
     #No input except the model. Nothing to do here...
@@ -117,26 +128,34 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     merging_caps = stack[7]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
+    #Resetting customer number layer
+    customer = stack[8]
+    customer.kwargs['num_customers'] = 1
+
     #Splitting layer
-    split = stack[8]
+    split = stack[9]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
+    split.kwargs['compute_metrics'] = True
+    split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
+    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'timeseries','cyme', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'timeseries','cyme', 'metrics.json')
 
     #Intermediate node layer
-    inter = stack[9]
+    inter = stack[10]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
     # Missing coords
     # No args/kwargs for this layer
 
     # Move overlayed node layer
-    adjust = stack[11]
+    adjust = stack[12]
     adjust.kwargs['delta_x'] = 10
     adjust.kwargs['delta_y'] = 10
 
     #Substations
 
-    add_substations = stack[12]
+    add_substations = stack[13]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -147,19 +166,29 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
 
     #LTC Controls
 
-    ltc_controls = stack[13]
+    ltc_controls = stack[14]
     ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    fuse_controls = stack[14]
+    fuse_controls = stack[15]
     fuse_controls.kwargs['current_rating'] = 65
 
-    #Write to CYME
-    final = stack[15]
-    final.args[0] = os.path.join('.','results',region)
+    #Add switch in long lines
 
-    stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'.json'))
+    switch_cut = stack[16]
+    switch_cut.kwargs['cutoff_length'] = 800
+
+    #Write to CYME
+    final = stack[17]
+    final.args[0] = os.path.join('.','results',region,'timeseries','cyme')
+
+    #Write Tags
+    tags = stack[18]
+    tags.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','cyme')
+    tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
+
+    stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'_timeseries.json'))
 
 
 def main():
@@ -167,12 +196,12 @@ def main():
 #create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
-    dataset_map = {'dataset_4':'20180727','dataset_3':'20180716','dataset_2':'20180716'}
+    dataset_map = {'dataset_4':'20180920','dataset_3':'20180917','dataset_2':'20180716'}
     create_rnm_to_cyme_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
     from layerstack.stack import Stack
-    s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'.json')
-    if not os.path.isdir(os.path.join('.','results',region)):
-        os.makedirs(os.path.join('.','results',region))
+    s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'_timeseries.json')
+    if not os.path.isdir(os.path.join('.','results',region,'timeseries','cyme')):
+        os.makedirs(os.path.join('.','results',region,'timeseries','cyme'))
     s.run_dir = 'run_dir'
     s.run()
 

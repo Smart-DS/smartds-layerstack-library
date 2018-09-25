@@ -37,6 +37,9 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Add the capacitor coordinates with a model merge
     stack.append(Layer(os.path.join(layer_library_dir,'merging-layer')))
 
+    #Set number of customers
+    stack.append(Layer(os.path.join(layer_library_dir,'set_num_customers')))
+
     #Split the network into feeders
     stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
 
@@ -58,8 +61,14 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Add fuse control settings
     stack.append(Layer(os.path.join(layer_library_dir,'set_fuse_controls')))
 
-    #Write to CYME
+    #Add extra switches to long lines 
+    stack.append(Layer(os.path.join(layer_library_dir,'add_switches_to_long_lines')))
+
+    #Write to OpenDSS
     stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
+
+    #Copy Tag file over
+    stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
 
 
     for layer in stack:
@@ -89,19 +98,12 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     rnm_regulators.kwargs['rnm_name'] = 'CRegulador'
     rnm_regulators.kwargs['setpoint'] = 103
 
-    #Timeseries Loads
-  #  add_timeseries = stack[3]
-  #  add_timeseries.kwargs['customer_file'] = os.path.join(dataset_dir,feeder,'Inputs','customers_ext.txt')
-  #  add_timeseries.kwargs['residential_load_data'] = os.path.join(dataset_dir,'GSO_loads','residential','guilford_real_power.dsg')
-  #  add_timeseries.kwargs['residential_load_metadata'] = os.path.join(dataset_dir,'GSO_loads','residential','results.csv')
-  #  add_timeseries.kwargs['commercial_load_data'] = os.path.join(dataset_dir,'GSO_loads','commercial','com_guilford_real_power.dsg')
-  #  add_timeseries.kwargs['commercial_load_metadata'] = os.path.join(dataset_dir,'GSO_loads','commercial','results.csv')
-  #  add_timeseries.kwargs['output_folder'] = os.path.join('.','results',feeder)
-
     #Modify layer
+    #No input except the model. Nothing to do here...
     post_processing = stack[4]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
+    post_processing.kwargs['center_tap_postprocess'] = True
     post_processing.kwargs['switch_to_recloser'] = True
     post_processing.kwargs['center_tap_postprocess'] = False
 
@@ -113,26 +115,34 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     merging_caps = stack[6]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
+    #Resetting customer number layer
+    customer = stack[7]
+    customer.kwargs['num_customers'] = 1
+
     #Splitting layer
-    split = stack[7]
+    split = stack[8]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
+    split.kwargs['compute_metrics'] = True
+    split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
+    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'base','opendss', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'base', 'opendss','metrics.json')
 
     #Intermediate node layer
-    inter = stack[8]
+    inter = stack[9]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
     # Missing coords
     # No args/kwargs for this layer
 
     # Move overlayed node layer
-    adjust = stack[10]
+    adjust = stack[11]
     adjust.kwargs['delta_x'] = 10
     adjust.kwargs['delta_y'] = 10
 
     #Substations
 
-    add_substations = stack[11]
+    add_substations = stack[12]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -143,20 +153,30 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
 
     #LTC Controls
 
-    ltc_controls = stack[12]
+    ltc_controls = stack[13]
     ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    fuse_controls = stack[13]
+    fuse_controls = stack[14]
     fuse_controls.kwargs['current_rating'] = 65
+
+    #Add switch in long lines
+
+    switch_cut = stack[15]
+    switch_cut.kwargs['cutoff_length'] = 800
 
 
     #Write to OpenDSS
-    final = stack[14]
-    final.args[0] = os.path.join('.','results',region)
+    final = stack[16]
+    final.args[0] = os.path.join('.','results',region,'base','opendss')
     final.kwargs['separate_feeders'] = True
     final.kwargs['separate_substations'] = True
+
+    #Write Tags 
+    tags = stack[17]
+    tags.kwargs['output_folder'] = os.path.join('.','results',region,'base','opendss')
+    tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_'+region+'.json'))
 
@@ -166,12 +186,13 @@ def main():
 #create_rnm_to_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
-    dataset_map = {'dataset_4':'20180727','dataset_3':'20180716','dataset_2':'20180716'}
+    #dataset_map = {'dataset_4':'20180727','dataset_3':'20180910','dataset_2':'20180716'}
+    dataset_map = {'dataset_4':'20180920','dataset_3':'20180917','dataset_2':'20180716'}
     create_rnm_to_opendss_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_opendss_stack_'+region+'.json')
-    if not os.path.isdir(os.path.join('.','results',region)):
-        os.makedirs(os.path.join('.','results',region))
+    if not os.path.isdir(os.path.join('.','results',region,'base','opendss')):
+        os.makedirs(os.path.join('.','results',region,'base','opendss'))
     s.run_dir = 'run_dir'
     s.run()
 
