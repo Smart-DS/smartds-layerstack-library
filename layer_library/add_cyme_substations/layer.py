@@ -398,8 +398,15 @@ class AddSubstations(DiTToLayerBase):
                            # import pdb;pdb.set_trace()
                             if ref_long ==0 and ref_lat ==0:
                                 logger.warning("Warning: Reference co-ords are (0,0)")
-                            i.positions[0].lat = 7*(i.positions[0].lat-ref_lat) + lat
-                            i.positions[0].long = 10*(i.positions[0].long-ref_long) + long
+                            scale_factor = 1
+                            if element[0]>=12: # The larger substations were created with a strange scale factor
+                                scale_factor = 1/50.0
+                            i.positions[0].lat = scale_factor*7*(i.positions[0].lat-ref_lat) + lat
+                            i.positions[0].long = scale_factor*10*(i.positions[0].long-ref_long) + long
+                            if len(i.positions)>1:
+                                for k in range(1,len(i.positions)):
+                                    i.positions[k].lat = scale_factor*7*(i.positions[k].lat-ref_lat) + lat
+                                    i.positions[k].long = scale_factor*10*(i.positions[k].long-ref_long) + long
 #import pdb;pdb.set_trace()
                     not_allocated = False
                     sub_model.set_names()
@@ -413,10 +420,6 @@ class AddSubstations(DiTToLayerBase):
                 raise ValueError('Substation too small. {num} feeders needed.  Exiting...'.format(num=num_model_feeders))
 
         model.set_names()
-#        import pdb;pdb.set_trace()
-        modifier = system_structure_modifier(model,'st_mat')
-        modifier.replace_kth_switch_with_recloser()
-#        modifier.set_nominal_voltages_recur()
         logger.debug("Returning {!r}".format(model))
         return model
 
