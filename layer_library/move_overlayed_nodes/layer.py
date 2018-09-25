@@ -5,9 +5,10 @@ import logging
 from uuid import UUID
 import random
 import networkx as nx
-#from networkx.drawing.nx_agraph import graphviz_layout
+from networkx.drawing.nx_agraph import graphviz_layout
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
+from ditto.models.line import Line
 import networkx
 
 logger = logging.getLogger('layerstack.layers.Move_Overlayed_Nodes')
@@ -75,7 +76,8 @@ class Move_Overlayed_Nodes(DiTToLayerBase):
                     m.positions = new_positions
 
         model.build_networkx('st_mat')
-        spring = nx.spring_layout(model._network.graph)
+        attrs = nx.get_edge_attributes(model._network.graph,'name')
+        all_neighboring_lines = set()
         for pos in all_positions:
             if len(all_positions[pos]) >1:
                 #model._network.build(model,source='st_mat')
@@ -83,16 +85,45 @@ class Move_Overlayed_Nodes(DiTToLayerBase):
                 #path = model.get_extremal_path(all_positions[pos])
                 #import pdb;pdb;pdb.set_trace()
                 path = all_positions[pos]
+                subgraph = model._network.graph.subgraph(path) 
+                spring = graphviz_layout(subgraph)
                 for i in range(len(path)):
                     ###range1 = random.choice([(-2*delta_x,-0.5*delta_x),(0.5*delta_x,2*delta_x)]) 
                     ###range2 = random.choice([(-2*delta_y,-0.5*delta_y),(0.5*delta_y,2*delta_y)]) 
                     ###model[path[i]].positions[0].lat += random.uniform(range1[0],range1[1])
                     ###model[path[i]].positions[0].long += random.uniform(range2[0],range1[1])
                     factor = 1
-                    if len(path)>6:
-                        factor = 4
+               #     if len(path)>6:
+               #         factor = 4
+                    delta_x = 0.065
+                    delta_y = 0.065
                     model[path[i]].positions[0].lat += spring[path[i]][0]*delta_x *factor
                     model[path[i]].positions[0].long += spring[path[i]][1]*delta_y *factor
+
+                """
+                for j in model._network.graph.edges(subgraph.nodes()):
+                    if not j in attrs:
+                        i = (j[1],j[0])
+                    else:
+                        i = j
+                    #import pdb;pdb.set_trace()
+                    if i in attrs and attrs[i] in model.model_names and isinstance(model[attrs[i]],Line):
+                        tmp_line = model[attrs[i]]
+                        all_neighboring_lines.add(tmp_line)
+                """
+
+                for j in subgraph.edges():
+                    if not j in attrs:
+                        i = (j[1],j[0])
+                    else:
+                        i = j
+                    if i in attrs and attrs[i] in model.model_names and isinstance(model[attrs[i]],Line):
+                        model[attrs[i]].positions = []
+
+        # Do at end to avoid double counting
+        for tmp_line in all_neighboring_lines:
+            if tmp_line.positions is not None and len(tmp_line.positions)>0:
+                tmp_line.positions = tmp_line.positions[:-1]
 
         for pos in all_positions_intermediate:
             if len(all_positions_intermediate[pos])>1:
