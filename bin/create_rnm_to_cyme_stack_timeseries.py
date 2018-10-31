@@ -172,7 +172,7 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Fuse Controls
 
     fuse_controls = stack[15]
-    fuse_controls.kwargs['current_rating'] = 65
+    fuse_controls.kwargs['current_rating'] = 100
 
     #Add switch in long lines
 
@@ -196,7 +196,7 @@ def main():
 #create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
-    dataset_map = {'dataset_4':'20180920','dataset_3':'20180917','dataset_2':'20180716'}
+    dataset_map = {'dataset_4':'20180920','dataset_3':'20181010','dataset_2':'20180716'}
     create_rnm_to_cyme_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'_timeseries.json')
