@@ -70,6 +70,8 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Copy Tag file over
     stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
 
+    #Run validation metrics
+    stack.append(Layer(os.path.join(layer_library_dir,'statistical_validation')))
 
     for layer in stack:
         layer.args.mode = ArgMode.USE
@@ -174,6 +176,12 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     tags = stack[17]
     tags.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
     tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
+
+    validation = stack[18]
+    validation.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
+    validation.kwargs['input_folder'] = os.path.join('.','results',region,'base','cyme')
+    validation.kwargs['rscript_folder'] = os.path.join('..','..','smartdsR-analysis-lite')
+    validation.kwargs['output_name'] = region
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'.json'))
 
