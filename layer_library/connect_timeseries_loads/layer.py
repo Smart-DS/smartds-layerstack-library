@@ -57,11 +57,14 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
         kwarg_dict['write_opendss_file'] = Kwarg(default=True, description='write the many opendss timeseries files', 
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+        kwarg_dict['dataset'] = Kwarg(default=True, description='Which dataset is being used', 
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         return kwarg_dict
 
      # Select timeseries with the largest peak value less than the P of the DiTTo load 
     @classmethod
-    def apply(cls, stack, model, residential_load_data=None, residential_load_metadata=None, commercial_load_data=None, commercial_load_metadata=None, customer_file=None, output_folder=None, write_cyme_file = True, write_opendss_file= True):
+    def apply(cls, stack, model, residential_load_data=None, residential_load_metadata=None, commercial_load_data=None, commercial_load_metadata=None, customer_file=None, output_folder=None, write_cyme_file = True, write_opendss_file= True, dataset=None):
         if residential_load_data is None or residential_load_metadata is None or commercial_load_data is None or commercial_load_metadata is None or customer_file is None:
             logging.warning("Load data not attached")
             return model
@@ -226,6 +229,7 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
         sorted_peaks_commercial['NA'] = sorted_peaks_commercial['multi-family']
 
         timeseries_map = {}
+        peak_map = {}
         timeseries_category = {}
         timeseries_type = {}
 
@@ -233,9 +237,12 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
             split_row = row.split(';') # A csv file delimited by ;
             load_name = split_row[customer_file_headers_index['Identifier']].lower()
             total_p = float(split_row[customer_file_headers_index['peak active power']])
-            customer_type = building_types[int(split_row[customer_file_headers_index['building type']])]
+            if dataset != 'dataset_2':
+                customer_type = building_types[int(split_row[customer_file_headers_index['building type']])] 
+            else:
+                customer_type = 'single-family' #Don't have any info for dataset 2 so assume they're all residential for now
 
-            if total_p >0 and customer_type == 'single-family':
+            if total_p >0 and customer_type == 'single-family': 
                 selected_timeseries = 0
                 selected_timeseries = sorted_peaks_residential[0][1]
                 for i in range(len(sorted_peaks_residential)):
@@ -243,6 +250,7 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
                         break
                     selected_timeseries = sorted_peaks_residential[i][1]
                 timeseries_map[load_name] = selected_timeseries
+                peak_map[load_name] = total_p
                 timeseries_category[load_name] = 'res__SingleFamilyDetached'
                 timeseries_type[load_name] = 'residential'
             elif total_p>0 and customer_type in sorted_peaks_commercial:
@@ -254,6 +262,7 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
                     selected_timeseries = sorted_peaks_commercial[customer_type][i][1] 
                     selected_category = sorted_peaks_commercial[customer_type][i][2]
                 timeseries_map[load_name] = selected_timeseries
+                peak_map[load_name] = total_p
                 timeseries_category[load_name] = selected_category
                 timeseries_type[load_name] = 'commercial'
 
@@ -283,7 +292,8 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
             timeseries.interval = 3600 #Hourly data = 60*60 seconds
             timeseries.data_type = 'float'
             timeseries.scale_factor = 1
-            timeseries.data_location = os.path.join(output_folder,timeseries.data_label+'.csv')
+            timeseries.data_location = os.path.join(output_folder,timeseries.data_label+'_pu.csv')
+            unscaled_location = os.path.join(output_folder,timeseries.data_label+'.csv') 
             category = timeseries_category[load]
 
             model['load_'+load].timeseries = [timeseries]
@@ -297,13 +307,16 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
                 d1 = data_commercial[category][profile][:][:]
                 timeseries_data = sum(d1[i][:] for i in range(len(d1)))
 
+            scaled_timeseries_data = timeseries_data/float(peak_map[load])
             written_timeseries.add(timeseries.data_label)
 
             # Need to check that datetimes and timeseries_data are the same length
             datetimes = pd.date_range('2012-01-01','2013-01-01',freq='15T')[:-1]
             if write_opendss_file:
-                output = pd.DataFrame({'kW':timeseries_data}) #Not including the timestamp in the output
+                output = pd.DataFrame({'kW':scaled_timeseries_data}) #Not including the timestamp in the output
                 output.to_csv(timeseries.data_location,header=False,index=False)
+                output_unscaled = pd.DataFrame({'kW':timeseries_data}) #Not including the timestamp in the output
+                output_unscaled.to_csv(unscaled_location,header=False,index=False)
             curr_day = -1
             cyme_str = ''
             if write_cyme_file:
