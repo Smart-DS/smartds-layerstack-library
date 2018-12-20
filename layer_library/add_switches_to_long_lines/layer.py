@@ -41,6 +41,8 @@ class Add_Switches_To_Long_Lines(DiTToLayerBase):
             cutoff_length = kwargs['cutoff_length']
         if cutoff_length is None:
             return model
+
+        from_element_cnt = {}
         for i in model.models:
             if isinstance(i,Line) and i.length is not None and i.length >cutoff_length and i.feeder_name is not None and i.feeder_name != 'subtransmission':
                 # Option 1: put a switch at one of the intermediate nodes 1/10 of the way down the line
@@ -53,7 +55,11 @@ class Add_Switches_To_Long_Lines(DiTToLayerBase):
                     node1.feeder_name = i.feeder_name
                     node1.substation_name = i.substation_name
                     node1.nominal_voltage = i.nominal_voltage
-                    node1.name = i.name+'_b1'
+                    if i.from_element in from_element_cnt:
+                        from_element_cnt[i.from_element]=from_element_cnt[i.from_element]+1
+                    else:
+                        from_element_cnt[i.from_element] = 1
+                    node1.name = i.from_element+'_b1_'+str(from_element_cnt[i.from_element])
                     node1.positions = [i.positions[pos]]
                     node1_phases = []
                     for p in i.wires:
@@ -66,7 +72,7 @@ class Add_Switches_To_Long_Lines(DiTToLayerBase):
                     node2.feeder_name = i.feeder_name
                     node2.substation_name = i.substation_name
                     node2.nominal_voltage = i.nominal_voltage
-                    node2.name = i.name+'_b2'
+                    node2.name = i.from_element+'_b2_'+str(from_element_cnt[i.from_element])
                     node2.positions = [i.positions[pos+1]]
                     node2_phases = []
                     for p in i.wires:
