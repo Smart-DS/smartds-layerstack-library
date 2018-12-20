@@ -303,6 +303,7 @@ class AddSubstations(DiTToLayerBase):
                 for i in sub_model.models:
                     if isinstance(i,Node) and hasattr(i,'is_substation_connection') and i.is_substation_connection == 1:
                         all_substation_connections.append(i)
+                        i.setpoint = 1.03
                         try:
                             if i.nominal_voltage == low_voltage:
                                 available_feeders+=1
@@ -352,8 +353,9 @@ class AddSubstations(DiTToLayerBase):
 #########  USE no_feeders.txt to inform how many connection points there should be. Skip this substation if the number isn't correct-->>>>
 #### Need to discuss with Carlos                            
                                 boundry_map[i.name] = high_boundary
+                                i.setpoint = 1.0
                                 i.name = high_boundary #TODO: issue of multiple high voltage inputs needs to be addressed
-                                i.feeder_name = 'subtransmission'
+                                #i.feeder_name = 'subtransmission'
                                 i.substation_name = substation_name
                                 i.is_substation = False
                             elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<high_voltage:
@@ -363,6 +365,8 @@ class AddSubstations(DiTToLayerBase):
                                     if 'mv' in endpoint: #The node names for these are reversed for some reason
                                         boundry_map[i.name] = substation_name+'-'+endpoint+'x'
                                         i.name = substation_name+'-'+endpoint+'x' 
+                                        if i.name in all_nodes_set:
+                                            all_nodes_set.remove(i.name)
                                     else:
                                         boundry_map[i.name] = feeder_names[feeder_cnt-1]
                                         i.name = feeder_names[feeder_cnt-1].lower() 
