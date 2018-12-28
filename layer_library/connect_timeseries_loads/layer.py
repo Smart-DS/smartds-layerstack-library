@@ -73,6 +73,7 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
 
         customer_file_headers = ['X', 'Y', 'Z','Identifier', 'voltage level', 'peak active power', 'peak reactive power', 'phases', 'area', 'height', 'energy', 'coincident active power', 'coincident reactive power', 'equivalent users', 'building type', 'Value', 'Year', 'PV capacity', 'Class', 'Rural/Urban','Zone']
         building_types = {
+                           0:'industrial', #A HV load
                            1:'single-family',
                            2:'multi-family',
                            3:'stand-alone_retail',
