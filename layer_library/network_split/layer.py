@@ -3,11 +3,17 @@ from __future__ import print_function, division, absolute_import
 from builtins import super
 import logging
 from uuid import UUID
+import numpy as np
+import networkx as nx
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
 
+from ditto.models.line import Line
 from ditto.metrics.network_analysis import NetworkAnalyzer
+from ditto.modify.system_structure import system_structure_modifier
+from ditto.models.power_source import PowerSource
+from ditto.network.network import Network
 
 logger = logging.getLogger('layerstack.layers.Network_Split')
 
@@ -118,6 +124,8 @@ class Network_Split(DiTToLayerBase):
                         feeders['subtransmission'] = [node.lower().replace('.','')]
                     else:
                         feeders['subtransmission'].append(node.lower().replace('.',''))
+                    if 'subtransmission' not in substations:
+                        substations['subtransmission'] = ''
             
 
         #Create a network analyzer object
@@ -138,6 +146,103 @@ class Network_Split(DiTToLayerBase):
         #Set the names
         network_analyst.model.set_names()
 
+
+
+        # Set reclosers. This algorithm finds to closest 1/3 of goabs to the feeder head (in topological order)
+        # without common ancestry. i.e. no recloser should be upstream of another recloser. If this is not possible,
+        # the number of reclosers is decreased
+
+        recloser_proportion = 0.33
+        all_goabs = {}
+        np.random.seed(0)
+        tmp_network = Network()
+        tmp_network.build(network_analyst.model,'st_mat')
+        tmp_network.set_attributes(network_analyst.model)
+        tmp_network.remove_open_switches(network_analyst.model)
+        tmp_network.rebuild_digraph(network_analyst.model,'st_mat')
+        sorted_elements =  []
+        for element in nx.topological_sort(tmp_network.digraph):
+            sorted_elements.append(element)
+        for i in network_analyst.model.models:
+            if isinstance(i,Line) and i.is_switch is not None and i.is_switch and i.name is not None and 'goab' in i.name.lower(): 
+                is_open = False
+                for wire in i.wires:
+                    if wire.is_open:
+                        is_open = True
+                if is_open:
+                    continue
+                if hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != 'subtransmission':
+                    if i.feeder_name in all_goabs:
+                        all_goabs[i.feeder_name].append(i.name)
+                    else:
+                        all_goabs[i.feeder_name] = [i.name]
+
+        for key in list(all_goabs.keys()):
+            feeder_goabs_dic = {} # Topological sorting done by node. This matches goabs to their end-node
+            for goab in all_goabs[key]:
+                feeder_goabs_dic[model[goab].to_element] = goab # shouldn't have multiple switches ending at the same node
+            feeder_goabs = []
+            feeder_goab_ends= []
+            for element in sorted_elements:
+                if element in feeder_goabs_dic:
+                    feeder_goabs.append(feeder_goabs_dic[element])
+                    feeder_goab_ends.append(element)
+            connectivity_matrix = [[False for i in range(len(feeder_goabs))] for j in range(len(feeder_goabs))]
+            for i in range(len(feeder_goabs)):
+                recloser1 = feeder_goab_ends[i]
+                for j in range(i+1,len(feeder_goabs)):
+                    recloser2 = feeder_goab_ends[j]
+                    if recloser2 == recloser1:
+                        continue
+                    connected = nx.has_path(tmp_network.digraph,recloser1,recloser2)
+                    connectivity_matrix[i][j] = connected
+                    if connected:
+                        connectivity_matrix[j][i] = connected
+
+
+            selected_goabs = []
+            num_goabs = int(len(feeder_goabs)*float(recloser_proportion))
+            finished = False
+            if num_goabs == 0:
+                finished = True
+            while not finished:
+                for i in range(len(feeder_goabs)):
+                    current_set = set([i])
+                    for j in range(i+1,len(feeder_goabs)):
+                        skip_this_one = False
+                        for k in current_set:
+                            if connectivity_matrix[j][k]: #i.e. see if the candidate node has common anything upstream or downstream
+                                skip_this_one = True
+                                break
+                        if skip_this_one:
+                            continue
+                        current_set.add(j)
+                        if len(current_set) == num_goabs:
+                            break
+                    if len(current_set) == num_goabs:
+                        finished = True
+                        for k in current_set:
+                            selected_goabs.append(feeder_goabs[k])
+                        break
+                if not finished:
+                    num_goabs -=1
+
+
+            #selected_goabs = np.random.choice(feeder_goabs,int(len(feeder_goabs)*float(recloser_proportion)))
+
+            for recloser in selected_goabs:
+                network_analyst.model[recloser].is_switch = False
+                network_analyst.model[recloser].is_recloser = True
+                if network_analyst.model[recloser].wires is not None:
+                    for wire in network_analyst.model[recloser].wires:
+                        wire.is_switch = False
+                        wire.is_recloser = True
+                network_analyst.model[recloser].name = network_analyst.model[recloser].name.replace('goab','recloser')
+                network_analyst.model[recloser].nameclass= 'recloser'
+        network_analyst.model.set_names()
+
+
+
         #Compute the metrics if needed
         if compute_metrics:
 
@@ -149,6 +254,7 @@ class Network_Split(DiTToLayerBase):
 
             #Export metrics to JSON
             network_analyst.export_json(json_output)
+
 
         #Return the model
         return network_analyst.model

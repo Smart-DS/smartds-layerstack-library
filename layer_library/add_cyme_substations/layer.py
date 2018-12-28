@@ -303,6 +303,7 @@ class AddSubstations(DiTToLayerBase):
                 for i in sub_model.models:
                     if isinstance(i,Node) and hasattr(i,'is_substation_connection') and i.is_substation_connection == 1:
                         all_substation_connections.append(i)
+                        i.setpoint = 1.03
                         try:
                             if i.nominal_voltage == low_voltage:
                                 available_feeders+=1
@@ -352,8 +353,9 @@ class AddSubstations(DiTToLayerBase):
 #########  USE no_feeders.txt to inform how many connection points there should be. Skip this substation if the number isn't correct-->>>>
 #### Need to discuss with Carlos                            
                                 boundry_map[i.name] = high_boundary
+                                i.setpoint = 1.0
                                 i.name = high_boundary #TODO: issue of multiple high voltage inputs needs to be addressed
-                                i.feeder_name = 'subtransmission'
+                                #i.feeder_name = 'subtransmission'
                                 i.substation_name = substation_name
                                 i.is_substation = False
                             elif hasattr(i,'nominal_voltage') and i.nominal_voltage is not None and i.nominal_voltage<high_voltage:
@@ -363,6 +365,8 @@ class AddSubstations(DiTToLayerBase):
                                     if 'mv' in endpoint: #The node names for these are reversed for some reason
                                         boundry_map[i.name] = substation_name+'-'+endpoint+'x'
                                         i.name = substation_name+'-'+endpoint+'x' 
+                                        if i.name in all_nodes_set:
+                                            all_nodes_set.remove(i.name)
                                     else:
                                         boundry_map[i.name] = feeder_names[feeder_cnt-1]
                                         i.name = feeder_names[feeder_cnt-1].lower() 
@@ -398,8 +402,15 @@ class AddSubstations(DiTToLayerBase):
                            # import pdb;pdb.set_trace()
                             if ref_long ==0 and ref_lat ==0:
                                 logger.warning("Warning: Reference co-ords are (0,0)")
-                            i.positions[0].lat = 7*(i.positions[0].lat-ref_lat) + lat
-                            i.positions[0].long = 10*(i.positions[0].long-ref_long) + long
+                            scale_factor = 1
+                            if element[0]>=12: # The larger substations were created with a strange scale factor
+                                scale_factor = 1/50.0
+                            i.positions[0].lat = scale_factor*7*(i.positions[0].lat-ref_lat) + lat
+                            i.positions[0].long = scale_factor*10*(i.positions[0].long-ref_long) + long
+                            if len(i.positions)>1:
+                                for k in range(1,len(i.positions)):
+                                    i.positions[k].lat = scale_factor*7*(i.positions[k].lat-ref_lat) + lat
+                                    i.positions[k].long = scale_factor*10*(i.positions[k].long-ref_long) + long
 #import pdb;pdb.set_trace()
                     not_allocated = False
                     sub_model.set_names()
@@ -413,10 +424,6 @@ class AddSubstations(DiTToLayerBase):
                 raise ValueError('Substation too small. {num} feeders needed.  Exiting...'.format(num=num_model_feeders))
 
         model.set_names()
-#        import pdb;pdb.set_trace()
-        modifier = system_structure_modifier(model,'st_mat')
-        modifier.replace_kth_switch_with_recloser()
-#        modifier.set_nominal_voltages_recur()
         logger.debug("Returning {!r}".format(model))
         return model
 

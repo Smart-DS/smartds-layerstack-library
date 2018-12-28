@@ -65,6 +65,9 @@ class PostProcessing(DiTToLayerBase):
         if 'center_tap_postprocess' in kwargs:
             center_tap_postprocess = kwargs['center_tap_postprocess']
         
+        #Make sure the voltage of st_mat is set
+        model['st_mat'].nominal_voltage = 230000.0
+
         #Create the modifier object
         modifier=system_structure_modifier(model,'st_mat')
 
@@ -100,6 +103,7 @@ class PostProcessing(DiTToLayerBase):
                 i.positive_sequence_impedance = complex(1.1208,3.5169)
                 i.zero_sequence_impedance = complex(1.1208,3.5169)
         
+
 
         #Set headnodes for each feeder
         modifier.set_feeder_headnodes()

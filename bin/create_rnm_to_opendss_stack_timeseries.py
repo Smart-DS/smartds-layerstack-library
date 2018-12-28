@@ -11,10 +11,10 @@ from layerstack.stack import Stack
 layer_library_dir = '../layer_library'
 stack_library_dir = '../stack_library'
 
-def create_rnm_to_cyme_stack(dataset_dir, region):
-    '''Create the stack to convert RNM models in OpenDSS to CYME.'''
+def create_rnm_to_opendss_stack(dataset_dir, region, dataset):
+    '''Create the stack to convert RNM models in OpenDSS to OpenDSS.'''
 
-    stack = Stack(name='RNM to CYME Stack')
+    stack = Stack(name='RNM to OpenDSS Stack')
 
     #Parse load coordinates csv file
     stack.append(Layer(os.path.join(layer_library_dir,'csv_processing')))
@@ -27,6 +27,9 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
 
     #Add regulators with setpoints
     stack.append(Layer(os.path.join(layer_library_dir,'add_rnm_regulators')))
+
+    #Add Timeseries loads
+    stack.append(Layer(os.path.join(layer_library_dir,'connect_timeseries_loads')))
 
     #Modify the model
     stack.append(Layer(os.path.join(layer_library_dir,'post-processing')))
@@ -82,8 +85,8 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Set source kv
     stack.append(Layer(os.path.join(layer_library_dir,'set_source_voltage')))
 
-    #Write to CYME
-    stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
+    #Write to OpenDSS
+    stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
 
     #Copy Tag file over
     stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
@@ -118,55 +121,94 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     rnm_regulators.kwargs['rnm_name'] = 'CRegulador'
     rnm_regulators.kwargs['setpoint'] = 103
 
+
+    #Timeseries Loads
+    add_timeseries = stack[4]
+    add_timeseries.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt')
+    county = None
+    lower_case_county = None
+    if dataset == 'dataset_4':
+        try: 
+            f = open(os.path.join(dataset_dir,region,'Inputs','customers_ext.txt'),'r')
+            line = f.readlines()[0].split(';')
+            county = 'CA - '+line[-1].strip()
+            lower_case_county = line[-1].strip().lower()
+        except:
+            county = 'CA - SanFrancisco'
+            print('Warning - county not found. Using San Francisco as default')
+            lower_case_county = 'sanfrancisco'
+            
+    if dataset == 'dataset_3':
+        county = 'NC - Guilford'
+        lower_case_county = 'guilford'
+    if dataset == 'dataset_2':
+        county = 'NM - Santa Fe'
+        lower_case_county = 'santafe'
+
+
+    load_map = {'dataset_4':'SanFrancisco','dataset_3':'Greensboro','dataset_2':'SantaFe'}
+    load_location = load_map[dataset]
+    add_timeseries.kwargs['residential_load_data'] = os.path.join('..','..','Loads','residential',load_location,'datapoints_elec_only.h5')
+    add_timeseries.kwargs['residential_load_metadata'] = os.path.join('..','..','Loads','residential',load_location,'results_fips.csv')
+    add_timeseries.kwargs['commercial_load_data'] = os.path.join('..','..','Loads','commercial',county,'com_'+lower_case_county+'_electricity_only.dsg')
+    add_timeseries.kwargs['commercial_load_metadata'] = os.path.join('..','..','Loads','commercial',county,'results.csv')
+    add_timeseries.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','opendss')
+    add_timeseries.kwargs['write_cyme_file'] = False
+    add_timeseries.kwargs['dataset'] = dataset
+
+
+
+
     #Modify layer
     #No input except the model. Nothing to do here...
-    post_processing = stack[4]
+    post_processing = stack[5]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
     post_processing.kwargs['center_tap_postprocess'] = True
     post_processing.kwargs['switch_to_recloser'] = True
+    post_processing.kwargs['center_tap_postprocess'] = False
 
     #Merging Load layer
-    merging_load = stack[5]
+    merging_load = stack[6]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat2.csv')
 
     #Merging Capacitor Layer
-    merging_caps = stack[6]
+    merging_caps = stack[7]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
     #Resetting customer number layer
-    customer = stack[7]
+    customer = stack[8]
     customer.kwargs['num_customers'] = 1
 
     #Splitting layer
-    split = stack[8]
+    split = stack[9]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'base','cyme', 'metrics.csv')
-    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'base', 'cyme','metrics.json')
+    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'timeseries','opendss', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'timeseries', 'opendss','metrics.json')
 
     #Customer per Transformer plotting layer
-    transformer_metrics = stack[9]
+    transformer_metrics = stack[10]
     transformer_metrics.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt') 
-    transformer_metrics.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
+    transformer_metrics.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','opendss')
 
     #Intermediate node layer
-    inter = stack[10]
+    inter = stack[11]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
     # Missing coords
     # No args/kwargs for this layer
 
     # Move overlayed node layer
-    adjust = stack[12]
+    adjust = stack[13]
     adjust.kwargs['delta_x'] = 10
     adjust.kwargs['delta_y'] = 10
 
     #Substations
 
-    add_substations = stack[13]
+    add_substations = stack[14]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -177,82 +219,84 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
 
     #LTC Controls
 
-    ltc_controls = stack[14]
+    ltc_controls = stack[15]
     ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    fuse_controls = stack[15]
+    fuse_controls = stack[16]
     fuse_controls.kwargs['current_rating'] = 100
 
     #Add switch in long lines
 
-    switch_cut = stack[16]
+    switch_cut = stack[17]
     switch_cut.kwargs['cutoff_length'] = 800
 
-   #Add additional regulators
+    #Add additional regulators
 
-    additional_regs = stack[17]
+    additional_regs = stack[18]
     additional_regs.kwargs['file_location'] = os.path.join(dataset_dir,region,'Auxiliary','additional_regs.csv')
     additional_regs.kwargs['setpoint'] = 103
 
     # Capacitor controls
-    cap_controls = stack[18]
+    cap_controls = stack[19]
     cap_controls.kwargs['delay'] = 100
     cap_controls.kwargs['lowpoint'] = 118
     cap_controls.kwargs['highpoint'] = 123
 
     # Reduce overloaded nodes
-    overload_nodes = stack[19]
+    overload_nodes = stack[20]
     overload_nodes.kwargs['powerflow_file'] = os.path.join(dataset_dir,region,'Auxiliary','powerflow.csv')
     overload_nodes.kwargs['threshold'] = 0.94
     overload_nodes.kwargs['scale_factor'] = 2.0
 
     # Set delta loads and transformers   
-    delta = stack[20]
+    delta = stack[21]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
         readme = readme_list[0]
     delta.kwargs['readme_location'] = readme
 
-
     #Set source KV value
-    set_source = stack[21]
+    set_source = stack[22]
     set_source.kwargs['source_kv'] = 230
     set_source.kwargs['source_names'] = ['st_mat']
 
-    #Write to CYME
-    final = stack[22]
-    final.args[0] = os.path.join('.','results',region,'base','cyme')
+    #Write to OpenDSS
+    final = stack[23]
+    final.args[0] = os.path.join('.','results',region,'timeseries','opendss')
+    final.kwargs['separate_feeders'] = True
+    final.kwargs['separate_substations'] = True
 
     #Write Tags 
-    tags = stack[23]
-    tags.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
+    tags = stack[24]
+    tags.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','opendss')
     tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     #Write validation
-    validation = stack[24]
-    validation.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
-    validation.kwargs['input_folder'] = os.path.join('.','results',region,'base','cyme')
+    validation = stack[25]
+    validation.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','opendss')
+    validation.kwargs['input_folder'] = os.path.join('.','results',region,'timeseries','opendss')
     validation.kwargs['rscript_folder'] = os.path.join('..','..','smartdsR-analysis-lite')
     validation.kwargs['output_name'] = region
 
-    stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_'+region+'.json'))
+
+    stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_'+region+'.json'))
 
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-#create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+#create_rnm_to_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
     #dataset_map = {'dataset_4':'20180727','dataset_3':'20180910','dataset_2':'20180716'}
     dataset_map = {'dataset_4':'20181120','dataset_3':'20181130','dataset_2':'20181130'}
-    create_rnm_to_cyme_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
+    create_rnm_to_opendss_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, dataset)
     from layerstack.stack import Stack
-    s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'.json')
-    if not os.path.isdir(os.path.join('.','results',region,'base','cyme')):
-        os.makedirs(os.path.join('.','results',region,'base','cyme'))
+    s = Stack.load('../stack_library/rnm_to_opendss_stack_'+region+'.json')
+    if not os.path.isdir(os.path.join('.','results',region,'timeseries','opendss')):
+        os.makedirs(os.path.join('.','results',region,'timeseries','opendss'))
     s.run_dir = 'run_dir'
     s.run()
 

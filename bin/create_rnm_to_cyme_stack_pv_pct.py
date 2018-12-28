@@ -39,6 +39,9 @@ def create_rnm_to_cyme_stack_pv(dataset_dir, region, pct_pv=15):
     #Add the capacitor coordinates with a model merge
     stack.append(Layer(os.path.join(layer_library_dir,'merging-layer')))
 
+    #Set number of customers
+    stack.append(Layer(os.path.join(layer_library_dir,'set_num_customers')))
+
     #Split the network into feeders
     stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
 
@@ -57,16 +60,23 @@ def create_rnm_to_cyme_stack_pv(dataset_dir, region, pct_pv=15):
     #Adjust overlaid nodes
     stack.append(Layer(os.path.join(layer_library_dir,'move_overlayed_nodes')))
 
-
     #Add cyme substations
     stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
-
 
     #Add ltc control settings
     stack.append(Layer(os.path.join(layer_library_dir,'set_ltc_controls')))
 
+    #Add fuse control settings
+    stack.append(Layer(os.path.join(layer_library_dir,'set_fuse_controls')))
+
+    #Add extra switches to long lines 
+    stack.append(Layer(os.path.join(layer_library_dir,'add_switches_to_long_lines')))
+
     #Write to CYME
     stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
+
+    #Copy Tag file over
+    stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
 
 
     for layer in stack:
@@ -112,13 +122,22 @@ def create_rnm_to_cyme_stack_pv(dataset_dir, region, pct_pv=15):
     merging_caps = stack[6]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
+    #Resetting customer number layer
+    customer = stack[7]
+    customer.kwargs['num_customers'] = 1
+
     #Splitting layer
-    split = stack[7]
+    split = stack[8]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
+    split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
+    split.kwargs['compute_metrics'] = True
+    split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
+    split.kwargs['excel_output'] = os.path.join('.', 'results', region, '{pct}_pv'.format(pct=pct_pv),'cyme', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results', region,  '{pct}_pv'.format(pct=pct_pv),'cyme', 'metrics.json')
 
 
     #Intermediate node layer
-    inter = stack[8]
+    inter = stack[9]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
     #Create Placement for PV
@@ -130,7 +149,7 @@ def create_rnm_to_cyme_stack_pv(dataset_dir, region, pct_pv=15):
     file_name = feeders+'_'+equipment_type.split('.')[-1]+'_'+selection[0]+'-'+str(selection[1])+'_'+str(seed)+'.txt'
 
 
-    create_placement = stack[9]
+    create_placement = stack[10]
     create_placement.args[0] = feeders
     create_placement.args[1] = equipment_type
     create_placement.args[2] = selection
@@ -138,7 +157,7 @@ def create_rnm_to_cyme_stack_pv(dataset_dir, region, pct_pv=15):
     create_placement.args[4] = placement_folder
     create_placement.args[5] = file_name
 
-    add_pv = stack[10]
+    add_pv = stack[11]
     add_pv.args[0] = os.path.join(placement_folder,file_name) # placement
     add_pv.args[1] = 4000                                     # rated power (Watts)
     add_pv.args[2] = 1.0                                      # power factor
@@ -149,13 +168,13 @@ def create_rnm_to_cyme_stack_pv(dataset_dir, region, pct_pv=15):
     # No args/kwargs for this layer
 
     # Move overlayed node layer
-    adjust = stack[12]
-    adjust.kwargs['delta_x'] = 4
-    adjust.kwargs['delta_y'] = 4
+    adjust = stack[13]
+    adjust.kwargs['delta_x'] = 10
+    adjust.kwargs['delta_y'] = 10
 
     #Substations
 
-    add_substations = stack[13]
+    add_substations = stack[14]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -167,26 +186,41 @@ def create_rnm_to_cyme_stack_pv(dataset_dir, region, pct_pv=15):
     
     #LTC Controls
 
-    ltc_controls = stack[14]
+    ltc_controls = stack[15]
     ltc_controls.kwargs['setpoint'] = 103
 
+    #Fuse Controls
+
+    fuse_controls = stack[16]
+    fuse_controls.kwargs['current_rating'] = 100
+
+    #Add switch in long lines
+
+    switch_cut = stack[17]
+    switch_cut.kwargs['cutoff_length'] = 800
+
     #Write to CYME
-    final = stack[15]
-    final.args[0] = os.path.join('.','results',region,'{pct}_pv'.format(pct=pct_pv))
+    final = stack[18]
+    final.args[0] = os.path.join('.','results',region,'{pct}_pv'.format(pct=pct_pv),'cyme')
+
+    #Write Tags
+    tags = stack[19]
+    tags.kwargs['output_folder'] = os.path.join('.','results',region,'{pct}_pv'.format(pct=pct_pv),'cyme')
+    tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_pv_'+region+'_'+str(pct_pv)+'_pct.json'))
 
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-#create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+#create_rnm_to_cyme_stack(os.path.join '..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
     percent = float(sys.argv[3])
-    dataset_map = {'dataset_4':'20180727','dataset_3':'20180716','dataset_2':'20180716'}
-    if not os.path.isdir(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent))):
-        os.makedirs(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent)))
-    create_rnm_to_cyme_stack_pv(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
+    dataset_map = {'dataset_4':'20180920','dataset_3':'20181010','dataset_2':'20180716'}
+    if not os.path.isdir(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent),'cyme')):
+        os.makedirs(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent),'cyme'))
+    create_rnm_to_cyme_stack_pv(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, percent)
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_cyme_stack_pv_'+region+'_'+str(percent)+'_pct.json')
     s.run_dir = 'run_dir'

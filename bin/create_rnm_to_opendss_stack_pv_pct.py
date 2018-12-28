@@ -27,6 +27,9 @@ def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     #Read the OpenDSS input model
     stack.append(Layer(os.path.join(layer_library_dir,'from_opendss')))
 
+    #Add regulators with setpoints
+    stack.append(Layer(os.path.join(layer_library_dir,'add_rnm_regulators')))
+
     #Modify the model
     stack.append(Layer(os.path.join(layer_library_dir,'post-processing')))
 
@@ -36,11 +39,26 @@ def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     #Add the capacitor coordinates with a model merge
     stack.append(Layer(os.path.join(layer_library_dir,'merging-layer')))
 
+    #Set number of customers
+    stack.append(Layer(os.path.join(layer_library_dir,'set_num_customers')))
+
     #Split the network into feeders
     stack.append(Layer(os.path.join(layer_library_dir,'network_split')))
 
     #Add intermediate node coordinates
     stack.append(Layer(os.path.join(layer_library_dir,'intermediate_node')))
+
+    #Create placement for PV
+    stack.append(Layer(os.path.join(layer_library_dir,'create_placement')))
+
+    #Add PV
+    stack.append(Layer(os.path.join(layer_library_dir,'add_pv')))
+
+    #Find missing coordinates
+    stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
+
+    #Adjust overlaid nodes
+    stack.append(Layer(os.path.join(layer_library_dir,'move_overlayed_nodes')))
 
     #Add cyme substations
     stack.append(Layer(os.path.join(layer_library_dir,'add_cyme_substations')))
@@ -51,18 +69,14 @@ def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     #Add fuse control settings
     stack.append(Layer(os.path.join(layer_library_dir,'set_fuse_controls')))
 
-    #Create placement for PV
-    stack.append(Layer(os.path.join(layer_library_dir,'create_placement')))
+    #Add extra switches to long lines 
+    stack.append(Layer(os.path.join(layer_library_dir,'add_switches_to_long_lines')))
 
-    #Add PV
-    stack.append(Layer(os.path.join(layer_library_dir,'add_pv')))
-
-
-    #Find missing coordinates
-    stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
-
-    #Write to CYME
+    #Write to OpenDSS
     stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
+
+    #Copy Tag file over
+    stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
 
 
     for layer in stack:
@@ -87,50 +101,45 @@ def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     from_opendss.args[1] = os.path.join(region,'OpenDSS','BusCoord.dss')
     from_opendss.kwargs['base_dir'] = dataset_dir
 
+    #Set regulators with setpoints
+    rnm_regulators = stack[3]
+    rnm_regulators.kwargs['rnm_name'] = 'CRegulador'
+    rnm_regulators.kwargs['setpoint'] = 103
+
     #Modify layer
     #No input except the model. Nothing to do here...
-    post_processing = stack[3]
+    post_processing = stack[4]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
-    post_processing.kwargs['center_tap_postprocess'] = False
+    post_processing.kwargs['center_tap_postprocess'] = True
     post_processing.kwargs['switch_to_recloser'] = True
+    post_processing.kwargs['center_tap_postprocess'] = False
 
     #Merging Load layer
-    merging_load = stack[4]
+    merging_load = stack[5]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat2.csv')
 
     #Merging Capacitor Layer
-    merging_caps = stack[5]
+    merging_caps = stack[6]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
+    #Resetting customer number layer
+    customer = stack[7]
+    customer.kwargs['num_customers'] = 1
+
     #Splitting layer
-    split = stack[6]
+    split = stack[8]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
+    split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
+    split.kwargs['compute_metrics'] = True
+    split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
+    split.kwargs['excel_output'] = os.path.join('.', 'results', region, '{pct}_pv'.format(pct=pct_pv),'opendss', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results', region,  '{pct}_pv'.format(pct=pct_pv),'opendss', 'metrics.json')
+
 
     #Intermediate node layer
-    inter = stack[7]
+    inter = stack[9]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
-
-    #Substations
-
-    add_substations = stack[8]
-    readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
-    readme = None
-    if len(readme_list)==1:
-        readme = readme_list[0]
-    add_substations.args[0] = os.path.join(dataset_dir,region,'Auxiliary', 'Feeder.txt')
-    add_substations.kwargs['base_dir'] = dataset_dir
-    add_substations.kwargs['readme_file'] = readme
-
-    #LTC Controls
-
-    ltc_controls = stack[9]
-    ltc_controls.kwargs['setpoint'] = 105
-
-    #Fuse Controls
-
-    ltc_controls = stack[10]
-    ltc_controls.kwargs['current_rating'] = 65
 
     #Create Placement for PV
     feeders = 'all'
@@ -141,7 +150,7 @@ def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     file_name = feeders+'_'+equipment_type.split('.')[-1]+'_'+selection[0]+'-'+str(selection[1])+'_'+str(seed)+'.txt'
 
 
-    create_placement = stack[11]
+    create_placement = stack[10]
     create_placement.args[0] = feeders
     create_placement.args[1] = equipment_type
     create_placement.args[2] = selection
@@ -149,34 +158,72 @@ def create_rnm_to_opendss_stack_pv(dataset_dir, region, pct_pv=15):
     create_placement.args[4] = placement_folder
     create_placement.args[5] = file_name
 
-    add_pv = stack[12]
+    add_pv = stack[11]
     add_pv.args[0] = os.path.join(placement_folder,file_name) # placement
     add_pv.args[1] = 4000                                     # rated power (Watts)
     add_pv.args[2] = 1.0                                      # power factor
 
 
+
     # Missing coords
     # No args/kwargs for this layer
 
+    # Move overlayed node layer
+    adjust = stack[13]
+    adjust.kwargs['delta_x'] = 10
+    adjust.kwargs['delta_y'] = 10
+
+    #Substations
+
+    add_substations = stack[14]
+    readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
+    readme = None
+    if len(readme_list)==1:
+        readme = readme_list[0]
+    add_substations.args[0] = os.path.join(dataset_dir,region,'Auxiliary', 'Feeder.txt')
+    add_substations.kwargs['base_dir'] = dataset_dir
+    add_substations.kwargs['readme_file'] = readme
+
+    
+    #LTC Controls
+
+    ltc_controls = stack[15]
+    ltc_controls.kwargs['setpoint'] = 103
+
+    #Fuse Controls
+
+    fuse_controls = stack[16]
+    fuse_controls.kwargs['current_rating'] = 100
+
+    #Add switch in long lines
+
+    switch_cut = stack[17]
+    switch_cut.kwargs['cutoff_length'] = 800
+
     #Write to OpenDSS
-    final = stack[14]
-    final.args[0] = os.path.join('.','results',region,'{pct}_pv'.format(pct=pct_pv))
-    final.kwargs['separate_feeders'] = False
-    final.kwargs['separate_substations'] = False
+    final = stack[18]
+    final.args[0] = os.path.join('.','results',region,'{pct}_pv'.format(pct=pct_pv),'opendss')
+    final.kwargs['separate_feeders'] = True
+    final.kwargs['separate_substations'] = True
+
+    #Write Tags
+    tags = stack[19]
+    tags.kwargs['output_folder'] = os.path.join('.','results',region,'{pct}_pv'.format(pct=pct_pv),'opendss')
+    tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_pv_'+region+'_'+str(pct_pv)+'_pct.json'))
 
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-#create_rnm_to_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+#create_rnm_to_opendss_stack(os.path.join '..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
     percent = float(sys.argv[3])
-    dataset_map = {'dataset_4':'20180727','dataset_3':'20180716','dataset_2':'20180727'}
-    if not os.path.isdir(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent))):
-        os.makedirs(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent)))
-    create_rnm_to_opendss_stack_pv(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region,percent)
+    dataset_map = {'dataset_4':'20180920','dataset_3':'20181010','dataset_2':'20180716'}
+    if not os.path.isdir(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent),'opendss')):
+        os.makedirs(os.path.join('.','results',region,'{pct}_pv'.format(pct=percent),'opendss'))
+    create_rnm_to_opendss_stack_pv(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, percent)
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_opendss_stack_pv_'+region+'_'+str(percent)+'_pct.json')
     s.run_dir = 'run_dir'
