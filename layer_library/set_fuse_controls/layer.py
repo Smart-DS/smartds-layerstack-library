@@ -28,6 +28,9 @@ class Set_Fuse_Controls(DiTToLayerBase):
         kwarg_dict['current_rating'] = Kwarg(default=None, description='Rated current of the fuse',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+        kwarg_dict['high_current_rating'] = Kwarg(default=None, description='Rated current of the fuse on HV lines',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         kwarg_dict['fuse_set'] = Kwarg(default=None, description='Set of the fuse names to apply the controls to. If None provided, controls applied to all fuses',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
@@ -36,23 +39,33 @@ class Set_Fuse_Controls(DiTToLayerBase):
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
         current_rating = None
+        high_current_rating = None
         fuse_set = None
         if 'current_rating' in kwargs:
             current_rating = kwargs['current_rating']
+        if 'high_current_rating' in kwargs:
+            high_current_rating = kwargs['high_current_rating']
         if fuse_set in kwargs:
             fuse_set = kwargs['fuse_set']
         if current_rating is not None:
             for i in model.models:
                 if isinstance(i,Line) and hasattr (i,'is_fuse') and i.is_fuse and hasattr(i,'wires') and i.wires is not None:
+                    nominal_voltage = i.nominal_voltage
                     if fuse_set is not None:
                         if i in fuse_set:
                             for w in i.wires:
                                 w.is_fuse = True
-                                w.interrupting_rating = float(current_rating)
+                                if nominal_voltage is not None and nominal_voltage > 30000 and high_current_rating is not None:
+                                    w.interrupting_rating = float(high_current_rating)
+                                else:
+                                    w.interrupting_rating = float(current_rating)
                     else:
                         for w in i.wires:
                             w.is_fuse = True
-                            w.interrupting_rating = float(current_rating)
+                            if nominal_voltage is not None and nominal_voltage > 30000 and high_current_rating is not None:
+                                w.interrupting_rating = float(high_current_rating)
+                            else:
+                                w.interrupting_rating = float(current_rating)
 
 
         return model
