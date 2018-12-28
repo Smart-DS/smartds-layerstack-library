@@ -54,8 +54,9 @@ class Set_Capacitor_Controlers(DiTToLayerBase):
         to_node_mapping = {}
         for i in model.models:
             if isinstance(i,Capacitor) and i.connecting_element is not None:
-                i.lowpoint = lowpoint
-                i.highpoint = highpoint
+                i.low = lowpoint
+                i.high = highpoint
+                i.mode = "voltage"
                 i.pt_ratio = float(i.nominal_voltage)/120/(3**0.5)
                 i.ct_ratio = 100.0
                 i.delay = delay
