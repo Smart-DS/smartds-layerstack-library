@@ -56,6 +56,7 @@ class Partitioned_Customers_Per_Transformer_Plots(DiTToLayerBase):
         for i in range(len(customer_file_headers)):
             customer_file_headers_index[customer_file_headers[i]] = i
         building_types = {
+                           0:'industrial', #Normally a HV load
                            1:'single-family',
                            2:'multi-family',
                            3:'stand-alone_retail',
