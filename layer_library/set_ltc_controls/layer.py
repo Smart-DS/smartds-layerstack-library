@@ -40,6 +40,19 @@ class Set_Ltc_Controls(DiTToLayerBase):
             if isinstance(i,Regulator) and hasattr(i,'ltc') and i.ltc is not None and i.ltc:
                 if hasattr(i,'setpoint') and setpoint is not None:
                     i.setpoint = float(setpoint)
+                    nominal_voltage = 0
+                    if len(i.windings) >0:
+                        nominal_voltage = float(i.windings[0].nominal_voltage)
+                    else:
+                        nominal_voltage = float(model[i.connected_transformer].windings[1].nominal_voltage)
+                    if nominal_voltage < 10000:
+                        i.pt_ratio = 19.24
+                    elif nominal_voltage <20000:
+                        i.pt_raio = 60
+                    else:
+                        i.pt_ratio = nominal_voltage/120.0/(3**0.5)
+
+
         return model
 
 

@@ -28,6 +28,9 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Add regulators with setpoints
     stack.append(Layer(os.path.join(layer_library_dir,'add_rnm_regulators')))
 
+    #Ensure all LV lines are triplex
+    stack.append(Layer(os.path.join(layer_library_dir,'set_lv_as_triplex')))
+
     #Modify the model
     stack.append(Layer(os.path.join(layer_library_dir,'post-processing')))
 
@@ -118,9 +121,13 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     rnm_regulators.kwargs['rnm_name'] = 'CRegulador'
     rnm_regulators.kwargs['setpoint'] = 103
 
+    #Ensure all LV lines are triplex
+    set_lv_triplex = stack[4]
+    set_lv_triplex.kwargs['to_replace'] = ['Ionic', 'Corinthian', 'Doric']
+
     #Modify layer
     #No input except the model. Nothing to do here...
-    post_processing = stack[4]
+    post_processing = stack[5]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
     post_processing.kwargs['center_tap_postprocess'] = True
@@ -128,19 +135,19 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     post_processing.kwargs['center_tap_postprocess'] = False
 
     #Merging Load layer
-    merging_load = stack[5]
+    merging_load = stack[6]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat2.csv')
 
     #Merging Capacitor Layer
-    merging_caps = stack[6]
+    merging_caps = stack[7]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
     #Resetting customer number layer
-    customer = stack[7]
+    customer = stack[8]
     customer.kwargs['num_customers'] = 1
 
     #Splitting layer
-    split = stack[8]
+    split = stack[9]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
     split.kwargs['compute_metrics'] = True
@@ -149,25 +156,25 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     split.kwargs['json_output'] = os.path.join('.', 'results', region, 'base', 'opendss','metrics.json')
 
     #Customer per Transformer plotting layer
-    transformer_metrics = stack[9]
+    transformer_metrics = stack[10]
     transformer_metrics.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt') 
     transformer_metrics.kwargs['output_folder'] = os.path.join('.','results',region,'base','opendss')
 
     #Intermediate node layer
-    inter = stack[10]
+    inter = stack[11]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
     # Missing coords
     # No args/kwargs for this layer
 
     # Move overlayed node layer
-    adjust = stack[12]
+    adjust = stack[13]
     adjust.kwargs['delta_x'] = 10
     adjust.kwargs['delta_y'] = 10
 
     #Substations
 
-    add_substations = stack[13]
+    add_substations = stack[14]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -178,39 +185,40 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
 
     #LTC Controls
 
-    ltc_controls = stack[14]
+    ltc_controls = stack[15]
     ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    fuse_controls = stack[15]
+    fuse_controls = stack[16]
     fuse_controls.kwargs['current_rating'] = 100
+    fuse_controls.kwargs['high_current_rating'] = 600
 
     #Add switch in long lines
 
-    switch_cut = stack[16]
+    switch_cut = stack[17]
     switch_cut.kwargs['cutoff_length'] = 800
 
     #Add additional regulators
 
-    additional_regs = stack[17]
+    additional_regs = stack[18]
     additional_regs.kwargs['file_location'] = os.path.join(dataset_dir,region,'Auxiliary','additional_regs.csv')
     additional_regs.kwargs['setpoint'] = 103
 
     # Capacitor controls
-    cap_controls = stack[18]
+    cap_controls = stack[19]
     cap_controls.kwargs['delay'] = 100
-    cap_controls.kwargs['lowpoint'] = 118
-    cap_controls.kwargs['highpoint'] = 123
+    cap_controls.kwargs['lowpoint'] = 120.5
+    cap_controls.kwargs['highpoint'] = 125
 
     # Reduce overloaded nodes
-    overload_nodes = stack[19]
+    overload_nodes = stack[20]
     overload_nodes.kwargs['powerflow_file'] = os.path.join(dataset_dir,region,'Auxiliary','powerflow.csv')
     overload_nodes.kwargs['threshold'] = 0.94
     overload_nodes.kwargs['scale_factor'] = 2.0
 
     # Set delta loads and transformers   
-    delta = stack[20]
+    delta = stack[21]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -218,23 +226,23 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     delta.kwargs['readme_location'] = readme
 
     #Set source KV value
-    set_source = stack[21]
+    set_source = stack[22]
     set_source.kwargs['source_kv'] = 230
     set_source.kwargs['source_names'] = ['st_mat']
 
     #Write to OpenDSS
-    final = stack[22]
+    final = stack[23]
     final.args[0] = os.path.join('.','results',region,'base','opendss')
     final.kwargs['separate_feeders'] = True
     final.kwargs['separate_substations'] = True
 
     #Write Tags 
-    tags = stack[23]
+    tags = stack[24]
     tags.kwargs['output_folder'] = os.path.join('.','results',region,'base','opendss')
     tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     #Write validation
-    validation = stack[24]
+    validation = stack[25]
     validation.kwargs['output_folder'] = os.path.join('.','results',region,'base','opendss')
     validation.kwargs['input_folder'] = os.path.join('.','results',region,'base','opendss')
     validation.kwargs['rscript_folder'] = os.path.join('..','..','smartdsR-analysis-lite')
@@ -261,3 +269,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

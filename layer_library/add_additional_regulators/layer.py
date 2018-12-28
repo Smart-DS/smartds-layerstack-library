@@ -98,7 +98,7 @@ class Add_Additional_Regulators(DiTToLayerBase):
                         reg.windings = windings
                         reg.ltc=0
                         reg.is_subtation = 0
-                        reg.pt_ratio = float(obj.nominal_voltage)/120.0/(3**0.5)
+                        reg.pt_ratio = float(end_node.nominal_voltage)/120.0/(3**0.5)
                         reg.ct_ratio = 100.0
                         reg.bandwidth = 2.0
                         if setpoint is not None:
