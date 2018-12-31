@@ -290,7 +290,7 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
             uuid = metadata_residential['_id'].iloc[timeseries_map[load]]
             timeseries = Timeseries(model)
             timeseries.data_label=timeseries_type[load]+'_'+str(profile)+ '_'+str(timeseries_category[load])
-            timeseries.interval = 3600 #Hourly data = 60*60 seconds
+            timeseries.interval = 1 #15 minute data provided - take every loadpoint
             timeseries.data_type = 'float'
             timeseries.scale_factor = 1
             timeseries.data_location = os.path.join(output_folder,timeseries.data_label+'_pu.csv')
