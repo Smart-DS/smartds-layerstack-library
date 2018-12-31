@@ -88,6 +88,9 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     #Write to OpenDSS
     stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
 
+    #Write to OpenDSS
+    stack.append(Layer(os.path.join(layer_library_dir,'to_json')))
+
     #Copy Tag file over
     stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
 
@@ -152,13 +155,13 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'base','opendss', 'metrics.csv')
-    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'base', 'opendss','metrics.json')
+    split.kwargs['excel_output'] = os.path.join('.', 'results_v2', region, 'base','opendss', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results_v2', region, 'base', 'opendss','metrics.json')
 
     #Customer per Transformer plotting layer
     transformer_metrics = stack[10]
     transformer_metrics.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt') 
-    transformer_metrics.kwargs['output_folder'] = os.path.join('.','results',region,'base','opendss')
+    transformer_metrics.kwargs['output_folder'] = os.path.join('.','results_v2',region,'base','opendss')
 
     #Intermediate node layer
     inter = stack[11]
@@ -232,19 +235,23 @@ def create_rnm_to_opendss_stack(dataset_dir, region):
 
     #Write to OpenDSS
     final = stack[23]
-    final.args[0] = os.path.join('.','results',region,'base','opendss')
+    final.args[0] = os.path.join('.','results_v2',region,'base','opendss')
     final.kwargs['separate_feeders'] = True
     final.kwargs['separate_substations'] = True
 
+    #Dump to Ditto json
+    final_json = stack[24]
+    final_json.kwargs['base_dir'] = os.path.join('.','results_v2',region,'base','json_opendss')
+
     #Write Tags 
-    tags = stack[24]
-    tags.kwargs['output_folder'] = os.path.join('.','results',region,'base','opendss')
+    tags = stack[25]
+    tags.kwargs['output_folder'] = os.path.join('.','results_v2',region,'base','opendss')
     tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     #Write validation
-    validation = stack[25]
-    validation.kwargs['output_folder'] = os.path.join('.','results',region,'base','opendss')
-    validation.kwargs['input_folder'] = os.path.join('.','results',region,'base','opendss')
+    validation = stack[26]
+    validation.kwargs['output_folder'] = os.path.join('.','results_v2',region,'base','opendss')
+    validation.kwargs['input_folder'] = os.path.join('.','results_v2',region,'base','opendss')
     validation.kwargs['rscript_folder'] = os.path.join('..','..','smartdsR-analysis-lite')
     validation.kwargs['output_name'] = region
 
@@ -262,8 +269,8 @@ def main():
     create_rnm_to_opendss_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_opendss_stack_'+region+'.json')
-    if not os.path.isdir(os.path.join('.','results',region,'base','opendss')):
-        os.makedirs(os.path.join('.','results',region,'base','opendss'))
+    if not os.path.isdir(os.path.join('.','results_v2',region,'base','opendss')):
+        os.makedirs(os.path.join('.','results_v2',region,'base','opendss'))
     s.run_dir = 'run_dir'
     s.run()
 

@@ -88,6 +88,9 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     #Write to CYME
     stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
 
+    #Write to OpenDSS
+    stack.append(Layer(os.path.join(layer_library_dir,'to_json')))
+
     #Copy Tag file over
     stack.append(Layer(os.path.join(layer_library_dir,'add_tags')))
 
@@ -151,13 +154,13 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('.', 'results', region, 'base','cyme', 'metrics.csv')
-    split.kwargs['json_output'] = os.path.join('.', 'results', region, 'base', 'cyme','metrics.json')
+    split.kwargs['excel_output'] = os.path.join('.', 'results_v2', region, 'base','cyme', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results_v2', region, 'base', 'cyme','metrics.json')
 
     #Customer per Transformer plotting layer
     transformer_metrics = stack[10]
     transformer_metrics.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt') 
-    transformer_metrics.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
+    transformer_metrics.kwargs['output_folder'] = os.path.join('.','results_v2',region,'base','cyme')
 
     #Intermediate node layer
     inter = stack[11]
@@ -232,17 +235,21 @@ def create_rnm_to_cyme_stack(dataset_dir, region):
 
     #Write to CYME
     final = stack[23]
-    final.args[0] = os.path.join('.','results',region,'base','cyme')
+    final.args[0] = os.path.join('.','results_v2',region,'base','cyme')
+
+    #Dump to Ditto json
+    final_json = stack[24]
+    final_json.kwargs['base_dir'] = os.path.join('.','results_v2',region,'base','json_cyme')
 
     #Write Tags 
-    tags = stack[24]
-    tags.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
+    tags = stack[25]
+    tags.kwargs['output_folder'] = os.path.join('.','results_v2',region,'base','cyme')
     tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     #Write validation
-    validation = stack[25]
-    validation.kwargs['output_folder'] = os.path.join('.','results',region,'base','cyme')
-    validation.kwargs['input_folder'] = os.path.join('.','results',region,'base','cyme')
+    validation = stack[26]
+    validation.kwargs['output_folder'] = os.path.join('.','results_v2',region,'base','cyme')
+    validation.kwargs['input_folder'] = os.path.join('.','results_v2',region,'base','cyme')
     validation.kwargs['rscript_folder'] = os.path.join('..','..','smartdsR-analysis-lite')
     validation.kwargs['output_name'] = region
 
@@ -259,8 +266,8 @@ def main():
     create_rnm_to_cyme_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region)
     from layerstack.stack import Stack
     s = Stack.load('../stack_library/rnm_to_cyme_stack_'+region+'.json')
-    if not os.path.isdir(os.path.join('.','results',region,'base','cyme')):
-        os.makedirs(os.path.join('.','results',region,'base','cyme'))
+    if not os.path.isdir(os.path.join('.','results_v2',region,'base','cyme')):
+        os.makedirs(os.path.join('.','results_v2',region,'base','cyme'))
     s.run_dir = 'run_dir'
     s.run()
 
