@@ -49,8 +49,42 @@ class Set_Fuse_Controls(DiTToLayerBase):
             fuse_set = kwargs['fuse_set']
         if current_rating is not None:
             for i in model.models:
+                if isinstance(i,Line) and hasattr(i,'is_switch') and i.is_switch and hasattr(i,'impedance_matrix') and i.impedance_matrix is not None:
+                    for k in range(len(i.impedance_matrix)):
+                        for kk in range(len(i.impedance_matrix)):
+                            if k == kk:
+                                i.impedance_matrix[k][kk] = complex(0.000001,0.000001)
+                            else:
+                                i.impedance_matrix[k][kk] = complex(0.0,0.0)
+
+                if isinstance(i,Line) and hasattr(i,'is_breaker') and i.is_breaker and hasattr(i,'impedance_matrix') and i.impedance_matrix is not None:
+                    for k in range(len(i.impedance_matrix)):
+                        for kk in range(len(i.impedance_matrix)):
+                            if k == kk:
+                                i.impedance_matrix[k][kk] = complex(0.000001,0.000001)
+                            else:
+                                i.impedance_matrix[k][kk] = complex(0.0,0.0)
+
+
+                if isinstance(i,Line) and hasattr(i,'is_recloser') and i.is_recloser and hasattr(i,'impedance_matrix') and i.impedance_matrix is not None:
+                    for k in range(len(i.impedance_matrix)):
+                        for kk in range(len(i.impedance_matrix)):
+                            if k == kk:
+                                i.impedance_matrix[k][kk] = complex(0.000001,0.000001)
+                            else:
+                                i.impedance_matrix[k][kk] = complex(0.0,0.0)
+
+
                 if isinstance(i,Line) and hasattr (i,'is_fuse') and i.is_fuse and hasattr(i,'wires') and i.wires is not None:
                     nominal_voltage = i.nominal_voltage
+                    if hasattr(i,'impedance_matrix') and i.impedance_matrix is not None:
+                        for k in range(len(i.impedance_matrix)):
+                            for kk in range(len(i.impedance_matrix)):
+                                if k == kk:
+                                    i.impedance_matrix[k][kk] = complex(0.000001,0.000001)
+                                else:
+                                    i.impedance_matrix[k][kk] = complex(0.0,0.0)
+
                     if fuse_set is not None:
                         if i in fuse_set:
                             for w in i.wires:
