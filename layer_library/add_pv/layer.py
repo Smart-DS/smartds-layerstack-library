@@ -83,6 +83,8 @@ class Add_Pv(DiTToLayerBase):
     def apply(cls, stack, model, *args, **kwargs):
         placement_folder = kwargs['placement_folder']
         placements = kwargs['placement_names']
+        if placements is None:
+            return model
         single_size = None
         residential_sizes = None
         commercial_sizes = None
@@ -203,24 +205,22 @@ class Add_Pv(DiTToLayerBase):
                     kw = all_load_kws[model[location].name]
 
 
-                if max_feeder_sizing_percent is not None:
+                lookup = substation_name+"_"+feeder_name
+                at_max = False
+                if lookup in total_feeder_load:
+                    total_pv_local = kw
+                    if lookup in total_pv:
+                        total_pv_local += total_pv[lookup]
 
- 
-                    lookup = substation_name+"_"+feeder_name
-                    at_max = False
-                    if lookup in total_feeder_load:
-                        total_pv_local = kw
-                        if lookup in total_pv:
-                            total_pv_local += total_pv[lookup]
-    
-                        if total_pv_local > max_feeder_sizing_percent*total_feeder_load[lookup]:
-                            at_max = True
-                        if lookup not in total_pv and not at_max:
-                            total_pv[lookup] = kw
+                    if max_feeder_sizing_percent is not None and total_pv_local > max_feeder_sizing_percent*total_feeder_load[lookup]/100.0:
+                        at_max = True
+                    if not at_max:
+                        total_pv[lookup] = total_pv_local
 
-    
-                    if at_max:
-                        continue # Continue and not break since there might be smaller solar loads that can fit
+                if at_max:
+                    print(model[location].name+ " not added to feeder. Adding "+ str(kw/1000)  +" kW would create "+str(round(total_pv_local/total_feeder_load[lookup]*100,3))+" % PV penetration on feeder "+lookup)
+                    continue # Continue and not break since there might be smaller solar loads that can fit
+
                 pv = Photovoltaic(model)
 
                 if hasattr(node_to_connect,'feeder_name'):
@@ -257,6 +257,9 @@ class Add_Pv(DiTToLayerBase):
 
         
         model.set_names()
+        for key in total_feeder_load:
+            if key in total_pv:
+                print(key +" PV Penetration: "+str(round(total_pv[key]/float(total_feeder_load[key])*100,3))+'% PV: '+str(round(total_pv[key]/1000,3))+ " Load "+str(round(total_feeder_load[key]/1000,3)))
         return model
 
 

@@ -12,10 +12,10 @@ layer_library_dir = '../layer_library'
 stack_library_dir = '../stack_library'
 placement_library_dir = '../placement_library'
 
-def create_rnm_to_opendss_stack_scenarios(dataset_dir, region, solar, batteries):
-    '''Create the stack to convert RNM models in OpenDSS to OpenDSS.'''
+def create_rnm_to_cyme_stack_scenarios(dataset_dir, region, solar, batteries):
+    '''Create the stack to convert RNM models in OpenDSS to CYME.'''
 
-    stack = Stack(name='RNM to OpenDSS Stack')
+    stack = Stack(name='RNM to CYME Stack')
 
     #Parse load coordinates csv file
     stack.append(Layer(os.path.join(layer_library_dir,'csv_processing')))
@@ -31,6 +31,9 @@ def create_rnm_to_opendss_stack_scenarios(dataset_dir, region, solar, batteries)
 
     #Ensure all LV lines are triplex
     stack.append(Layer(os.path.join(layer_library_dir,'set_lv_as_triplex')))
+
+    #Add Timeseries loads
+    stack.append(Layer(os.path.join(layer_library_dir,'connect_timeseries_loads')))
 
     #Modify the model
     stack.append(Layer(os.path.join(layer_library_dir,'post-processing')))
@@ -98,8 +101,8 @@ def create_rnm_to_opendss_stack_scenarios(dataset_dir, region, solar, batteries)
     #Set source kv
     stack.append(Layer(os.path.join(layer_library_dir,'set_source_voltage')))
 
-    #Write to OpenDSS
-    stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
+    #Write to CYME
+    stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
 
     #Write to OpenDSS
     stack.append(Layer(os.path.join(layer_library_dir,'to_json')))
@@ -141,43 +144,80 @@ def create_rnm_to_opendss_stack_scenarios(dataset_dir, region, solar, batteries)
     set_lv_triplex = stack[4]
     set_lv_triplex.kwargs['to_replace'] = ['Ionic', 'Corinthian', 'Doric']
 
+    #Timeseries Loads
+    add_timeseries = stack[5]
+    add_timeseries.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt')
+    county = None
+    lower_case_county = None
+    if dataset == 'dataset_4':
+        try: 
+            f = open(os.path.join(dataset_dir,region,'Inputs','customers_ext.txt'),'r')
+            line = f.readlines()[0].split(';')
+            county = 'CA - '+line[-1].strip()
+            lower_case_county = line[-1].strip().lower()
+        except:
+            county = 'CA - SanFrancisco'
+            print('Warning - county not found. Using San Francisco as default')
+            lower_case_county = 'sanfrancisco'
+            
+    if dataset == 'dataset_3':
+        county = 'NC - Guilford'
+        lower_case_county = 'guilford'
+    if dataset == 'dataset_2':
+        county = 'NM - Santa Fe'
+        lower_case_county = 'santafe'
+
+
+    load_map = {'dataset_4':'SanFrancisco','dataset_3':'Greensboro','dataset_2':'SantaFe'}
+    load_location = load_map[dataset]
+    add_timeseries.kwargs['residential_load_data'] = os.path.join('..','..','Loads','residential',load_location,'datapoints_elec_only.h5')
+    add_timeseries.kwargs['residential_load_metadata'] = os.path.join('..','..','Loads','residential',load_location,'results_fips.csv')
+    add_timeseries.kwargs['commercial_load_data'] = os.path.join('..','..','Loads','commercial',county,'com_'+lower_case_county+'_electricity_only.dsg')
+    add_timeseries.kwargs['commercial_load_metadata'] = os.path.join('..','..','Loads','commercial',county,'results.csv')
+    add_timeseries.kwargs['output_folder'] = os.path.join('.','results',region,'timeseries','opendss')
+    add_timeseries.kwargs['write_cyme_file'] = False
+    add_timeseries.kwargs['dataset'] = dataset
+
+
+
+
+
     #Modify layer
     #No input except the model. Nothing to do here...
-    post_processing = stack[5]
+    post_processing = stack[6]
     post_processing.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     post_processing.kwargs['path_to_switching_devices_file'] = os.path.join(dataset_dir,region,'OpenDSS','SwitchingDevices.dss')
     post_processing.kwargs['center_tap_postprocess'] = True
     post_processing.kwargs['switch_to_recloser'] = True
-    post_processing.kwargs['center_tap_postprocess'] = False
 
     #Merging Load layer
-    merging_load = stack[6]
+    merging_load = stack[7]
     merging_load.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Loads_IntermediateFormat2.csv')
 
     #Merging Capacitor Layer
-    merging_caps = stack[7]
+    merging_caps = stack[8]
     merging_caps.kwargs['filename'] = os.path.join(dataset_dir,region,'IntermediateFormat','Capacitors_IntermediateFormat2.csv')
 
     #Resetting customer number layer
-    customer = stack[8]
+    customer = stack[9]
     customer.kwargs['num_customers'] = 1
 
     #Splitting layer
-    split = stack[9]
+    split = stack[10]
     split.kwargs['path_to_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','Feeder.txt')
     split.kwargs['path_to_no_feeder_file'] = os.path.join(dataset_dir,region,'Auxiliary','NoFeeder.txt')
     split.kwargs['compute_metrics'] = True
     split.kwargs['compute_kva_density_with_transformers'] = True #RNM networks have LV information
-    split.kwargs['excel_output'] = os.path.join('.', 'results_v2', region, 'peak_solar_'+solar+'_battery_'+batteries,'opendss', 'metrics.csv')
-    split.kwargs['json_output'] = os.path.join('.', 'results_v2', region, 'peak_solar_'+solar+'_battery_'+batteries, 'opendss','metrics.json')
+    split.kwargs['excel_output'] = os.path.join('.', 'results_v2', region, 'timeseries_solar_'+solar+'_battery_'+batteries,'cyme', 'metrics.csv')
+    split.kwargs['json_output'] = os.path.join('.', 'results_v2', region, 'timeseries_solar_'+solar+'_battery_'+batteries, 'cyme','metrics.json')
 
     #Customer per Transformer plotting layer
-    transformer_metrics = stack[10]
+    transformer_metrics = stack[11]
     transformer_metrics.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt') 
-    transformer_metrics.kwargs['output_folder'] = os.path.join('.','results_v2',region,'peak_solar_'+solar+'_battery_'+batteries,'opendss')
+    transformer_metrics.kwargs['output_folder'] = os.path.join('.','results_v2',region, 'timeseries_solar_'+solar+'_battery_'+batteries,'cyme')
 
     #Intermediate node layer
-    inter = stack[11]
+    inter = stack[12]
     inter.kwargs['filename'] = os.path.join(dataset_dir,region,'OpenDSS','LineCoord.txt')
 
     #Create Placement for PV
@@ -203,21 +243,21 @@ def create_rnm_to_opendss_stack_scenarios(dataset_dir, region, solar, batteries)
 
 
 
-    load_solar_placement = stack[12]
+    load_solar_placement = stack[13]
     load_solar_placement.args[0] = load_feeder_mapping[solar]
     load_solar_placement.args[1] = load_equipment_type
     load_solar_placement.args[2] = load_selection_mapping[solar]
     load_solar_placement.args[3] = seed
     load_solar_placement.args[4] = placement_folder
 
-    utility_solar_placement = stack[13]
+    utility_solar_placement = stack[14]
     utility_solar_placement.args[0] = utility_feeder_mapping[solar] # Length should equal selection[1]. values should be in decreasing order
     utility_solar_placement.args[1] = None
     utility_solar_placement.args[2] = utility_selection_mapping[solar]
     utility_solar_placement.args[3] = None
     utility_solar_placement.args[4] = placement_folder
 
-    add_load_pv = stack[14]
+    add_load_pv = stack[15]
     load_file_names = None #Do nothing if this is the case
     powerfactors = None
     inverters = None
@@ -254,7 +294,7 @@ def create_rnm_to_opendss_stack_scenarios(dataset_dir, region, solar, batteries)
 
 
 
-    add_utility_pv = stack[15]
+    add_utility_pv = stack[16]
     utility_file_name = None
     if utility_selection_mapping[solar] is not None:
         feeders_str = str(utility_feeder_mapping[solar])
@@ -276,19 +316,17 @@ def create_rnm_to_opendss_stack_scenarios(dataset_dir, region, solar, batteries)
     add_utility_pv.kwargs['oversizing'] = [1.1]
 
 
-
-
     # Missing coords
     # No args/kwargs for this layer
 
     # Move overlayed node layer
-    adjust = stack[17]
+    adjust = stack[18]
     adjust.kwargs['delta_x'] = 10
     adjust.kwargs['delta_y'] = 10
 
     #Substations
 
-    add_substations = stack[18]
+    add_substations = stack[19]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
@@ -299,80 +337,78 @@ def create_rnm_to_opendss_stack_scenarios(dataset_dir, region, solar, batteries)
 
     #LTC Controls
 
-    ltc_controls = stack[19]
+    ltc_controls = stack[20]
     ltc_controls.kwargs['setpoint'] = 103
 
     #Fuse Controls
 
-    fuse_controls = stack[20]
+    fuse_controls = stack[21]
     fuse_controls.kwargs['current_rating'] = 100
     fuse_controls.kwargs['high_current_rating'] = 600
 
     #Add switch in long lines
 
-    switch_cut = stack[21]
+    switch_cut = stack[22]
     switch_cut.kwargs['cutoff_length'] = 800
 
-    #Add additional regulators
+   #Add additional regulators
 
-    additional_regs = stack[22]
+    additional_regs = stack[23]
     additional_regs.kwargs['file_location'] = os.path.join(dataset_dir,region,'Auxiliary','additional_regs.csv')
     additional_regs.kwargs['setpoint'] = 103
 
     # Capacitor controls
-    cap_controls = stack[23]
+    cap_controls = stack[24]
     cap_controls.kwargs['delay'] = 100
     cap_controls.kwargs['lowpoint'] = 120.5
     cap_controls.kwargs['highpoint'] = 125
 
     # Reduce overloaded nodes
-    overload_nodes = stack[24]
+    overload_nodes = stack[25]
     overload_nodes.kwargs['powerflow_file'] = os.path.join(dataset_dir,region,'Auxiliary','powerflow.csv')
     overload_nodes.kwargs['threshold'] = 0.94
     overload_nodes.kwargs['scale_factor'] = 2.0
 
     # Set delta loads and transformers   
-    delta = stack[25]
+    delta = stack[26]
     readme_list = [os.path.join(dataset_dir,region,'Inputs',f) for f in os.listdir(os.path.join(dataset_dir,region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
         readme = readme_list[0]
     delta.kwargs['readme_location'] = readme
 
+
     #Set source KV value
-    set_source = stack[26]
+    set_source = stack[27]
     set_source.kwargs['source_kv'] = 230
     set_source.kwargs['source_names'] = ['st_mat']
 
-    #Write to OpenDSS
-    final = stack[27]
-    final.args[0] = os.path.join('.','results_v2',region, 'peak_solar_'+solar+'_battery_'+batteries,'opendss')
-    final.kwargs['separate_feeders'] = True
-    final.kwargs['separate_substations'] = True
+    #Write to CYME
+    final = stack[28]
+    final.args[0] = os.path.join('.','results_v2',region, 'timeseries_solar_'+solar+'_battery_'+batteries,'cyme')
 
     #Dump to Ditto json
-    final_json = stack[28]
-    final_json.kwargs['base_dir'] = os.path.join('.','results_v2',region, 'peak_solar_'+solar+'_battery_'+batteries,'json_opendss')
+    final_json = stack[29]
+    final_json.kwargs['base_dir'] = os.path.join('.','results_v2',region, 'timeseries_solar_'+solar+'_battery_'+batteries,'json_cyme')
 
     #Write Tags 
-    tags = stack[29]
-    tags.kwargs['output_folder'] = os.path.join('.','results_v2',region, 'peak_solar_'+solar+'_battery_'+batteries,'opendss')
+    tags = stack[30]
+    tags.kwargs['output_folder'] = os.path.join('.','results_v2',region, 'timeseries_solar_'+solar+'_battery_'+batteries,'cyme')
     tags.kwargs['tag_file'] = os.path.join(dataset_dir,region,'Auxiliary','FeederStats.txt')
 
     #Write validation
-    validation = stack[30]
-    validation.kwargs['output_folder'] = os.path.join('.','results_v2',region, 'peak_solar_'+solar+'_battery_'+batteries,'opendss')
-    validation.kwargs['input_folder'] = os.path.join('.','results_v2',region, 'peak_solar_'+solar+'_battery_'+batteries,'opendss')
+    validation = stack[31]
+    validation.kwargs['output_folder'] = os.path.join('.','results_v2',region, 'timeseries_solar_'+solar+'_battery_'+batteries,'cyme')
+    validation.kwargs['input_folder'] = os.path.join('.','results_v2',region, 'timeseries_solar_'+solar+'_battery_'+batteries,'cyme')
     validation.kwargs['rscript_folder'] = os.path.join('..','..','smartdsR-analysis-lite')
     validation.kwargs['output_name'] = region
 
-
-    stack.save(os.path.join(stack_library_dir,'rnm_to_opendss_stack_peak_'+region+'solar_'+solar+'_batteries_'+batteries+'.json'))
+    stack.save(os.path.join(stack_library_dir,'rnm_to_cyme_stack_timeseries_'+region+'solar_'+solar+'_batteries_'+batteries+'.json'))
 
 
 def main():
     # Based on the structure in the dataset3 repo: https://github.com/Smart-DS/dataset3
-#create_rnm_to_opendss_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
+#create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
     solar = sys.argv[3]
@@ -383,14 +419,13 @@ def main():
     battery_options = ['none','low','high']
     if batteries not in battery_options or solar not in solar_options:
         raise("Invalid arguments "+solar+" "+batteries)
-    create_rnm_to_opendss_stack_scenarios(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region,solar,batteries)
+    create_rnm_to_cyme_stack_scenarios(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, solar, batteries)
     from layerstack.stack import Stack
-    s = Stack.load('../stack_library/rnm_to_opendss_stack_peak_'+region+'solar_'+solar+'_batteries_'+batteries+'.json')
-    if not os.path.isdir(os.path.join('.','results_v2',region, 'peak_solar_'+solar+'_battery_'+batteries,'opendss')):
-        os.makedirs(os.path.join('.','results_v2',region, 'peak_solar_'+solar+'_battery_'+batteries,'opendss'))
+    s = Stack.load('../stack_library/rnm_to_cyme_stack_timeseries_'+region+'solar_'+solar+'_batteries_'+batteries+'.json')
+    if not os.path.isdir(os.path.join('.','results_v2',region, 'timeseries_solar_'+solar+'_battery_'+batteries,'cyme')):
+        os.makedirs(os.path.join('.','results_v2',region, 'timeseries_solar_'+solar+'_battery_'+batteries,'cyme'))
     s.run_dir = 'run_dir'
     s.run()
 
 if __name__ == "__main__":
     main()
-
