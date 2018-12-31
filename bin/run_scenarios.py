@@ -23,14 +23,14 @@ types = ['cyme', 'opendss']
 
 for sz,i in sorted_dirs:
     for j in range(len(scenario_commands)):
-        f=open('batch_run_scenarios_'+str(cnt)+'.sh','w')
+        f=open('v2_batch_run_scenarios_'+str(cnt)+'.sh','w')
         cnt+=1
         f.write('source activate py36\n')
         f.write('export PYTHONPATH=/projects/solfor/SMART-DS/layerstack:/projects/solfor/SMART-DS/ditto\n')
-        if not os.path.exists(os.path.join('results',i,folder_names[j],types[j])):
-            os.makedirs(os.path.join('results',i,folder_names[j],types[j]))
+        if not os.path.exists(os.path.join('results_v2',i,folder_names[j],types[j])):
+            os.makedirs(os.path.join('results_v2',i,folder_names[j],types[j]))
 
-        f.write('rm -rf results/'+i+'/'+folder_names[j]+'/'+types[j]+'/*\n')
+        f.write('rm -rf results_v2/'+i+'/'+folder_names[j]+'/'+types[j]+'/*\n')
         f.write('time python '+scenario_commands[j]+' '+i+' '+dataset + scenario_params[j])
 
 
