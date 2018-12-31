@@ -66,3 +66,12 @@ tests/outputs/
 
 # stack runs
 **/*run_dir*
+
+# stack library
+stack_library/
+
+# placement library
+placement_library/
+
+# runlogs and batch sripts
+bin/*batch_run_scenarios*
