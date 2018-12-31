@@ -141,7 +141,7 @@ class Create_Placement(DiTToLayerBase):
                         num_goabs -=1
 
                 for i in range(min(len(selected_goabs),selection[1])):
-                    if goab_counter/float(len(goab_key_list))*100 < feeders[i]:
+                    if goab_counter/float(len(goab_key_list))*100 <= feeders[i]:
                         subset.append(model[selected_goabs[i]].to_element)
 
 
