@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
+import os
 
-import json
+import json_tricks
 from builtins import super
 import logging
 from uuid import UUID
@@ -10,6 +11,7 @@ from ditto.dittolayers import DiTToLayerBase
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.base import Unicode
 from ditto.modify.system_structure import system_structure_modifier
+from ditto.models.load import Load
 
 logger = logging.getLogger('layerstack.layers.Add_Pv')
 
@@ -23,33 +25,236 @@ class Add_Pv(DiTToLayerBase):
     @classmethod
     def args(cls, model=None):
         arg_list = super().args()
-        arg_list.append(Arg('placement', description='', parser=None, choices=None, nargs=None))
-        arg_list.append(Arg('rated_power', description='', parser=None, choices=None, nargs=None))
-        arg_list.append(Arg('power_factor', description='', parser=None, choices=None, nargs=None))
         return arg_list
 
     @classmethod
-    def apply(cls, stack, model, placement,rated_power,power_factor):
-        loads = json.load(open(placement))
-        for load in loads:
-            connected_node = model[load].connecting_element
-            upstream_node = model[connected_node] #Connect the PV to the upstream node not directly to the load
-            ps = Photovoltaic(model)
-            ps.name = 'pv_'+load
-            ps.connecting_element = upstream_node.name
-            ps.rated_power = rated_power
-            ps.active_rating = rated_power
-            ps.reactive_rating = rated_power
-            ps.power_factor = power_factor
-            if hasattr(upstream_node,'feeder_name'):
-                ps.feeder_name = upstream_node.feeder_name
-            if hasattr(upstream_node,'substation_name'):
-                ps.substation_name = upstream_node.substation_name
-            phases = []
-            for phase_load in model[load].phase_loads:
-                if phase_load.drop != 1:
-                    phases.append(Unicode(phase_load.phase))
-            ps.phases = phases
+    def kwargs(cls, model=None):
+        kwarg_dict = super().kwargs()
+        kwarg_dict['placement_folder'] = Kwarg(default=None, description='Location of placement folder',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['placement_names'] = Kwarg(default=None, description='A list of placements to be applied',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['single_size'] = Kwarg(default=None, description='A single kW size to be applied to all placements',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['residential_sizes'] = Kwarg(default=None, description='Range of Kw sizes to be applied to different residential customers',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['commercial_sizes'] = Kwarg(default=None, description='Range of building areas in m^2 for partitioning commercial customers',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['residential_areas'] = Kwarg(default=None, description='Range of building areas in m^2 for partitioning residential customers',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['commercial_areas'] = Kwarg(default=None, description='Range of Kw sizes to be applied to different commercial customers',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['customer_file'] = Kwarg(default=None, description='Commercial file for distinguishing commerical and residential loads',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['max_feeder_sizing_percent'] = Kwarg(default=None, description='List of percentages of total load on the feeder that the total PV installed cannot exceed',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['power_factors'] = Kwarg(default=None, description='List of power factors for each placement',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['inverters'] = Kwarg(default=None, description='List of inverters for each placement',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['cutin'] = Kwarg(default=None, description='List of cutin values for each placement',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['cutout'] = Kwarg(default=None, description='List of cutout values for each placement',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['kvar_percent'] = Kwarg(default=None, description='Percentage of KVA as kvar limit',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+        kwarg_dict['oversizing'] = Kwarg(default=None, description='Amount the inverter is oversized',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
+
+        return kwarg_dict
+
+
+    @classmethod
+    def apply(cls, stack, model, *args, **kwargs):
+        placement_folder = kwargs['placement_folder']
+        placements = kwargs['placement_names']
+        single_size = None
+        residential_sizes = None
+        commercial_sizes = None
+        customer_file = None
+        power_factors = None
+        inverters = None
+        cutin = None
+        cutout = None
+        kvar_percent = None
+        oversizing = None
+
+        if 'single_size' in kwargs:
+            single_size = kwargs['single_size']
+
+        if 'residential_sizes' in kwargs:
+            residential_sizes = kwargs['residential_sizes']
+
+        if 'commercial_sizes' in kwargs:
+            commercial_sizes = kwargs['commercial_sizes']
+
+        if 'residential_areas' in kwargs:
+            residential_areas = kwargs['residential_areas']
+
+        if 'commercial_areas' in kwargs:
+            commercial_areas = kwargs['commercial_areas']
+
+        if 'customer_file' in kwargs:
+            customer_file = kwargs['customer_file']
+
+        if 'max_feeder_sizing_percent' in kwargs:
+            max_feeder_sizing_percent = kwargs['max_feeder_sizing_percent']
+
+        if 'power_factors' in kwargs:
+            power_factors = kwargs['power_factors']
+
+        if 'inverters' in kwargs:
+            inverters = kwargs['inverters']
+
+        if 'cutin' in kwargs:
+            cutin = kwargs['cutin']
+
+        if 'cutout' in kwargs:
+            cutout = kwargs['cutout']
+
+        if 'kvar_percent' in kwargs:
+            kvar_percent = kwargs['kvar_percent']
+
+        if 'oversizing' in kwargs:
+            oversizing = kwargs['oversizing']
+
+        total_feeder_load = {}
+        total_pv = {}
+        for i in model.models:
+            if isinstance(i,Load):
+                local_load = 0
+                for ph in i.phase_loads:
+                    local_load+=ph.p
+                if i.feeder_name is not None and i.substation_name is not None:
+                    lookup = i.substation_name+"_"+i.feeder_name
+                    if lookup in total_feeder_load:
+                        total_feeder_load[lookup] = total_feeder_load[lookup]+ local_load
+                    else:
+                        total_feeder_load[lookup] = local_load
+
+
+        all_load_kws = {}
+        if residential_sizes is not None and commercial_sizes is not None and customer_file is not None and commercial_areas is not None and residential_areas is not None:
+            for row in open(customer_file,'r').readlines():
+                sp_row = row.split(';')
+                area = float(sp_row[8])
+                cust_type = sp_row[-3]
+                name = sp_row[3]
+                
+                kw = None
+                if cust_type == 'Res':
+                    if area < residential_areas[0]:
+                        kw = residential_sizes[0]
+                    elif area >= residential_areas[-1]:
+                        kw = residential_sizes[-1]
+                    else:
+                        for i in range(1,len(residential_areas)):
+                            if area < residential_areas[i]:
+                                kw = residential_sizes[i] 
+
+                else:
+                    if area < commercial_areas[0]:
+                        kw = commercial_sizes[0]
+                    elif area >= commercial_areas[-1]:
+                        kw = commercial_sizes[-1]
+                    else:
+                        for i in range(1,len(commercial_areas)):
+                            if area < commercial_areas[i]:
+                                kw = commercial_sizes[i] 
+                all_load_kws['load_'+name.lower()] = kw
+
+
+
+
+        placement_cnt = 0
+        for placement in placements:
+            locations = None
+            with open(os.path.join(placement_folder,placement), "r") as f:
+                locations = json_tricks.load(f)
+            for location in locations:
+                node_to_connect = model[location]
+                if hasattr(node_to_connect,'connecting_element'):
+                    connected_node = model[location].connecting_element
+                    node_to_connect = model[connected_node] #Connect the PV to the upstream node not directly to the load
+                feeder_name = None
+                substation_name = None
+                if hasattr(node_to_connect,'feeder_name'):
+                    feeder_name = node_to_connect.feeder_name
+                if hasattr(node_to_connect,'substation_name'):
+                    substation_name = node_to_connect.substation_name
+
+                kw = single_size # May be none
+                if model[location].name in all_load_kws:
+                    kw = all_load_kws[model[location].name]
+
+
+                if max_feeder_sizing_percent is not None:
+
+ 
+                    lookup = substation_name+"_"+feeder_name
+                    at_max = False
+                    if lookup in total_feeder_load:
+                        total_pv_local = kw
+                        if lookup in total_pv:
+                            total_pv_local += total_pv[lookup]
+    
+                        if total_pv_local > max_feeder_sizing_percent*total_feeder_load[lookup]:
+                            at_max = True
+                        if lookup not in total_pv and not at_max:
+                            total_pv[lookup] = kw
+
+    
+                    if at_max:
+                        continue # Continue and not break since there might be smaller solar loads that can fit
+                pv = Photovoltaic(model)
+
+                if hasattr(node_to_connect,'feeder_name'):
+                    pv.feeder_name = node_to_connect.feeder_name
+                if hasattr(node_to_connect,'substation_name'):
+                    pv.substation_name = node_to_connect.substation_name
+                pv.name = 'pv_'+model[location].name
+                pv.rated_power = kw #The size of the panel itself. Inverter defined through active and reactive
+                pv.connecting_element = node_to_connect.name
+                phases = []
+                if hasattr(model[location],'phase_loads'):
+                    for phase_load in model[location].phase_loads:
+                        if phase_load.drop != 1:
+                            phases.append(Unicode(phase_load.phase))
+                else:
+                    phases = node_to_connect.phases
+                    # CHECK NO UNICODE PROBLEMS
+                pv.phases = phases
+                pv.power_factor = power_factors[placement_cnt]
+                pv.cutout_percent = cutout[placement_cnt]
+                pv.cutin_percent = cutin[placement_cnt]
+                pv.control = inverters[placement_cnt]
+                pv.active_rating = kw*oversizing[placement_cnt]
+                if kvar_percent[placement_cnt] is None:
+                    pv.reactive_rating = None
+                else:
+                    if pv.power_factor is not None and pv.power_factor !=0:
+                        pv.reactive_rating = pv.active_rating/abs(pv.power_factor)*kvar_percent[placement_cnt]/100.0
+                    else: #assume pf of 1
+                        pv.reactive_rating = pv.active_rating*kvar_percent[placement_cnt]/100.0
+                pv.temperature = 25
+                #print(pv.name,pv.active_rating,pv.reactive_rating,pv.rated_power)
+            placement_cnt+=1
+
         
         model.set_names()
         return model
