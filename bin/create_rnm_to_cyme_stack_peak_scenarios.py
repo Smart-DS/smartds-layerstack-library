@@ -185,6 +185,7 @@ def create_rnm_to_cyme_stack_scenarios(dataset_dir, region, solar, batteries):
     utility_feeder_mapping = {'none':None,'low':None,'medium':[50],'high':[100,75]}
     load_feeder_mapping = {'none':None,'low':[100],'medium':[100,100],'high':[100,100,100,100]}
     utility_max_feeder_sizing = {'none':None,'low':None,'medium':33,'high':80}
+    load_max_feeder_sizing = {'none':None,'low':75,'medium':150,'high':None}
     
 
     powerfactor_mapping = {'none':None, 'low':[1], 'medium':[1,-0.95], 'high':[1,-0.95,1,1]} #the pf=1 in the last two should be overridden by the controllers
@@ -219,8 +220,10 @@ def create_rnm_to_cyme_stack_scenarios(dataset_dir, region, solar, batteries):
     load_file_names = None #Do nothing if this is the case
     powerfactors = None
     inverters = None
-    cutin = []
-    cutout = []
+    cutin = None
+    cutout = None
+    kvar_percent = None
+    oversizing = None
     if load_selection_mapping[solar] is not None:
         load_file_names = []
         powerfactors = []
@@ -240,6 +243,7 @@ def create_rnm_to_cyme_stack_scenarios(dataset_dir, region, solar, batteries):
     add_load_pv.kwargs['commercial_sizes'] = [3000,6000,8000,40000,100000,300000]
     add_load_pv.kwargs['commercial_areas'] = [100,300,600,1000,2000]
     add_load_pv.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt')
+    add_load_pv.kwargs['max_feeder_sizing_percent'] = load_max_feeder_sizing[solar] # total_pv <= max_feeder_size*total_feeder_load. 
     add_load_pv.kwargs['power_factors'] = powerfactors
     add_load_pv.kwargs['inverters'] = inverters
     add_load_pv.kwargs['cutin'] = cutin
