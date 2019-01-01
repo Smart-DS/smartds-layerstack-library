@@ -5,6 +5,7 @@ import logging
 from uuid import UUID
 import pandas as pd
 import math
+import pyproj
 import os
 
 from layerstack.args import Arg, Kwarg
@@ -52,16 +53,16 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
-        region = None
+        dataset = None
         base_folder = None
         output_folder = None
         write_opendss_file = False
         write_cyme_file = False
-        if 'region' in kwargs:
-            region = kwargs['region']
+        if 'dataset' in kwargs:
+            dataset = kwargs['dataset']
         if 'base_folder' in kwargs:
             base_folder = kwargs['base_folder']
-        if region is None or base_folder is None:
+        if dataset is None or base_folder is None:
             return model
         if 'output_folder' in kwargs:
             output_folder = kwargs['output_folder']
@@ -76,7 +77,7 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
         projection = {'dataset_4':'epsg:32610', 'dataset_3':'epsg:32617', 'dataset_2':'epsg:32613'}
         mapped_locations = set()
         all_coords = []
-        for csv_file in os.listdir(os.path.join(base_folder,folder[region])):
+        for csv_file in os.listdir(os.path.join(base_folder,folder[dataset])):
             vals = csv_file.split('_')
             clat = vals[0]
             clong = vals[1]
@@ -88,20 +89,20 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
                 y=None
                 if hasattr(i,'positions') and i.positions is not None and len(i.positions) > 0:
                     x = i.positions[0].lat
-                    y = i.positions[1].long
-                elif hasattr(i,'connecting_element') and i.connecting_element is not None and i.connecting_element in model.models:
-                    connecting_element = model.models[i.connecting_element]
+                    y = i.positions[0].long
+                elif hasattr(i,'connecting_element') and i.connecting_element is not None and i.connecting_element in model.model_names:
+                    connecting_element = model[i.connecting_element]
                     if hasattr(connecting_element,'positions') and connecting_element.positions is not None and len(connecting_element.positions) > 0:
                         x = connecting_element.positions[0].lat
-                        y = connecting_element.positions[1].long
+                        y = connecting_element.positions[0].long
                 if x == None or y == None:
                     print('Warning: No solar attached for object '+i.name)
                     return model
 
-                invproj = Proj(init=projection[region],preserve_units=True) 
-                lat_long = invproj(x,y,inverse=True)
-                i_lat = lat_long[0]
-                i_long = lat_long[1]
+                invproj = pyproj.Proj(init=projection[dataset],preserve_units=True) 
+                lat_long = invproj(y,x,inverse=True)
+                i_lat = lat_long[1]
+                i_long = lat_long[0]
 
                 best_dist = float('inf')
                 closest_lat = ''
@@ -110,23 +111,27 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
                     dist = math.sqrt((i_lat-float(coords[0]))**2 + (i_long-float(coords[1]))**2)
                     if dist < best_dist:
                         best_dist = dist
-                        closest_long = coords[0]
+                        closest_lat = coords[0]
                         closest_long = coords[1]
 
 
                 timeseries = Timeseries(model)
-                timeseries.data_label = folder[region]+'_'+closest_lat+'_'+closest_long
+                timeseries.data_label = folder[dataset]+'_'+closest_lat+'_'+closest_long
                 timeseries.data_type = 'float'
                 timeseries.interval = 15 # 15 minute load data so take every 15th minute
-                timeseries.data_location = os.path.join(output_folder,timeseries.data_label+'.csv')
+                if write_opendss_file:
+                    timeseries.data_location = os.path.join(output_folder,timeseries.data_label+'.csv')
+                if write_cyme_file:
+                    timeseries.data_location = timeseries.data_label+'.txt'
                 unscaled_location = os.path.join(output_folder,timeseries.data_label+'_1000kW_plant.csv')
 
                 i.timeseries = [timeseries]
 
                 if (closest_lat,closest_long) in mapped_locations:
                     continue
+                mapped_locations.add((closest_lat,closest_long))
 
-                df = pd.read_csv(os.path.join(base_folder,folder[region],closest_lat+'_'+closest_long+'_2012.csv'))
+                df = pd.read_csv(os.path.join(base_folder,folder[dataset],closest_lat+'_'+closest_long+'_2012.csv'))
                 feb28_start =  list(df.index[df['Timestamp'] =='2012_02_28_0000'])[0]
                 feb28_end =  list(df.index[df['Timestamp'] =='2012_03_01_0000'])[0]
                 extra_day = df.iloc[feb28_start:feb28_end]
@@ -138,18 +143,32 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
                 tmp1 = df1.append(extra_day,ignore_index=True)
                 full_year = tmp1.append(df2,ignore_index=True)
                 scaled = full_year['GHI'].apply(lambda row: row/1000.0) #1000 because OpenDSS treatas the base unit as 1 kW/m^2
+                rounded = list(full_year['GHI'].apply(lambda row: round(row,3))) # Cyme doesn't like big values
                 if write_opendss_file:
                     scaled.write_csv(timeseries.data_location,index=False,header=False)
                 if write_cyme_file:
-                    output_file = open(timeseries.data_location,'w')
+                    if not os.path.isdir(os.path.join(output_folder,timeseries.data_label)):
+                        os.makedirs(os.path.join(output_folder,timeseries.data_label))
+                    output_file = open(os.path.join(output_folder,timeseries.data_label,timeseries.data_location),'w')
                     output_file.write('[INSOLATION_CURVE_VALUES]\nFORMAT=TIME,INSOLATION\n')
-                    for key,row in full_year.iterrows():
-                        output_file.write("{time},{irrad}\n".format(time=time_cnt*60,irrad= row['GHI']))
+                    time_cnt = 0
+                    day = 0
+                    curr_day = None
+                    for cnt in range(len(rounded)):
+                        output_file.write("{time},{irrad}\n".format(time=time_cnt*60,irrad= rounded[cnt]))
+                        if time_cnt%(60*24) == 0:
+                            day+=1
+                            if curr_day != None:
+                                curr_day.close()
+                            curr_day = open(os.path.join(output_folder,timeseries.data_label,timeseries.data_location[:-4]+"_"+str(day)+timeseries.data_location[-4:]),'w')
+                            curr_day.write('[INSOLATION_CURVE_VALUES]\nFORMAT=TIME,INSOLATION\n')
+                        curr_day.write("{time},{irrad}\n".format(time=time_cnt*60%(60*60*24),irrad= rounded[cnt]))
+                        time_cnt+=1
+
                     output_file.close()
 
 
-                full_year['GHI']
-                full_year.write_csv(timeseries.data_location,index=False,header=True)
+                full_year.to_csv(timeseries.data_location[:-4]+"_full.csv",index=False,header=True)
 
 
 
