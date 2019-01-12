@@ -15,6 +15,7 @@ from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
 from ditto.network.network import Network
 from ditto.models.line import Line
+from ditto.models.powertransformer import PowerTransformer
 
 logger = logging.getLogger('layerstack.layers.Create_Placement')
 
@@ -33,18 +34,52 @@ class Create_Placement(DiTToLayerBase):
         arg_list.append(Arg('selection', description='', parser=None, choices=None, nargs=None))
         arg_list.append(Arg('seed', description='', parser=None, choices=None, nargs=None))
         arg_list.append(Arg('placement_folder', description='', parser=None, choices=None, nargs=None))
+        arg_list.append(Arg('placement_name', description='', parser=None, choices=None, nargs=None))
         return arg_list
 
 
     @classmethod
-    def apply(cls, stack, model, feeders = 100, equipment_type=None, selection = ('Random',15), seed = 0, placement_folder=''):
+    def apply(cls, stack, model, feeders = 100, equipment_type=None, selection = ('Random',15), seed = 0, placement_folder='',placement_name='default'):
         subset = []
         if selection is None:
             return model
         
         # TODO: Apply placements to feeders selectively. Currently applying to all equipment in the distribution system
 
-        # Currently just including random selections. Need to also include and document other selection options
+        file_name = placement_name
+        if selection[0] == 'Substation':
+            all_substations = {}
+            for i in model.models:
+                if isinstance(i,PowerTransformer) and i.to_element in model.model_names and i.is_substation and i.windings[0].nominal_voltage <100000:
+                    if i.substation_name is not None and i.substation_name in all_substations:
+                        all_substations[i.substation_name].append(i.to_element)
+                    elif i.substation_name is not None:
+                        all_substations[i.substation_name] = [i.to_element]
+
+            feeders_str = str(feeders)
+            selection_str = str(selection[1])
+            if isinstance(feeders,list):
+                feeders_str = ''
+                selection_str = ''
+                for f in range(len(feeders)):
+                    feeders_str = feeders_str+str(feeders[f])+'-'
+                    selection_str = selection_str+'-'+str(selection[f+1])
+                feeders_str = feeders_str.strip('-')
+            all_substation_keys = sorted(all_substations.keys())
+            random.seed(seed)
+            random.shuffle(all_substation_keys)
+            for feeder_cnt in range(len(feeders)):
+                end_pos = math.floor(len(all_substation_keys)*float(feeders[feeder_cnt])/100.0) #should only have one element in feeders for substation placement
+                substation_subset = all_substation_keys[:end_pos]
+                for sub in substation_subset:
+
+                    for i in range(selection[feeder_cnt+1],int(selection[len(selection)-1])+1):
+                        pos = i%len(all_substations[sub])
+                        subset.append(all_substations[sub][pos]) #May have multiple nodes in same placement
+
+    
+            #file_name = str(feeders_str)+'_Substation'+selection_str+'.json'
+
         if selection[0] == 'Reclosers':
             # Get a subset of nodes at the end of Reclosers. This algorithm finds to closest goabs to the feeder head (in topological order)
             # without common ancestry. i.e. no goab should be upstream of another goab. If this is not possible,
@@ -59,7 +94,7 @@ class Create_Placement(DiTToLayerBase):
                     feeders_str = feeders_str+str(f)+'-'
                 feeders_str = feeders_str.strip('-')
     
-            file_name = str(feeders_str)+'_Node_'+selection[0]+'-'+str(selection[1])+'-'+str(selection[2])+'.json'
+            #file_name = str(feeders_str)+'_Node_'+selection[0]+'-'+str(selection[1])+'-'+str(selection[2])+'.json'
             all_goabs = {}
             random.seed(seed)
 
@@ -158,11 +193,11 @@ class Create_Placement(DiTToLayerBase):
                 start_pos = math.floor(len(all_equipment)*float(selection[1])/100.0)
                 end_pos = math.floor(len(all_equipment)*float(selection[2])/100.0)
                 subset = all_equipment[start_pos:end_pos]
-                file_name = str(feeders)+'_'+equipment_type.split('.')[-1]+'_'+selection[0]+'-'+str(selection[1])+'-'+str(selection[2])+'_'+str(seed)+'.json'
+                #file_name = str(feeders)+'_'+equipment_type.split('.')[-1]+'_'+selection[0]+'-'+str(selection[1])+'-'+str(selection[2])+'_'+str(seed)+'.json'
             if len(selection)==2:
                 random.seed(seed)
                 subset = random.sample(all_equipment,math.floor(len(all_equipment)*float(selection[1])/100.0))
-                file_name = str(feeders)+'_'+equipment_type.split('.')[-1]+'_'+selection[0]+'-'+str(selection[1])+'_'+str(seed)+'.json'
+                #file_name = str(feeders)+'_'+equipment_type.split('.')[-1]+'_'+selection[0]+'-'+str(selection[1])+'_'+str(seed)+'.json'
 
 
 
