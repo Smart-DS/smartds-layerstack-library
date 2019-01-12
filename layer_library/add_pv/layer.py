@@ -83,7 +83,7 @@ class Add_Pv(DiTToLayerBase):
     def apply(cls, stack, model, *args, **kwargs):
         placement_folder = kwargs['placement_folder']
         placements = kwargs['placement_names']
-        if placements is None:
+        if placements is None or placements == [None]:
             return model
         single_size = None
         residential_sizes = None
@@ -188,6 +188,7 @@ class Add_Pv(DiTToLayerBase):
             locations = None
             with open(os.path.join(placement_folder,placement), "r") as f:
                 locations = json_tricks.load(f)
+            seen_elements = {}
             for location in locations:
                 node_to_connect = model[location]
                 if hasattr(node_to_connect,'connecting_element'):
@@ -227,7 +228,15 @@ class Add_Pv(DiTToLayerBase):
                     pv.feeder_name = node_to_connect.feeder_name
                 if hasattr(node_to_connect,'substation_name'):
                     pv.substation_name = node_to_connect.substation_name
+                if hasattr(node_to_connect,'nominal_voltage'):
+                    pv.nominal_voltage = node_to_connect.nominal_voltage
                 pv.name = 'pv_'+model[location].name
+                if pv.name in seen_elements:
+                    seen_elements[pv.name] = seen_elements[pv.name]+1
+                    pv.name = pv.name+'_'+str(seen_elements[pv.name])
+                else:
+                    seen_elements[pv.name] = 0
+
                 pv.rated_power = kw #The size of the panel itself. Inverter defined through active and reactive
                 pv.connecting_element = node_to_connect.name
                 phases = []
