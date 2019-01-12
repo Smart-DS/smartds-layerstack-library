@@ -9,6 +9,7 @@ from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.phase_winding import PhaseWinding
+from ditto.models.load import Load
 
 logger = logging.getLogger('layerstack.layers.Fix_Delta_Phases')
 
@@ -79,6 +80,12 @@ class Fix_Delta_Phases(DiTToLayerBase):
                         element_mapping[(from_element.lower(),to_element.lower())] = phases
                 
                 for obj in model.models:
+                    if isinstance(obj,Load):
+                        if (not obj.is_center_tap) or len(obj.phase_loads) == 3:
+                            obj.connection_type = 'D'
+                        else:
+                            obj.connection_type = 'Y'
+
                     if isinstance(obj,PowerTransformer) and obj.windings[0].connection_type == "D":
                         if len(obj.windings[0].phase_windings)==1:
                             correct_phases_dss = element_mapping[(obj.from_element,obj.to_element)]
@@ -92,7 +99,37 @@ class Fix_Delta_Phases(DiTToLayerBase):
                             additional_pw.phase = correct_phases[1]
                             obj.windings[0].phase_windings.append(additional_pw)
 
+                        winding1 = obj.windings[0]
+                        winding2 = obj.windings[1]
+                        if hasattr(winding1,'phase_windings') and winding1.phase_windings is not None:
+                            n_phases = len(winding1.phase_windings)
+                            if n_phases ==3:
+                                if winding1.nominal_voltage is not None and winding1.nominal_voltage > 30000:
+                                    winding1.connection_type = 'D'
+                                    winding2.connection_type = 'Y'
+                                else:
+                                    winding1.connection_type = 'D'
+                                    winding2.connection_type = 'D'
+                            else:
+                                winding1.connection_type = 'D'
+                                winding2.connection_type = 'Y'
 
+            else:
+                for i in model.models:
+                    if isinstance(i,Load):
+                        i.connection_type = 'Y'
+
+                    if isinstance(i,PowerTransformer) and i.windings is not None and len(i.windings)>1:
+                        winding1 = i.windings[0]
+                        winding2 = i.windings[1]
+                        if hasattr(winding1,'phase_windings') and winding1.phase_windings is not None:
+                            n_phases = len(winding1.phase_windings)
+                            if n_phases ==3:
+                                winding1.connection_type = 'D'
+                                winding2.connection_type = 'Y'
+                            else:
+                                winding1.connection_type = 'Y'
+                                winding2.connection_type = 'Y'
 
         return model
 
