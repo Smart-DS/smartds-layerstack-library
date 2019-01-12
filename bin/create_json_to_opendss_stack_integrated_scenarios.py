@@ -38,12 +38,21 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
     #Create utility placement for Storage
     stack.append(Layer(os.path.join(layer_library_dir,'create_placement')))
 
+    #Add Load Storage
+    stack.append(Layer(os.path.join(layer_library_dir,'add_storage')))
+
+    #Add Utility Storage
+    stack.append(Layer(os.path.join(layer_library_dir,'add_storage')))
+
     if timeseries == 'timeseries':
         #Add Timeseries Solar
         stack.append(Layer(os.path.join(layer_library_dir,'connect_solar_timeseries')))
     
         #Add Timeseries loads
         stack.append(Layer(os.path.join(layer_library_dir,'connect_timeseries_loads')))
+
+    #Find missing coordinates
+    stack.append(Layer(os.path.join(layer_library_dir,'find_missing_coords')))
 
     #Write to OpenDSS
     stack.append(Layer(os.path.join(layer_library_dir,'to_opendss')))
@@ -84,6 +93,10 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
     oversizing_mapping = {'none':None, 'low':[1.1], 'medium': [1.1,1.1], 'high':[1.1,1.1,1.2,1.2]}
     load_equipment_type = 'ditto.models.load.Load'
     utility_equipment_type = 'ditto.models.node.Node'
+
+    load_placement_names = {'none': None, 'low':['pvroof=L.json'],'medium':['pvroof=L.json','pvroof=M.json'],'high':['pvroof=L.json','pvroof=M.json','pvroof=H1.json','pvroof=H2.json']}
+    utility_placement_name = {'none': None, 'low':None,'medium':'pvlg=M.json','high':'pvlg=H.json'}
+
     seed = 1
     placement_folder = os.path.join(placement_library_dir,region)
 
@@ -96,6 +109,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
     load_solar_placement.args[2] = load_selection_mapping[solar]
     load_solar_placement.args[3] = seed
     load_solar_placement.args[4] = placement_folder
+    load_solar_placement.args[5] = load_placement_names[solar]
 
     utility_solar_placement = stack[2]
     utility_solar_placement.args[0] = utility_feeder_mapping[solar] # Length should equal selection[1]. values should be in decreasing order
@@ -103,6 +117,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
     utility_solar_placement.args[2] = utility_selection_mapping[solar]
     utility_solar_placement.args[3] = None
     utility_solar_placement.args[4] = placement_folder
+    utility_solar_placement.args[5] = utility_placement_name[solar]
 
     add_load_pv = stack[3]
     load_file_names = None #Do nothing if this is the case
@@ -125,7 +140,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
         kvar_percent = kvar_percent_mapping[solar]
         oversizing = oversizing_mapping[solar]
     add_load_pv.kwargs['placement_folder'] = placement_folder
-    add_load_pv.kwargs['placement_names'] = load_file_names
+    add_load_pv.kwargs['placement_names'] = load_placement_names[solar]
     add_load_pv.kwargs['residential_sizes'] =[3000,5000,8000]
     add_load_pv.kwargs['residential_areas'] =[75,300]
     add_load_pv.kwargs['commercial_sizes'] = [3000,6000,8000,40000,100000,300000]
@@ -152,7 +167,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
             feeders_str = feeders_str.strip('-')
         utility_file_name = [feeders_str+'_Node_'+utility_selection_mapping[solar][0]+'-'+str(utility_selection_mapping[solar][1])+'-'+str(utility_selection_mapping[solar][2])+'.json']
     add_utility_pv.kwargs['placement_folder'] = placement_folder
-    add_utility_pv.kwargs['placement_names'] = utility_file_name
+    add_utility_pv.kwargs['placement_names'] = [utility_placement_name[solar]]
     add_utility_pv.kwargs['single_size'] = 2000000
     add_utility_pv.kwargs['max_feeder_sizing_percent'] = utility_max_feeder_sizing[solar] # total_pv <= max_feeder_size*total_feeder_load
     add_utility_pv.kwargs['power_factors'] = [0.95]
@@ -165,10 +180,12 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
     #Create Placement for Storage
     load_selection_mapping = {'none':None, 'low':[('Random',0,5)], 'high':[('Random',0,5),('Random',5,35)]}
     # TODO put second utility BESS at substation
-    utility_selection_mapping = {'none':None,'low':('Reclosers',1,2), 'high':('Reclosers',2,2)} #(Reclosers,1,2) means algorithm will select 2 Reclosers that are not upstream of each other and return the first. Useful for consistency with larger selections
+    utility_selection_mapping = {'none':None,'low':('Substation',1), 'high':('Substation',1,2)} #(Substation,1,2) means algorithm will select use 1 storage on the first feeder selection set and 2 storage units 
     utility_feeder_mapping = {'none':None,'low':[50],'high':[100,75]}
     load_feeder_mapping = {'none':None,'low':[100],'high':[100,100]}
 
+    load_placement_names = {'none': None, 'low':['batsm=L.json'],'high':['batsm=L.json','batsm=H.json']}
+    utility_placement_name = {'none': None, 'low':'batlg=L.json','high':'batlg=H.json'}
 
     load_storage_placement = stack[5]
     load_storage_placement.args[0] = load_feeder_mapping[batteries]
@@ -176,6 +193,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
     load_storage_placement.args[2] = load_selection_mapping[batteries]
     load_storage_placement.args[3] = seed
     load_storage_placement.args[4] = placement_folder
+    load_storage_placement.args[5] = load_placement_names[batteries]
 
     utility_storage_placement = stack[6]
     utility_storage_placement.args[0] = utility_feeder_mapping[batteries] # Length should equal selection[1]. values should be in decreasing order. This is done for the recloser selection
@@ -183,11 +201,43 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
     utility_storage_placement.args[2] = utility_selection_mapping[batteries]
     utility_storage_placement.args[3] = None
     utility_storage_placement.args[4] = placement_folder
+    utility_storage_placement.args[5] = utility_placement_name[batteries]
+
+    add_load_storage = stack[7]
+    add_load_storage.kwargs['placement_folder'] = placement_folder
+    add_load_storage.kwargs['placement_names'] = load_placement_names[batteries]
+    add_load_storage.kwargs['single_kw'] = 8
+    add_load_storage.kwargs['single_kwh'] = 16
+    add_load_storage.kwargs['kw_values'] =[4,8,25,100]
+    add_load_storage.kwargs['kwh_values'] =[8,16,50,200]
+    add_load_storage.kwargs['connected_pv_threshold'] =[4,10,150]
+    add_load_storage.kwargs['starting_percentage'] = 50
+    add_load_storage.kwargs['charge_efficiency'] = 95
+    add_load_storage.kwargs['discharge_efficiency'] = 95
+    add_load_storage.kwargs['oversizing'] = 1.1
+    add_load_storage.kwargs['power_factor'] = 1.0
+    add_load_storage.kwargs['kvar_percent'] = 65
+    add_load_storage.kwargs['is_substation'] = False
+
+
+    add_utility_storage = stack[8]
+    add_utility_storage.kwargs['placement_folder'] = placement_folder
+    add_utility_storage.kwargs['placement_names'] = [utility_placement_name[batteries]]
+    add_utility_storage.kwargs['single_kw'] = 1000
+    add_utility_storage.kwargs['single_kwh'] = 2000
+    add_utility_storage.kwargs['starting_percentage'] = 50
+    add_utility_storage.kwargs['charge_efficiency'] = 95
+    add_utility_storage.kwargs['discharge_efficiency'] = 95
+    add_utility_storage.kwargs['oversizing'] = 1.1
+    add_utility_storage.kwargs['power_factor'] = 1.0
+    add_utility_storage.kwargs['kvar_percent'] = 65
+    add_utility_storage.kwargs['is_substation'] = True
+
 
     if timeseries == 'timeseries':
 
         #Timeseries Solar
-        add_solar_timeseries = stack[7]
+        add_solar_timeseries = stack[9]
         dataset = dataset_dir.split('/')[2][:9] #Warning - tightly coupled to dataset naming convention
         add_solar_timeseries.kwargs['dataset'] = dataset
         add_solar_timeseries.kwargs['base_folder'] = os.path.join('..','..','Solar')
@@ -196,7 +246,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
         add_solar_timeseries.kwargs['write_opendss_file'] = True
     
         #Timeseries Loads
-        add_timeseries = stack[8]
+        add_timeseries = stack[10]
         add_timeseries.kwargs['customer_file'] = os.path.join(dataset_dir,region,'Inputs','customers_ext.txt')
         county = None
         lower_case_county = None
@@ -231,23 +281,23 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
         add_timeseries.kwargs['dataset'] = dataset
 
     #Write to OpenDSS
-    final = stack[7+timeseries_layer_cnt]
+    final = stack[10+timeseries_layer_cnt]
     final.args[0] = os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss')
     final.kwargs['separate_feeders'] = True
     final.kwargs['separate_substations'] = True
 
     #Dump to Ditto json
-    final_json = stack[8+timeseries_layer_cnt]
+    final_json = stack[11+timeseries_layer_cnt]
     final_json.kwargs['base_dir'] = os.path.join('.','results_v4',region, 'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_opendss')
 
     # Run OpenDSSDirect and get plots
-    run_dss = stack[9+timeseries_layer_cnt]
+    run_dss = stack[12+timeseries_layer_cnt]
     run_dss.kwargs['master_file'] = os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss','Master.dss')
     run_dss.kwargs['plot_profile'] = True
     run_dss.kwargs['output_folder'] = os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss','analysis')
     run_dss.kwargs['region'] = region
 
-    stack.save(os.path.join(stack_library_dir,'json_to_opendss_stack_'+region+'.json'))
+    stack.save(os.path.join(stack_library_dir,'json_to_opendss_stack_'+region+'_solar_'+solar+'_batteries_'+batteries+'_'+timeseries+'.json'))
 
 
 def main():
@@ -269,7 +319,7 @@ def main():
 
     create_rnm_to_opendss_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, dataset, solar,batteries, timeseries)
     from layerstack.stack import Stack
-    s = Stack.load('../stack_library/json_to_opendss_stack_'+region+'solar_'+solar+'_batteries_'+batteries+'_'+timeseries+'.json')
+    s = Stack.load('../stack_library/json_to_opendss_stack_'+region+'_solar_'+solar+'_batteries_'+batteries+'_'+timeseries+'.json')
     if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss')):
         os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss'))
     if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_opendss')):
