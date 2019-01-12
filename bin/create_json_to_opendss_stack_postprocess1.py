@@ -25,6 +25,12 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset):
     #Increase MVA of low transformers
     stack.append(Layer(os.path.join(layer_library_dir,'boost_transformers')))
 
+    #Increase ltc setpoint
+    stack.append(Layer(os.path.join(layer_library_dir,'boost_setpoints')))
+
+    #Reduce the load of select load locations
+    stack.append(Layer(os.path.join(layer_library_dir,'reduce_lv_loads')))
+
     #Fix delta phases
     stack.append(Layer(os.path.join(layer_library_dir,'fix_delta_phases')))
 
@@ -68,39 +74,52 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset):
     boost_transformers.kwargs['reactance'] = 6.76625
     boost_transformers.kwargs['input_file'] = os.path.join('extra_inputs',region,'extra_transformers.csv')
 
+    # Boost selected setpoints
+    boost_transformers = stack[3]
+    boost_transformers.kwargs['setpoint'] = 105
+    boost_transformers.kwargs['input_file'] = os.path.join('extra_inputs',region,'setpoints.csv')
+
+    # Reduce selected loads
+    boost_transformers = stack[4]
+    boost_transformers.kwargs['scale_factor'] = 2.0
+    boost_transformers.kwargs['input_file'] = os.path.join('extra_inputs',region,'lv_nodes.csv')
+
     dataset_map = {'dataset_4':'dataset_4_20181120','dataset_3':'dataset_3_20181130','dataset_2':'dataset_2_20181130'}
     readme_list = [os.path.join('..','..',dataset_map[dataset],region,'Inputs',f) for f in os.listdir(os.path.join('..','..',dataset_map[dataset],region,'Inputs')) if f.startswith('README')]
     readme = None
     if len(readme_list)==1:
         readme = readme_list[0]
-    fix_delta_phases = stack[3]
+
+
+    # Fix delta systems
+    fix_delta_phases = stack[5]
     fix_delta_phases.kwargs['readme_location'] = readme
     fix_delta_phases.kwargs['transformer_file'] = os.path.join('..','..',dataset_map[dataset],region,'OpenDSS','Transformers.dss')
     
 
     # Set maximum name sizes
-    max_size = stack[4]
+    max_size = stack[6]
     max_size.kwargs['max_size'] = 48
     
 
 
     #Write to OpenDSS
-    final = stack[5]
+    final = stack[7]
     final.args[0] = os.path.join('.','results_v3',region,'base','opendss')
     final.kwargs['separate_feeders'] = True
     final.kwargs['separate_substations'] = True
 
     #Dump to Ditto json
-    final_json = stack[6]
+    final_json = stack[8]
     final_json.kwargs['base_dir'] = os.path.join('.','results_v3',region, 'base','json_opendss')
 
     #Walk through folders and write lats/longs
-    lat_longs = stack[7]
+    lat_longs = stack[9]
     lat_longs.kwargs['folder_location'] = os.path.join('.','results_v3',region, 'base','opendss')
     lat_longs.kwargs['dataset'] = dataset
 
     # Run OpenDSSDirect and get plots
-    run_dss = stack[8]
+    run_dss = stack[10]
     run_dss.kwargs['master_file'] = os.path.join('.','results_v3',region,'base','opendss','Master.dss')
     run_dss.kwargs['plot_profile'] = True
     run_dss.kwargs['output_folder'] = os.path.join('.','results_v3',region,'base','opendss','analysis')
