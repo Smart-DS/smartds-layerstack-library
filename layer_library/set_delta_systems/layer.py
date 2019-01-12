@@ -47,8 +47,31 @@ class Set_Delta_Systems(DiTToLayerBase):
             if config == 'delta-delta':
                 for i in model.models:
                     if isinstance(i,Load):
-                        if not i.is_center_tap:
+                        if not i.is_center_tap or len(i.phase_loads) == 3:
                             i.connection_type = 'D'
+                        else:
+                            i.connection_type = 'Y'
+
+                    if isinstance(i,PowerTransformer) and i.windings is not None and len(i.windings)>1:
+                        winding1 = i.windings[0]
+                        winding2 = i.windings[1]
+                        if hasattr(winding1,'phase_windings') and winding1.phase_windings is not None:
+                            n_phases = len(winding1.phase_windings)
+                            if n_phases ==3:
+                                if winding1.nominal_voltage is not None and winding1.nominal_voltage > 30000:
+                                    winding1.connection_type = 'D'
+                                    winding2.connection_type = 'Y'
+                                else:
+                                    winding1.connection_type = 'D'
+                                    winding2.connection_type = 'D'
+                            else:
+                                winding1.connection_type = 'D'
+                                winding2.connection_type = 'Y'
+
+            else:
+                for i in model.models:
+                    if isinstance(i,Load):
+                        i.connection_type = 'Y'
 
                     if isinstance(i,PowerTransformer) and i.windings is not None and len(i.windings)>1:
                         winding1 = i.windings[0]
@@ -57,11 +80,10 @@ class Set_Delta_Systems(DiTToLayerBase):
                             n_phases = len(winding1.phase_windings)
                             if n_phases ==3:
                                 winding1.connection_type = 'D'
-                                winding2.connection_type = 'D'
-                            else:
-                                winding1.connection_type = 'D'
                                 winding2.connection_type = 'Y'
-
+                            else:
+                                winding1.connection_type = 'Y'
+                                winding2.connection_type = 'Y'
 
 
         return model
