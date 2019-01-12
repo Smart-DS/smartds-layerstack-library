@@ -82,7 +82,7 @@ class Run_Dss(DiTToLayerBase):
                         all_feeders[i.substation_name+"_"+i.feeder_name].append(i.from_element)
                     else:
                         all_feeders[i.substation_name+"_"+i.feeder_name] = [i.from_element]
-                    if i.feeder_name is not "" and model[i.from_element].is_substation_connection:
+                    if i.feeder_name is not "" and i.from_element in model.model_names and model[i.from_element].is_substation_connection:
                         all_monitors[i.feeder_name] = i.name
             #    if hasattr(i,'from_element') and i.from_element == 'st_mat':
             #        monitor_line = i.name
@@ -92,6 +92,7 @@ class Run_Dss(DiTToLayerBase):
             all_G = {}
             if plot_profile:
                 #G = nx.Graph()
+                pos = {}
                 line_df = dss.utils.lines_to_dataframe()
                 trans_df = dss.utils.class_to_dataframe("transformer")
                 line_data = line_df[['Name','Bus1', 'Bus2']].to_dict(orient="index")
@@ -155,7 +156,6 @@ class Run_Dss(DiTToLayerBase):
                         print('ignoring line '+linename)
     
                 
-                pos = {}
                 
             
             #dss.run_command("export voltages "+os.path.join(output_folder,"bus_voltages.csv"))
@@ -166,6 +166,7 @@ class Run_Dss(DiTToLayerBase):
             first_run = True
             distance_lookup = {}
             for monitor_feeder,monitor_line in all_monitors.items():
+                dss.run_command("Redirect "+master_file) #rerun to get correct distances
                 print("Monitor at "+monitor_line)
                 dss.run_command("New Energymeter.m1 Line."+monitor_line) #should always be a line from st_mat
                 dss.run_command("Solve")
@@ -175,6 +176,8 @@ class Run_Dss(DiTToLayerBase):
                     pus = []
                     tot = 0
                     cnt = 0
+                    D = 0
+                    use_D = False
                     for i in range(int(len(dss_pus)/2)):
                         mag = abs(complex(dss_pus[2*i],dss_pus[2*i+1]))
                         if plot_profile:
@@ -182,11 +185,11 @@ class Run_Dss(DiTToLayerBase):
                             if name in distance_lookup:
                                 if distance_lookup[name] < D:
                                     pos[dss.Bus.Name()] = (D, mag) 
+                                    use_D = True
                                     distance_lookup[name] = D
                             else:
                                 distance_lookup[name] = D
                                 pos[dss.Bus.Name()] = (D, mag) 
-    
                         if mag > 0:
                             tot += mag
                             cnt+=1
@@ -194,6 +197,8 @@ class Run_Dss(DiTToLayerBase):
                         tot = 0
                     else:
                         tot = tot/cnt
+                    if use_D:
+                        pos[dss.Bus.Name()] = (D, tot) 
                     if tot < global_min and tot !=0 and first_run:
                         global_min = tot
                     if tot > global_max and first_run:
