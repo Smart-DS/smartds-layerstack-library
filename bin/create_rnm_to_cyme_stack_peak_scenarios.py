@@ -101,7 +101,7 @@ def create_rnm_to_cyme_stack_scenarios(dataset_dir, region, solar, batteries):
     #Write to CYME
     stack.append(Layer(os.path.join(layer_library_dir,'to_cyme')))
 
-    #Write to OpenDSS
+    #Write to json
     stack.append(Layer(os.path.join(layer_library_dir,'to_json')))
 
     #Copy Tag file over
@@ -273,6 +273,30 @@ def create_rnm_to_cyme_stack_scenarios(dataset_dir, region, solar, batteries):
     add_utility_pv.kwargs['cutout'] = [0.1]
     add_utility_pv.kwargs['kvar_percent'] = [44]
     add_utility_pv.kwargs['oversizing'] = [1.1]
+
+
+    #Create Placement for Storage
+    load_selection_mapping = {'none':None, 'low':[('Random',0,5)], 'high':[('Random',0,5),('Random',5,35)]}
+    # TODO put second utility BESS at substation
+    utility_selection_mapping = {'none':None,'low':('Reclosers',1,2), 'high':('Reclosers',2,2)} #(Reclosers,1,2) means algorithm will select 2 Reclosers that are not upstream of each other and return the first. Useful for consistency with larger selections
+    utility_feeder_mapping = {'none':None,'low':[50],'high':[100,75]}
+    load_feeder_mapping = {'none':None,'low':[100],'high':[100,100]}
+
+
+    load_storage_placement = stack[12]
+    load_storage_placement.args[0] = load_feeder_mapping[batteries]
+    load_storage_placement.args[1] = load_equipment_type
+    load_storage_placement.args[2] = load_selection_mapping[batteries]
+    load_storage_placement.args[3] = seed
+    load_storage_placement.args[4] = placement_folder
+
+    utility_storage_placement = stack[13]
+    utility_storage_placement.args[0] = utility_feeder_mapping[batteries] # Length should equal selection[1]. values should be in decreasing order. This is done for the recloser selection
+    utility_storage_placement.args[1] = None
+    utility_storage_placement.args[2] = utility_selection_mapping[batteries]
+    utility_storage_placement.args[3] = None
+    utility_storage_placement.args[4] = placement_folder
+
 
 
     # Missing coords
