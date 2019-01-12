@@ -39,7 +39,7 @@ class Boost_Transformers(DiTToLayerBase):
         kwarg_dict['mva'] = Kwarg(default=None, description='Mvar to set for the transformer',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
-        kwarg_dict['input_file'] = Kwarg(default=None, description='Mvar to set for the transformer',
+        kwarg_dict['input_file'] = Kwarg(default=None, description='Location of input file',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
         return kwarg_dict
