@@ -184,12 +184,18 @@ class Add_Pv(DiTToLayerBase):
 
 
         placement_cnt = 0
+        prev_placement_set = set() #assume at most one solar per location
         for placement in placements:
-            locations = None
+            locations = []
             with open(os.path.join(placement_folder,placement), "r") as f:
-                locations = json_tricks.load(f)
+                locations_feeders = json_tricks.load(f)
+                for key in locations_feeders:
+                    locations.extend(locations_feeders[key])
             seen_elements = {}
             for location in locations:
+                if location in prev_placement_set:
+                    continue
+                prev_placement_set.add(location)
                 node_to_connect = model[location]
                 if hasattr(node_to_connect,'connecting_element'):
                     connected_node = model[location].connecting_element

@@ -147,9 +147,12 @@ class Add_Storage(DiTToLayerBase):
         placement_cnt = 0 #Currently parameters are the same for all placements so this isn't used
         seen_elements = {}
         for placement in placements:
-            connecting_elements = None
+            connecting_elements = []
             with open(os.path.join(placement_folder,placement), "r") as f_input:
-                connecting_elements = json_tricks.load(f_input)
+                locations_feeders = json_tricks.load(f_input)
+                for key in locations_feeders:
+                    connecting_elements.extend(locations_feeders[key])
+
             for location in connecting_elements:
                 node_to_connect = model[location]
                 if hasattr(node_to_connect,'connecting_element'):
