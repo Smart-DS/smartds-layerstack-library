@@ -74,25 +74,35 @@ def create_rnm_to_cyme_stack(dataset_dir, region, dataset,solar,batteries,timese
     from_json.kwargs['base_dir'] = os.path.join('.','results_v3',region,'base','json_cyme')
 
     #Create Placement for PV
-    load_selection_mapping = {'none':None, 'low':[('Random',0,15)],'medium':[('Random',0,15),('Random',15,35)], 'high':[('Random',0,15),('Random',15,35),('Random',35,55),('Random',55,75)]}
-    utility_selection_mapping = {'none':None,'low':None,'medium':('Reclosers',1,2), 'high':('Reclosers',2,2)} #(Reclosers,1,2) means algorithm will select 2 Reclosers that are not upstream of each other and return the first. Useful for consistency with larger selections
-    utility_feeder_mapping = {'none':None,'low':None,'medium':[50],'high':[100,75]}
-    load_feeder_mapping = {'none':None,'low':[100],'medium':[100,100],'high':[100,100,100,100]}
-    utility_max_feeder_sizing = {'none':None,'low':None,'medium':33,'high':80}
-    load_max_feeder_sizing = {'none':None,'low':75,'medium':150,'high':None}
-    
 
-    powerfactor_mapping = {'none':None, 'low':[1], 'medium':[1,-0.95], 'high':[1,-0.95,1,1]} #the pf=1 in the last two should be overridden by the controllers
-    inverter_control_mapping = {'none':None, 'low':['powerfactor'], 'medium': ['powerfactor','powerfactor'], 'high':['powerfactor','powerfactor','voltvar','voltwatt']}
-    cutin_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1,0.1]}
-    cutout_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1,0.1]}
-    kvar_percent_mapping = {'none':None, 'low':[None], 'medium': [None,None], 'high':[None,None,44,44]}
-    oversizing_mapping = {'none':None, 'low':[1.1], 'medium': [1.1,1.1], 'high':[1.1,1.1,1.2,1.2]}
+    load_selection_mapping = {'none':None, 'low':[('Random',0,15)],'medium':[('Random',0,15),('Random',15,35)], 'high':[('Random',0,15),('Random',15,35),('Random',35,65)],'extreme':[('Random',0,15),('Random',15,35),('Random',35,65),('Random',65,85)]}
+    utility_selection_mapping = {'none':None,'low':None,'medium':('Reclosers',1,2), 'high':('Reclosers',2,2),'extreme':('Reclosers',2,2)} #(Reclosers,1,2) means algorithm will select 2 Reclosers that are not upstream of each other and return the first. Useful for consistency with larger selections
+    utility_feeder_mapping = {'none':None,'low':None,'medium':[50],'high':[100,75],'extreme':[100,75]}
+    load_feeder_mapping = {'none':None,'low':[100],'medium':[100,100],'high':[100,100,100],'extreme':[100,100,100,100]}
+    utility_max_feeder_sizing = {'none':None,'low':None,'medium':33,'high':80,'extreme':100}
+    load_max_feeder_sizing = {'none':None,'low':15,'medium':75,'high':150, 'extreme':None}
+    
+ 
+
+    powerfactor_mapping = {'none':None, 'low':[1], 'medium':[1,-0.95], 'high':[1,-0.95,1], 'extreme':[1,-0.95,1,1]} #the pf=1 in the last two should be overridden by the controllers
+    #powerfactor_mapping = {'none':None, 'low':[1], 'medium':[1,-0.95], 'high':[1,-0.95,1,1]} #the pf=1 in the last two should be overridden by the controllers
+    inverter_control_mapping = {'none':None, 'low':['powerfactor'], 'medium': ['powerfactor','powerfactor'], 'high':['powerfactor','powerfactor','powerfactor'], 'extreme':['powerfactor','powerfactor','powerfactor','powerfactor']}
+    #inverter_control_mapping = {'none':None, 'low':['powerfactor'], 'medium': ['powerfactor','powerfactor'], 'high':['powerfactor','powerfactor','voltvar','voltwatt']}
+    cutin_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1], 'extreme':[0.1,0.1,0.1,0.1]}
+    #cutin_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1,0.1]}
+    cutout_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1], 'extreme':[0.1,0.1,0.1,0.1]}
+    #cutout_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1,0.1]}
+    kvar_percent_mapping = {'none':None, 'low':[None], 'medium': [None,None], 'high':[None,None,44],'extreme':[None,None,44,44]}
+    #kvar_percent_mapping = {'none':None, 'low':[None], 'medium': [None,None], 'high':[None,None,44,44]}
+    oversizing_mapping = {'none':None, 'low':[1.1], 'medium': [1.1,1.1], 'high':[1.1,1.1,1.2], 'extreme':[1.1,1.1,1.2,1.2]}
+    #oversizing_mapping = {'none':None, 'low':[1.1], 'medium': [1.1,1.1], 'high':[1.1,1.1,1.2,1.2]}
+
     load_equipment_type = 'ditto.models.load.Load'
     utility_equipment_type = 'ditto.models.node.Node'
     
-    load_placement_names = {'none': None, 'low':['pvroof=L.json'],'medium':['pvroof=L.json','pvroof=M.json'],'high':['pvroof=L.json','pvroof=M.json','pvroof=H1.json','pvroof=H2.json']}
-    utility_placement_name = {'none': None, 'low':None,'medium':'pvlg=M.json','high':'pvlg=H.json'}
+    load_placement_names = {'none': None, 'low':'pvroof=L.json','medium':'pvroof=M.json','high':'pvroof=H.json','extreme':'pvroof=E.json'}
+    load_pv_placement_names = {'none':[None], 'low':['pvroof=L.json'], 'medium':['pvroof=L.json','pvroof=M.json'], 'high':['pvroof=L.json','pvroof=M.json','pvroof=H.json'], 'extreme':['pvroof=L.json','pvroof=M.json','pvroof=H.json','pvroof=E.json']}
+    utility_placement_name = {'none': None, 'low':None,'medium':'pvlg=M.json','high':'pvlg=H.json','extreme':'pvlg=E.json'}
 
     seed = 1
     placement_folder = os.path.join(placement_library_dir,region)
@@ -137,7 +147,7 @@ def create_rnm_to_cyme_stack(dataset_dir, region, dataset,solar,batteries,timese
         kvar_percent = kvar_percent_mapping[solar]
         oversizing = oversizing_mapping[solar]
     add_load_pv.kwargs['placement_folder'] = placement_folder
-    add_load_pv.kwargs['placement_names'] = load_placement_names[solar]
+    add_load_pv.kwargs['placement_names'] = load_pv_placement_names[solar]
     add_load_pv.kwargs['residential_sizes'] =[3000,5000,8000]
     add_load_pv.kwargs['residential_areas'] =[75,300]
     add_load_pv.kwargs['commercial_sizes'] = [3000,6000,8000,40000,100000,300000]
@@ -181,7 +191,8 @@ def create_rnm_to_cyme_stack(dataset_dir, region, dataset,solar,batteries,timese
     utility_feeder_mapping = {'none':None,'low':[50],'high':[100,75]}
     load_feeder_mapping = {'none':None,'low':[100],'high':[100,100]}
 
-    load_placement_names = {'none': None, 'low':['batsm=L.json'],'high':['batsm=L.json','batsm=H.json']}
+    load_placement_names = {'none': None, 'low':'batsm=L.json','high':'batsm=H.json'}
+    load_storage_placement_names = {'none': [None], 'low':['batsm=L.json'],'high':['batsm=L.json','batsm=H.json']}
     utility_placement_name = {'none': None, 'low':'batlg=L.json','high':'batlg=H.json'}
 
     load_storage_placement = stack[5]
@@ -202,7 +213,7 @@ def create_rnm_to_cyme_stack(dataset_dir, region, dataset,solar,batteries,timese
 
     add_load_storage = stack[7]
     add_load_storage.kwargs['placement_folder'] = placement_folder
-    add_load_storage.kwargs['placement_names'] = load_placement_names[batteries]
+    add_load_storage.kwargs['placement_names'] = load_storage_placement_names[batteries]
     add_load_storage.kwargs['single_kw'] = 8
     add_load_storage.kwargs['single_kwh'] = 16
     add_load_storage.kwargs['kw_values'] =[4,8,25,100]
@@ -294,27 +305,27 @@ def main():
 #create_rnm_to_cyme_stack(os.path.join('..','..','dataset3', 'MixedHumid'), 'industrial')
     region= sys.argv[1]
     dataset = sys.argv[2]
-    solar = sys.argv[3]
-    batteries = sys.argv[4]
-    timeseries = sys.argv[5]
+    timeseries = sys.argv[3]
 
     #dataset_map = {'dataset_4':'20180727','dataset_3':'20180910','dataset_2':'20180716'}
     dataset_map = {'dataset_4':'20181120','dataset_3':'20181130','dataset_2':'20181130'}
     solar_options = ['none','low','medium','high']
     battery_options = ['none','low','high']
     timeseries_options = ['timeseries','peak']
-    if batteries not in battery_options or solar not in solar_options or timeseries not in timeseries_options:
-        raise("Invalid arguments "+solar+" "+batteries+' '+timeseries)
+    if timeseries not in timeseries_options:
+        raise("Invalid arguments "+timeseries)
 
-    create_rnm_to_cyme_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, dataset,solar,batteries,timeseries)
-    from layerstack.stack import Stack
-    s = Stack.load('../stack_library/json_to_cyme_stack_'+region+'_solar_'+solar+'_batteries_'+batteries+'_'+timeseries+'.json')
-    if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'cyme')):
-        os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'cyme'))
-    if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_cyme')):
-        os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_cyme'))
-    s.run_dir = 'run_dir'
-    s.run()
+    for batteries in battery_options: #Need to create smaller areas first since they're referenced by larger areas
+        for solar in solar_options:
+            create_rnm_to_cyme_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, dataset,solar,batteries,timeseries)
+            from layerstack.stack import Stack
+            s = Stack.load('../stack_library/json_to_cyme_stack_'+region+'_solar_'+solar+'_batteries_'+batteries+'_'+timeseries+'.json')
+            if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'cyme')):
+                os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'cyme'))
+            if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_cyme')):
+                os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_cyme'))
+            s.run_dir = 'run_dir'
+            s.run()
 
 if __name__ == "__main__":
     main()
