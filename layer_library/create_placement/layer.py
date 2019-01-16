@@ -40,7 +40,7 @@ class Create_Placement(DiTToLayerBase):
 
     @classmethod
     def apply(cls, stack, model, feeders = 100, equipment_type=None, selection = ('Random',15), seed = 0, placement_folder='',placement_name='default'):
-        subset = []
+        subset = {}
         if selection is None:
             return model
         
@@ -75,7 +75,10 @@ class Create_Placement(DiTToLayerBase):
 
                     for i in range(selection[feeder_cnt+1],int(selection[len(selection)-1])+1):
                         pos = i%len(all_substations[sub])
-                        subset.append(all_substations[sub][pos]) #May have multiple nodes in same placement
+                        sub_name = model[all_substations[sub][pos]].substation_name
+                        if not sub_name in subset:
+                            subset[sub_name] = []
+                        subset[sub_name].append(all_substations[sub][pos]) #May have multiple nodes in same placement
 
     
             #file_name = str(feeders_str)+'_Substation'+selection_str+'.json'
@@ -177,7 +180,10 @@ class Create_Placement(DiTToLayerBase):
 
                 for i in range(min(len(selected_goabs),selection[1])):
                     if goab_counter/float(len(goab_key_list))*100 <= feeders[i]:
-                        subset.append(model[selected_goabs[i]].to_element)
+                        feeder = model[selected_goabs[i]].feeder_name
+                        if not feeder in subset:
+                            subset[feeder] = []
+                        subset[feeder].append(model[selected_goabs[i]].to_element)
 
 
         if selection[0] == 'Random':
@@ -187,6 +193,7 @@ class Create_Placement(DiTToLayerBase):
                 if isinstance(i,class_equipment_type):
                     all_equipment.append(i.name)
 
+            all_equipment = sorted(all_equipment)
             if len(selection) == 3:
                 random.seed(seed)
                 random.shuffle(all_equipment)
