@@ -55,6 +55,11 @@ class Boost_Setpoints(DiTToLayerBase):
                     if (i.from_element,i.to_element) in all_regs: # These should only have two windings since they're at substations
                         i.setpoint = float(setpoint)
                         print(i.setpoint)
+                    elif i.connected_transformer in model.model_names:
+                        transformer = model[i.connected_transformer]
+                        if (transformer.from_element,transformer.to_element) in all_regs:
+                            i.setpoint = float(setpoint)
+                            print(i.setpoint)
 
 
         return model
