@@ -181,9 +181,10 @@ class Create_Placement(DiTToLayerBase):
                 for i in range(min(len(selected_goabs),selection[1])):
                     if goab_counter/float(len(goab_key_list))*100 <= feeders[i]:
                         feeder = model[selected_goabs[i]].feeder_name
-                        if not feeder in subset:
+                        if not feeder in subset and feeder !="":
                             subset[feeder] = []
-                        subset[feeder].append(model[selected_goabs[i]].to_element)
+                        if feeder !="":
+                            subset[feeder].append(model[selected_goabs[i]].to_element)
 
 
         if selection[0] == 'Random':
