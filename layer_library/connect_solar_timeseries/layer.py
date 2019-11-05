@@ -7,6 +7,7 @@ import pandas as pd
 import math
 import pyproj
 import os
+import random
 
 from layerstack.args import Arg, Kwarg
 from ditto.dittolayers import DiTToLayerBase
@@ -74,15 +75,59 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
             output_folder = '.'
 
         folder = {'dataset_4':'SFO', 'dataset_3':'GSO', 'dataset_2': 'SAF'}
+        region_map = {'Santa Fe':'SAF', 'Guilford':'GSO', 'San Francisco':'SFO'}
         projection = {'dataset_4':'epsg:32610', 'dataset_3':'epsg:32617', 'dataset_2':'epsg:32613'}
         mapped_locations = set()
         all_coords = []
-        for csv_file in os.listdir(os.path.join(base_folder,folder[dataset])):
+        azimuth_map = {'N':0, 'NE':45, 'E':90, 'SE':135, 'S':180, 'SW':225, 'W': 270, 'NW':315}
+        res_tilt_azimuth = {'small':{}, 'medium':{}, 'large':{}}  #map each tilt_azimuth pair to a counter to build distribution of tilts partitioned by size
+        res_tilt_azimuth_total = {'small':0, 'medium':0, 'large':0}
+        com_tilt_azimuth = {'small':{}, 'medium':{}, 'large':{}}  #map each tilt_azimuth pair to a counter to build distribution of tilts partitioned by size
+        com_tilt_azimuth_total = {'small':0, 'medium':0, 'large':0}
+        solar_tilts = pd.read_csv(os.path.join(base_folder,'rooftop_solar_characteristics.csv'))
+        for idx,row in solar_tilts.iterrows():
+            if region_map[row['county']] == folder[dataset]:
+                size = row['size_class']
+                azimuth = azimuth_map[row['azimuth']]
+                tilt = row['tilt']
+                zone = row['zone']
+                if zone == 'residential':
+                    if (azimuth,tilt) in res_tilt_azimuth[size]:
+                        res_tilt_azimuth[size][(azimuth,tilt)] = res_tilt_azimuth[size][(azimuth,tilt)]+1
+                    else:
+                        res_tilt_azimuth[size][(azimuth,tilt)] = 1
+                    res_tilt_azimuth_total[size] +=1
+                else:
+                    if (azimuth,tilt) in com_tilt_azimuth[size]:
+                        com_tilt_azimuth[size][(azimuth,tilt)] = com_tilt_azimuth[size][(azimuth,tilt)]+1
+                    else:
+                        com_tilt_azimuth[size][(azimuth,tilt)] = 1
+                    com_tilt_azimuth_total[size] +=1
+
+        all_res_tilts = {'small':[], 'medium':[], 'large':[]}
+        all_res_p = {'small':[], 'medium':[], 'large':[]}
+        all_com_tilts = {'small':[], 'medium':[], 'large':[]}
+        all_com_p = {'small':[], 'medium':[], 'large':[]}
+        for size in com_tilt_azimuth.keys():
+            for orientation in com_tilt_azimuth[size]:
+                all_com_p[size].append(com_tilt_azimuth[size][orientation]/float(com_tilt_azimuth_total[size]))
+                all_com_tilts[size].append(orientation)
+            for orientation in res_tilt_azimuth[size]:
+                all_res_p[size].append(res_tilt_azimuth[size][orientation]/float(res_tilt_azimuth_total[size]))
+                all_res_tilts[size].append(orientation)
+
+
+
+
+
+
+        for csv_file in os.listdir(os.path.join(base_folder,folder[dataset])): #reads the folders that contain the csv files
             vals = csv_file.split('_')
             clat = vals[0]
             clong = vals[1]
             all_coords.append((clat,clong))
 
+        random.seed(0)
         for i in model.models:
             if isinstance(i,Photovoltaic):
                 x=None
@@ -115,10 +160,33 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
                         closest_long = coords[1]
 
 
+                kw = i.rated_power
+                customer_class = i.customer_class
+                az_tilt = None
+                if customer_class == 'residential':
+                    if kw < 5000:
+                        size='small'
+                    elif kw<8000:
+                        size='medium'
+                    else:
+                        size='large'
+                    az_tilt = random.choices(all_res_tilts[size],weights=all_res_p[size])[0]
+                else:
+                    if kw<8000:
+                        size='small'
+                    elif kw < 100000:
+                        size='medium'
+                    else:
+                        size='large'
+                    az_tilt = random.choices(all_com_tilts[size],weights=all_com_p[size])[0]
                 timeseries = Timeseries(model)
-                timeseries.data_label = folder[dataset]+'_'+closest_lat+'_'+closest_long
+                print(az_tilt)
+                timeseries.data_label = folder[dataset]+'_'+closest_lat+'_'+closest_long+'_'+str(az_tilt[1])+'_'+str(az_tilt[0])
                 timeseries.data_type = 'float'
-                timeseries.interval = 15 # 15 minute load data so take every 15th minute
+                timeseries.feeder_name = i.feeder_name 
+                timeseries.substation_name = i.substation_name
+                timeseries.scale_factor = 1
+                timeseries.interval = float(1/60.0) # 1 minute solar data
                 if write_opendss_file:
                     timeseries.data_location = os.path.join(output_folder,timeseries.data_label+'.csv')
                 if write_cyme_file:
@@ -127,11 +195,11 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
 
                 i.timeseries = [timeseries]
 
-                if (closest_lat,closest_long) in mapped_locations:
+                if (az_tilt[0],az_tilt[1],closest_lat,closest_long) in mapped_locations:
                     continue
-                mapped_locations.add((closest_lat,closest_long))
+                mapped_locations.add((az_tilt[0],az_tilt[1],closest_lat,closest_long))
 
-                df = pd.read_csv(os.path.join(base_folder,folder[dataset],closest_lat+'_'+closest_long+'_2012.csv'))
+                df = pd.read_csv(os.path.join(base_folder,folder[dataset],closest_lat+'_'+closest_long, closest_lat+'_'+closest_long+'_2012_'+str(az_tilt[1])+'_'+str(az_tilt[0])+'.csv'))
                 feb28_start =  list(df.index[df['Timestamp'] =='2012_02_28_0000'])[0]
                 feb28_end =  list(df.index[df['Timestamp'] =='2012_03_01_0000'])[0]
                 extra_day = df.iloc[feb28_start:feb28_end]
@@ -142,10 +210,10 @@ class Connect_Solar_Timeseries(DiTToLayerBase):
                 extra_day['Timestamp'] = shifted_timestamps
                 tmp1 = df1.append(extra_day,ignore_index=True)
                 full_year = tmp1.append(df2,ignore_index=True)
-                scaled = full_year['GHI'].apply(lambda row: row/1000.0) #1000 because OpenDSS treatas the base unit as 1 kW/m^2
-                rounded = list(full_year['GHI'].apply(lambda row: round(row,3))) # Cyme doesn't like big values
+                scaled = full_year['PoA'].apply(lambda row: row/1000.0) #1000 because OpenDSS treatas the base unit as 1 kW/m^2
+                rounded = list(full_year['PoA'].apply(lambda row: round(row,3))) # Cyme doesn't like big values
                 if write_opendss_file:
-                    scaled.write_csv(timeseries.data_location,index=False,header=False)
+                    scaled.to_csv(timeseries.data_location,index=False,header=False)
                 if write_cyme_file:
                     if not os.path.isdir(os.path.join(output_folder,timeseries.data_label)):
                         os.makedirs(os.path.join(output_folder,timeseries.data_label))
