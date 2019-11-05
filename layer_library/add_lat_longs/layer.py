@@ -38,7 +38,7 @@ class Add_Lat_Longs(DiTToLayerBase):
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
-        projection = {'dataset_4':'epsg:32610', 'dataset_3':'epsg:32617', 'dataset_2':'epsg:32613'}
+        projection = {'dataset_4':'epsg:32610', 'dataset_3':'epsg:32617', 'dataset_2':'epsg:32613','t_and_d':'epsg:32614','houston':'epsg:32614','texas_rural':'epsg:32614'}
         folder_location = None
         if 'folder_location' in kwargs:
             folder_location = kwargs['folder_location']
