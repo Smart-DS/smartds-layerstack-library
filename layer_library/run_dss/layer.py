@@ -210,8 +210,12 @@ class Run_Dss(DiTToLayerBase):
                 first_run=False
             
             sorted_dss_vals_avg = pd.DataFrame(sorted(sorted_dss_vals_avg))
-            sorted_dss_vals_avg.columns = ('OpenDSS Value', 'Node')
-            sorted_dss_vals_avg.to_csv(os.path.join(output_folder,region+'_pu_voltages_avg_opendss.csv'), index=False, header=True)
+            try:
+                sorted_dss_vals_avg.columns = ('OpenDSS Value', 'Node')
+                sorted_dss_vals_avg.to_csv(os.path.join(output_folder,region+'_pu_voltages_avg_opendss.csv'), index=False, header=True)
+            except:
+                print("System didn't solve")
+                return model
 
             if plot_profile:
 
