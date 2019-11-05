@@ -221,8 +221,8 @@ class Add_Storage(DiTToLayerBase):
 
     
                 ps.stored_kWh = starting_percentage*ps.rated_kWh/100.0
-                ps.discharging_efficiency = discharge_efficiency/100.0
-                ps.charging_efficiency = charge_efficiency/100.0
+                ps.discharging_efficiency = discharge_efficiency
+                ps.charging_efficiency = charge_efficiency
     
                 phase_storages = []
                 for phase in phases:
