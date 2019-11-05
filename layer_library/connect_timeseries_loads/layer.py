@@ -10,9 +10,11 @@ from ditto.models.load import Load
 from ditto.models.timeseries import Timeseries
 
 import h5py
+import random
 import pandas as pd
 import os
 import sys
+import numpy as np
 logger = logging.getLogger('layerstack.layers.Connect_Timeseries_Loads')
 
 
@@ -171,6 +173,7 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
 
         hf_res = h5py.File(residential_load_data,'r')
         hf_com = h5py.File(commercial_load_data,'r')
+        print('Loaded h5 files')
         cnt = 0
 
 
@@ -193,17 +196,26 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
         data_commercial = {}
         data_shape_commercial = {}
         peak_loads_commercial = {}
+        electricity_residential = {}
+        electricity_commercial = {}
         metadata_commercial = pd.read_csv(commercial_load_metadata)
+        rotations = [-5,-4,-3,-2,-1,0,1,2,3,4]
+        random.seed(1)
         for key in commercial_mapping.keys():
             data_commercial[key] = hf_com['data'][key]['data'] 
             data_shape_commercial[key] = data_commercial[key].shape # (load_id, enduse, hour)
             peak_loads_commercial[key] = [0 for j in range(data_shape_commercial[key][0])]
 
+        for building_code in data_commercial.keys():
+            electricity_commercial[building_code] = {}
         for profile in range(data_shape_residential[0]):
-            d1 = data_residential[profile][:][:]
-            electricity = sum(d1[i][:] for i in range(len(d1))) # Sum over all electricity enduses
+            d1 = [None for i in range(23)]
+            for enduse in range(23):
+                shift = random.choice(rotations)
+                d1[enduse] = np.roll(data_residential[profile][enduse],shift)
+            electricity_residential[profile] = sum(d1[i][:] for i in range(len(d1))) # Sum over all electricity enduses
             for hour in range(data_shape_residential[2]):
-                peak_loads_residential[profile] = max(peak_loads_residential[profile],electricity[hour])
+                peak_loads_residential[profile] = max(peak_loads_residential[profile],electricity_residential[profile][hour])
 
         sorted_peaks_residential = []
         for i in range(len(peak_loads_residential)):
@@ -218,9 +230,12 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
         for building_code in data_commercial.keys():
             for profile in range(data_shape_commercial[building_code][0]):
                 d1 = data_commercial[building_code][profile][:][:]
-                electricity = sum(d1[i][:] for i in range(len(d1)))
+                electricity_commercial[building_code][profile] = sum(d1[i][:] for i in range(len(d1)))
+                t_pdf = [0.01, 0.02, 0.03, 0.06, 0.08, 0.1, 0.13, 0.14, 0.13, 0.1, 0.08, 0.06, 0.03, 0.02, 0.01]
+                for i in range(len(d1)):
+                    electricity_commercial[building_code][profile] = np.convolve(electricity_commercial[building_code][profile], t_pdf, 'same')
                 for hour in range(data_shape_commercial[building_code][2]):
-                    peak_loads_commercial[building_code][profile] = max(peak_loads_commercial[building_code][profile],electricity[hour])
+                    peak_loads_commercial[building_code][profile] = max(peak_loads_commercial[building_code][profile],electricity_commercial[building_code][profile][hour])
 
                 sorted_peaks_commercial[commercial_mapping[building_code]].append((peak_loads_commercial[building_code][profile],profile,building_code))
         for key in sorted_peaks_commercial:
@@ -289,8 +304,10 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
             profile = timeseries_map[load]
             uuid = metadata_residential['_id'].iloc[timeseries_map[load]]
             timeseries = Timeseries(model)
+            timeseries.feeder_name = model['load_'+load].feeder_name
+            timeseries.substation_name = model['load_'+load].substation_name
             timeseries.data_label=timeseries_type[load]+'_'+str(profile)+ '_'+str(timeseries_category[load])
-            timeseries.interval = 1 #15 minute data provided - take every loadpoint
+            timeseries.interval = 0.25 #15 minute data provided - need to specify
             timeseries.data_type = 'float'
             timeseries.scale_factor = 1
             timeseries.data_location = os.path.join(output_folder,timeseries.data_label+'_pu.csv')
@@ -302,13 +319,11 @@ class Connect_Timeseries_Loads(DiTToLayerBase):
             if timeseries.data_label in written_timeseries:
                 continue
             if timeseries_type[load] == 'residential':
-                d1 = data_residential[profile][:][:]
-                timeseries_data = sum(d1[i][:] for i in range(len(d1)))
+                timeseries_data = electricity_residential[profile]
             if timeseries_type[load] == 'commercial':
-                d1 = data_commercial[category][profile][:][:]
-                timeseries_data = sum(d1[i][:] for i in range(len(d1)))
+                timeseries_data = electricity_commercial[category][profile]
 
-            scaled_timeseries_data = timeseries_data/float(peak_map[load])
+            scaled_timeseries_data = timeseries_data/max(timeseries_data)/0.7 #don't divide by capacity factor because causes voltages that are too low (0.4 capacity factor used for peak loads)
             written_timeseries.add(timeseries.data_label)
 
             # Need to check that datetimes and timeseries_data are the same length
