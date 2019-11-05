@@ -151,6 +151,7 @@ class Add_Pv(DiTToLayerBase):
 
 
         all_load_kws = {}
+        customer_classes = {}
         if residential_sizes is not None and commercial_sizes is not None and customer_file is not None and commercial_areas is not None and residential_areas is not None:
             for row in open(customer_file,'r').readlines():
                 sp_row = row.split(';')
@@ -160,6 +161,7 @@ class Add_Pv(DiTToLayerBase):
                 
                 kw = None
                 if cust_type == 'Res':
+                    customer_classes['load_'+name.lower()] = 'residential'
                     if area < residential_areas[0]:
                         kw = residential_sizes[0]
                     elif area >= residential_areas[-1]:
@@ -170,6 +172,7 @@ class Add_Pv(DiTToLayerBase):
                                 kw = residential_sizes[i] 
 
                 else:
+                    customer_classes['load_'+name.lower()] = 'commercial'
                     if area < commercial_areas[0]:
                         kw = commercial_sizes[0]
                     elif area >= commercial_areas[-1]:
@@ -237,6 +240,10 @@ class Add_Pv(DiTToLayerBase):
                 if hasattr(node_to_connect,'nominal_voltage'):
                     pv.nominal_voltage = node_to_connect.nominal_voltage
                 pv.name = 'pv_'+model[location].name
+                try:
+                    pv.customer_class = customer_classes[model[location].name]
+                except:
+                    pv.customer_class = 'commercial'
                 if pv.name in seen_elements:
                     seen_elements[pv.name] = seen_elements[pv.name]+1
                     pv.name = pv.name+'_'+str(seen_elements[pv.name])
