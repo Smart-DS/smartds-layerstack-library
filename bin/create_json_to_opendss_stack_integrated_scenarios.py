@@ -87,8 +87,8 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
 
     powerfactor_mapping = {'none':None, 'low':[1], 'medium':[1,-0.95], 'high':[1,-0.95,1], 'extreme':[1,-0.95,1,1]} #the pf=1 in the last two should be overridden by the controllers
     #powerfactor_mapping = {'none':None, 'low':[1], 'medium':[1,-0.95], 'high':[1,-0.95,1,1]} #the pf=1 in the last two should be overridden by the controllers
-    inverter_control_mapping = {'none':None, 'low':['powerfactor'], 'medium': ['powerfactor','powerfactor'], 'high':['powerfactor','powerfactor','powerfactor'], 'extreme':['powerfactor','powerfactor','powerfactor','powerfactor']}
-    #inverter_control_mapping = {'none':None, 'low':['powerfactor'], 'medium': ['powerfactor','powerfactor'], 'high':['powerfactor','powerfactor','voltvar','voltwatt']}
+    #inverter_control_mapping = {'none':None, 'low':['powerfactor'], 'medium': ['powerfactor','powerfactor'], 'high':['powerfactor','powerfactor','powerfactor'], 'extreme':['powerfactor','powerfactor','powerfactor','powerfactor']}
+    inverter_control_mapping = {'none':None, 'low':['powerfactor'], 'medium': ['powerfactor','powerfactor'], 'high':['powerfactor','powerfactor','voltvar'],'extreme':['powerfactor','powerfactor','voltvar','voltvar']}
     cutin_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1], 'extreme':[0.1,0.1,0.1,0.1]}
     #cutin_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1,0.1]}
     cutout_mapping = {'none':None, 'low':[0.1], 'medium': [0.1,0.1], 'high':[0.1,0.1,0.1], 'extreme':[0.1,0.1,0.1,0.1]}
@@ -178,7 +178,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
     add_utility_pv.kwargs['single_size'] = 2000000
     add_utility_pv.kwargs['max_feeder_sizing_percent'] = utility_max_feeder_sizing[solar] # total_pv <= max_feeder_size*total_feeder_load
     add_utility_pv.kwargs['power_factors'] = [0.95]
-    add_utility_pv.kwargs['inverters'] = ['voltvar'] #Note that in Opendss this needs kvar to be set to 0
+    add_utility_pv.kwargs['inverters'] = ['powerfactor'] #Note that in Opendss this needs kvar to be set to 0
     add_utility_pv.kwargs['cutin'] = [0.1]
     add_utility_pv.kwargs['cutout'] = [0.1]
     add_utility_pv.kwargs['kvar_percent'] = [44]
@@ -244,12 +244,14 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
 
     if timeseries == 'timeseries':
 
+        if not os.path.isdir(os.path.join('.','results_v4',region,'profiles')):
+            os.makedirs(os.path.join('.','results_v4',region,'profiles'))
         #Timeseries Solar
         add_solar_timeseries = stack[9]
         dataset = dataset_dir.split('/')[2][:9] #Warning - tightly coupled to dataset naming convention
         add_solar_timeseries.kwargs['dataset'] = dataset
         add_solar_timeseries.kwargs['base_folder'] = os.path.join('..','..','Solar')
-        add_solar_timeseries.kwargs['output_folder'] = os.path.join('.','results_v2',region,'timeseries_solar_'+solar+'_battery_'+batteries,'cyme')
+        add_solar_timeseries.kwargs['output_folder'] = os.path.join('.','results_v4',region,'profiles')
         add_solar_timeseries.kwargs['write_cyme_file'] = False
         add_solar_timeseries.kwargs['write_opendss_file'] = True
     
@@ -283,7 +285,7 @@ def create_rnm_to_opendss_stack(dataset_dir, region, dataset, solar, batteries, 
         add_timeseries.kwargs['residential_load_metadata'] = os.path.join('..','..','Loads','residential',load_location,'results_fips.csv')
         add_timeseries.kwargs['commercial_load_data'] = os.path.join('..','..','Loads','commercial',county,'com_'+lower_case_county+'_electricity_only.dsg')
         add_timeseries.kwargs['commercial_load_metadata'] = os.path.join('..','..','Loads','commercial',county,'results.csv')
-        add_timeseries.kwargs['output_folder'] = os.path.join('.','results_v2',region,'timeseries_solar_'+solar+'_battery_'+batteries,'cyme')
+        add_timeseries.kwargs['output_folder'] = os.path.join('.','results_v4',region,'profiles')
         add_timeseries.kwargs['write_cyme_file'] = False
         add_timeseries.kwargs['write_opendss_file'] = True
         add_timeseries.kwargs['dataset'] = dataset
@@ -314,26 +316,32 @@ def main():
     region= sys.argv[1]
     dataset = sys.argv[2]
     timeseries = sys.argv[3]
+    solar = sys.argv[4]
+    batteries = sys.argv[5]
 
     #dataset_map = {'dataset_4':'20180727','dataset_3':'20180910','dataset_2':'20180716'}
     dataset_map = {'dataset_4':'20181120','dataset_3':'20181130','dataset_2':'20181130'}
     solar_options = ['none','low','medium','high','extreme']
-    battery_options = ['none','low','high']
+    battery_options = ['none','low','high']#Need to create smaller areas first since they're referenced by larger areas
+    if solar not in solar_options:
+        raise("Invalid solar argument "+solar)
+
+    if batteries not in battery_options:
+        raise("Invalid battery argument "+battery)
+
     timeseries_options = ['timeseries','peak']
     if timeseries not in timeseries_options:
         raise("Invalid arguments " +timeseries)
 
-    for batteries in battery_options: #Need to create smaller areas first since they're referenced by larger areas
-        for solar in solar_options:
-            create_rnm_to_opendss_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, dataset, solar,batteries, timeseries)
-            from layerstack.stack import Stack
-            s = Stack.load('../stack_library/json_to_opendss_stack_'+region+'_solar_'+solar+'_batteries_'+batteries+'_'+timeseries+'.json')
-            if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss')):
-                os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss'))
-            if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_opendss')):
-                os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_opendss'))
-            s.run_dir = 'run_dir'
-            s.run()
+    create_rnm_to_opendss_stack(os.path.join('..','..','{dset}_{date}'.format(dset=dataset,date = dataset_map[dataset])), region, dataset, solar,batteries, timeseries)
+    from layerstack.stack import Stack
+    s = Stack.load('../stack_library/json_to_opendss_stack_'+region+'_solar_'+solar+'_batteries_'+batteries+'_'+timeseries+'.json')
+    if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss')):
+        os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'opendss'))
+    if not os.path.isdir(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_opendss')):
+        os.makedirs(os.path.join('.','results_v4',region,'solar_'+solar+'_batteries_'+batteries+'_'+timeseries,'json_opendss'))
+    s.run_dir = 'run_dir'
+    s.run()
 
 if __name__ == "__main__":
     main()
