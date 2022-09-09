@@ -29,20 +29,26 @@ class To_Json(DiTToLayerBase):
         kwarg_dict['base_dir'] = Kwarg(default=None, description='Location to write the json file to',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+        kwarg_dict['filename'] = Kwarg(default='full_model.json', description='Actual filename',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         return kwarg_dict
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
         base_dir = None
+        filename = 'full_model.json'
         if 'base_dir' in kwargs:
             base_dir = kwargs['base_dir']
+        if 'filename' in kwargs:
+            filename = kwargs['filename']
 
         if base_dir is None:
             return model
         if not os.path.exists(base_dir):
             os.makedirs(base_dir)
 
-        writer = Writer(output_path=base_dir,filename="full_model.json")
+        writer = Writer(output_path=base_dir,filename=filename)
         writer.write(model)
 
         return model

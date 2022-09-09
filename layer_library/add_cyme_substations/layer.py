@@ -67,7 +67,7 @@ class AddSubstations(DiTToLayerBase):
     @classmethod
     def apply(cls, stack, model, feeder_file, output_substation_folder, base_dir=None, readme_file = None, substation_folder=None):
         # Format is max number of feeders, list of substation numbers
-        subs_4kv = [(4,[5]),(8,[13]),(12,[14])]
+        subs_4kv = [(4,[5]),(8,[13]),(12,[14]),(16,[17])]
         subs_25kv = [(6,[11]),(12,[15]),(16,[16])]
         subs_1247kv = [(1,[1]),(2,[8]),(3,[2]), (4,[4,10]), (6,[9]), (8,[3,7]), (12,[6]), (16,[12])]
         sub_list = None

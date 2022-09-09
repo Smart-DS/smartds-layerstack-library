@@ -30,11 +30,20 @@ class Find_Missing_Coords(DiTToLayerBase):
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
 
-        #Create the modifier object
-        modifier=system_structure_modifier(model,'st_mat')
-        
-        # Set missing coordinates
-        modifier.set_missing_coords_recur()
+        all_substations = ['st_mat'] # when running for all regions
+        # Added for Texas case where we don't use subtransmission
+        all_substations = []
+        for i in model.models:
+            if hasattr(i,'is_substation_connection') and i.is_substation_connection:
+                if i.nominal_voltage > 30000: #69 kv or 138 kv
+                    all_substations.append(i.name)
+
+        for substation in all_substations:
+            #Create the modifier object
+            modifier=system_structure_modifier(model,substation)
+            
+            # Set missing coordinates
+            modifier.set_missing_coords_recur()
 
         return model
 

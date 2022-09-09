@@ -37,19 +37,24 @@ class List_Substations(DiTToLayerBase):
         kwarg_dict['dataset'] = Kwarg(default=None, description='Which dataset is being used for projection',
                                          parser=None, choices=None,
                                          nargs=None, action=None)
+        kwarg_dict['is_timeseries'] = Kwarg(default=False, description='whether or not there is timeseries data too',
+                                         parser=None, choices=None,
+                                         nargs=None, action=None)
         return kwarg_dict
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
         output_folder = kwargs.get('output_folder')
         dataset = kwargs.get('dataset')
-        projection = {'dataset_4':'epsg:32610', 'dataset_3':'epsg:32617', 'dataset_2':'epsg:32613','t_and_d':'epsg:32614','houston':'epsg:32614','texas_rural':'epsg:32614'}
+        is_timeseries = kwargs.get('is_timeseries')
+        projection = {'dataset_4':'epsg:32610', 'dataset_3':'epsg:32617', 'dataset_2':'epsg:32613','t_and_d':'epsg:32614','houston':'epsg:32614','texas_rural':'epsg:32614','Full_Texas':'epsg:32614', 'South_Texas':'epsg:32614','texas_test':'epsg:32614'}
         substation_kv = {}
         substation_load_p = {}
         substation_load_q = {}
         substation_coords_lat = {}
         substation_coords_long = {}
         substation_connections = {}
+        substation_timeseries_p = {}
         for i in model.models:
             if isinstance(i,Node) and i.is_substation_connection:
                 feeder_name = i.feeder_name
@@ -76,12 +81,21 @@ class List_Substations(DiTToLayerBase):
                     substation_coords_long[substation_name] = i_long
                     substation_connections[substation_name] = i.name
                     substation_kv[substation_name] = i.nominal_voltage/1000.0
+        print('starting to read load information')
         for i in model.models:
             if isinstance(i,Load):
                 for pl in i.phase_loads:
-                    if pl.p is not None:
-                        substation_load_p[i.substation_name]+=pl.p
-                        substation_load_q[i.substation_name]+=pl.q
+                    if pl.p is not None and i.substation_name in substation_load_p:
+                        substation_load_p[i.substation_name]+=pl.p/1000.0
+                        substation_load_q[i.substation_name]+=pl.q/1000.0
+                if is_timeseries and len(i.timeseries) > 0:
+                    timeseries_file = i.timeseries[0].data_location.replace('_pu','')
+
+                    ts_data = pd.read_csv(timeseries_file,header=None)
+                    if i.substation_name not in substation_timeseries_p:
+                        substation_timeseries_p[i.substation_name] = ts_data
+                    else:
+                        substation_timeseries_p[i.substation_name] += ts_data
         csv_output = pd.DataFrame([])
         for substation in substation_load_p:
             print(substation,substation_load_p[substation],substation_load_q[substation],substation_kv[substation], substation_coords_lat[substation], substation_connections[substation])
@@ -92,6 +106,20 @@ class List_Substations(DiTToLayerBase):
         
         csv_output.to_csv(os.path.join(output_folder,'substations.csv'),header=True,index=False)
         json_data = csv_output.to_dict()
+
+
+        if is_timeseries:
+            print('starting to write timeseries outputs')
+            if not os.path.exists(os.path.join(output_folder,'aggregate_timeseries')):
+                os.makedirs(os.path.join(output_folder,'aggregate_timeseries'))
+            for substation in substation_timeseries_p:
+                timeseries_output = substation_timeseries_p[substation]
+                timeseries_output.columns = ['Real Power']
+                pf = 0.95
+                timeseries_output['Reactive Power'] = timeseries_output['Real Power']*(((1/(pf**2))-1)**0.5)
+                timeseries_output.to_csv(os.path.join(output_folder,'aggregate_timeseries','substation_'+substation+'.csv'),header=True,index=False)
+
+        print('finished writing substation outputs')
         with open(os.path.join(output_folder,'substations.json'),'w') as json_output:
             json.dump(json_data,json_output, indent=4)
 

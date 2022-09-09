@@ -148,6 +148,9 @@ class Add_Storage(DiTToLayerBase):
         seen_elements = {}
         for placement in placements:
             connecting_elements = []
+            if not os.path.exists(os.path.join(placement_folder,placement)):
+                print('Skipping placement '+placement+'...')
+                continue
             with open(os.path.join(placement_folder,placement), "r") as f_input:
                 locations_feeders = json_tricks.load(f_input)
                 for key in locations_feeders:

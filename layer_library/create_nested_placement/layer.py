@@ -122,7 +122,7 @@ class Create_Nested_Placement(DiTToLayerBase):
 
             if 'Random' in selection[0]:
                 if len(selection)==2:
-                    random.seed(seed)
+                    #random.seed(seed)
                     for feeder in all_feeders:
                         if not feeder in subset:
                             subset[feeder] = []
@@ -155,13 +155,18 @@ class Create_Nested_Placement(DiTToLayerBase):
                         if isinstance(i_model,Load) and i_model.phase_loads is not None:
                             for pl in i_model.phase_loads:
                                 total_load+=pl.p
-                        if total_load/1000 >= float(selection[1]):
-                            sized_equipment.append(i)
-                    if len(selection)==3: #(Sized_Loads,200,50) is 50% of all loads at least 200kW
-                        if not feeder in subset:
-                            subset[feeder] = []
-                        subset[feeder].extend(random.sample(sized_equipment,math.floor(len(sized_equipment)*float(selection[2])/100.0)))
-                    if len(selection)==4: #(Sized_Loads,200,20,50) is range of 20-50% of all loads at least 200kW
+                        if len(selection) ==5 and selection[4] == 'below':
+                            if total_load/1000 < float(selection[1]):
+                                sized_equipment.append(i)
+
+                        if len(selection) ==5 and selection[4] == 'above':
+                            if total_load/1000 >= float(selection[1]):
+                                sized_equipment.append(i)
+#                    if len(selection)==3: #(Sized_Loads,200,50) is 50% of all loads at least 200kW
+#                        if not feeder in subset:
+#                            subset[feeder] = []
+#                        subset[feeder].extend(random.sample(sized_equipment,math.floor(len(sized_equipment)*float(selection[2])/100.0)))
+                    if len(selection)==5: #(Sized_Loads,200,20,50,above) is range of 20-50% of all loads at least 200kW
                         if not feeder in subset:
                             subset[feeder] = []
                         start_pos = math.floor(len(sized_equipment)*float(selection[2])/100.0)

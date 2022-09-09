@@ -188,7 +188,7 @@ class Add_Pv(DiTToLayerBase):
 
         placement_cnt = 0
         prev_placement_set = set() #assume at most one solar per location
-        for placement in placements:
+        for placement in placements: #NOTE - need to have run placements already
             locations = []
             with open(os.path.join(placement_folder,placement), "r") as f:
                 locations_feeders = json_tricks.load(f)
@@ -265,7 +265,7 @@ class Add_Pv(DiTToLayerBase):
                 pv.cutout_percent = cutout[placement_cnt]
                 pv.cutin_percent = cutin[placement_cnt]
                 pv.control = inverters[placement_cnt]
-                pv.active_rating = kw*oversizing[placement_cnt]
+                pv.active_rating = kw/oversizing[placement_cnt]
                 if kvar_percent[placement_cnt] is None:
                     pv.reactive_rating = None
                 else:

@@ -71,8 +71,8 @@ class Statistical_Validation(DiTToLayerBase):
             raise ValueError('no smartdsR location provided')
         partitioned_file = 'partitioned_generation.R'
         non_partitioned_file = 'non_partitioned_generation.R'
-        partitioned_command = 'module purge; module load conda; cd {smartdsR}; Rscript {rscript} {input} {output} {name}'.format(smartdsR=rscript_folder, rscript=partitioned_file, input=input_folder, output=output_folder, name=output_name)
-        non_partitioned_command = 'module purge; module load conda; cd {smartdsR}; Rscript {rscript} {input} {output} {name}'.format(smartdsR=rscript_folder, rscript=non_partitioned_file, input=input_folder, output=output_folder, name=output_name)
+        partitioned_command = 'cd {smartdsR}; Rscript {rscript} {input} {output} {name}'.format(smartdsR=rscript_folder, rscript=partitioned_file, input=input_folder, output=output_folder, name=output_name)
+        non_partitioned_command = 'cd {smartdsR}; Rscript {rscript} {input} {output} {name}'.format(smartdsR=rscript_folder, rscript=non_partitioned_file, input=input_folder, output=output_folder, name=output_name)
         subprocess_cmd(non_partitioned_command)
         subprocess_cmd(partitioned_command)
         return model

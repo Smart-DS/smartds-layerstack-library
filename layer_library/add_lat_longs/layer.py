@@ -38,7 +38,7 @@ class Add_Lat_Longs(DiTToLayerBase):
 
     @classmethod
     def apply(cls, stack, model, *args, **kwargs):
-        projection = {'dataset_4':'epsg:32610', 'dataset_3':'epsg:32617', 'dataset_2':'epsg:32613','t_and_d':'epsg:32614','houston':'epsg:32614','texas_rural':'epsg:32614'}
+        projection = {'dataset_4':'epsg:32610', 'dataset_3':'epsg:32617', 'dataset_2':'epsg:32613','t_and_d':'epsg:32614','houston':'epsg:32614','texas_rural':'epsg:32614','South_Texas':'epsg:32614','texas_test':'epsg:32614','Full_Texas':'epsg:32614'}
         folder_location = None
         if 'folder_location' in kwargs:
             folder_location = kwargs['folder_location']
@@ -47,6 +47,7 @@ class Add_Lat_Longs(DiTToLayerBase):
         if 'dataset' in kwargs:
             dataset = kwargs['dataset']
         print('Writing long-lats')
+        invproj = pyproj.Proj(init=projection[dataset],preserve_units=True) 
         for dirname,subdirs,files in os.walk(folder_location):
             if 'Buscoords.dss' in files:
                 f_in = open(os.path.join(dirname,'Buscoords.dss'),'r')
@@ -58,7 +59,6 @@ class Add_Lat_Longs(DiTToLayerBase):
                         continue
                     x = coords[1]
                     y = coords[2]
-                    invproj = pyproj.Proj(init=projection[dataset],preserve_units=True) 
                     lat_long = invproj(x,y,inverse=True)
                     i_lat = lat_long[1]
                     i_long = lat_long[0]
